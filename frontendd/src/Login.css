@@ -1,0 +1,13 @@
+.body {
+  
+    background-size: cover;
+    height: 100vh;
+    
+}
+
+.logo {
+    width: 30%;
+    height: 30%;
+    object-fit: cover; 
+    
+}

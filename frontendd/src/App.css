@@ -1,0 +1,32 @@
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+::-webkit-scrollbar-thumb {
+  background:rgb(224, 224, 224);
+  transition: 5s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #161F01;
+  transition: 5s;
+}
+
+
+::-webkit-scrollbar-thumb {
+  background:#dbdbdb;
+  transition: 5s;
+}
+
+.custom-dots li button {
+  background: #FABC3C; 
+  opacity: 0.5;
+}
+
+.custom-dots li.slick-active button {
+  background: #FACC6B;
+}
