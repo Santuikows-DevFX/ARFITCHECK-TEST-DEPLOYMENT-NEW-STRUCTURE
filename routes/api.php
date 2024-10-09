@@ -26,7 +26,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 //login endpoints
-Route::prefix('auth')->as('auth')->controller(DataController::class)->group(function () {
+Route::prefix('auth')->controller(DataController::class)->group(function () {
 
     Route::get('/getUser/{uid}', 'getUserByID');
     Route::get('/getMyAddress/{uid}', 'getMyAddress');
@@ -67,7 +67,7 @@ Route::prefix('auth')->as('auth')->controller(DataController::class)->group(func
 });
 
 //product endpoints
-Route::prefix('prd')->as('prd')->controller(ProductController::class)->group(function () {
+Route::prefix('prd')->controller(ProductController::class)->group(function () {
 
     Route::get('/getProducts/{role}', 'fetchProducts');
     Route::get('/fetchProductByCateg/{role}/{category}', 'fetchProductByCateg');
@@ -86,7 +86,7 @@ Route::prefix('prd')->as('prd')->controller(ProductController::class)->group(fun
 });
 
 //order endpoints
-Route::prefix('order')->as('order')->controller(OrderController::class)->group(function () {
+Route::prefix('order')->controller(OrderController::class)->group(function () {
 
     //admin side routes
     Route::get('/fetchOrders', 'fetchOrders');
@@ -125,7 +125,7 @@ Route::prefix('order')->as('order')->controller(OrderController::class)->group(f
 });
 
 //cart endpoints
-Route::prefix('cart')->as('cart')->controller(CartController::class)->group(function () {
+Route::prefix('cart')->controller(CartController::class)->group(function () {
 
     Route::post('/getMyCartItems', 'fetchMyCartItems');
     Route::post('/insertCartItems', 'insertCartItems');
@@ -134,14 +134,14 @@ Route::prefix('cart')->as('cart')->controller(CartController::class)->group(func
 });
 
 //analytics endpoints
-Route::prefix('rprt')->as('rprt')->controller(ReportController::class)->group(function () {
+Route::prefix('rprt')->controller(ReportController::class)->group(function () {
 
     Route::get('/fetchSalesSummary', 'fetchSalesSummary');
     Route::post('/calculateAnalyticsReports', 'calculateAnalyticsReports');
 });
 
 //clothing size
-Route::prefix('size')->as('size')->controller(SizeController::class)->group(function () {
+Route::prefix('size')->controller(SizeController::class)->group(function () {
 
     Route::get('/fetchClothingSizes/{category}', 'fetchClothingSizes');
 
@@ -152,7 +152,7 @@ Route::prefix('size')->as('size')->controller(SizeController::class)->group(func
 });
 
 //custom prd req
-Route::prefix('custom')->as('custom')->controller(CustomRequestController::class)->group(function () {
+Route::prefix('custom')->controller(CustomRequestController::class)->group(function () {
 
     Route::get('/fetchMyCustomizationRequests/{uid}', 'fetchMyCustomizationRequests');
     Route::get('/fetchCustomizationRequestForReceipt/{uid}/{orderTimeStamp}', 'fetchCustomizationRequestForReceipt');
