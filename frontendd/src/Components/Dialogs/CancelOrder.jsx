@@ -88,7 +88,7 @@ const CancelOrder = ({ open, onClose, orderID, orderType, zIndex, fetchOrders}) 
 
           }}
         >
-          {({ isSubmitting, isValid }) => (
+          {({ isSubmitting, isValid, values }) => (
             <Form>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
@@ -116,8 +116,8 @@ const CancelOrder = ({ open, onClose, orderID, orderType, zIndex, fetchOrders}) 
                 </Grid>
               </Grid>
               <DialogActions>
-                <Button  type = 'submit' color="primary" disabled={isSubmitting || !isValid}>
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'black'}}>
+                <Button  type = 'submit' color="primary" disabled={isSubmitting || !isValid || values.reason.length === 0}>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'black', opacity: isSubmitting || !isValid || values.reason.length === 0 ? 0.7 : 1}}>
                     PROCEED
                   </Typography>
                 </Button>

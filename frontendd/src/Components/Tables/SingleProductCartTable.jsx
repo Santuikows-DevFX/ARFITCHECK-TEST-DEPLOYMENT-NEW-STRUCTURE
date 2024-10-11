@@ -27,6 +27,8 @@ import { useCart } from '../../ContextAPI/CartProvider';
 import Navbar from '../../Widgets/Navbar';
 import Footer from '../Footer';
 
+import cartGraffitiBG from '../../../public/assets/cartGraffiti.png'
+
 const SingleProductCartTable = () => {
     const [cart, setCart] = useState([]);
     const [cookie] = useCookies(['?id', '?role']);
@@ -158,7 +160,7 @@ const SingleProductCartTable = () => {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            backgroundImage: 'url(/public/assets/cartGraffiti.png)',
+            backgroundImage: `url(${cartGraffitiBG})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
           }}

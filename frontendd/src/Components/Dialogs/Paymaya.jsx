@@ -2,6 +2,8 @@ import React from 'react'
 import { Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 
+import paymayaImage from '../../../public/assets/QRs/Paymaya.jpg'
+
 const Paymaya = ({ open, onClose }) => {
   return (
     <div>
@@ -16,7 +18,7 @@ const Paymaya = ({ open, onClose }) => {
                 Scan this QR Code:
             </DialogTitle>
             <DialogContent>
-                <img src="../../public/assets/QRs/Paymaya.jpg" style={{ width: "100%", height: "70%", objectFit: "cover" }} />
+                <img src= {paymayaImage} style={{ width: "100%", height: "70%", objectFit: "cover" }} />
             </DialogContent>
             <IconButton sx={{ position: 'absolute', top: 5, right: 5 }} onClick={onClose}>
                 <CloseIcon />

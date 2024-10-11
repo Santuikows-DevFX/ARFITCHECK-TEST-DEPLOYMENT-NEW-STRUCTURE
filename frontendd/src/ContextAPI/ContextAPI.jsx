@@ -31,12 +31,12 @@ export const ContextAPI = ({children}) => {
         _setToken(token);
         if (token) {
             //checks if the token exist and if exist store it into the local storage
-            sessionStorage.setItem('?sessiontoken', token);
+            localStorage.setItem('?sessiontoken', token);
             
         } else {
             //on the other hand, if it does not exist therefore there is no access
-            sessionStorage.removeItem('?sessiontoken');
-            sessionStorage.removeItem('USER_ROLE');
+            localStorage.removeItem('?sessiontoken');
+            localStorage.removeItem('USER_ROLE');
 
 
         }
@@ -46,10 +46,10 @@ export const ContextAPI = ({children}) => {
         _setUserID(userID)
 
         if(userID) {
-            sessionStorage.setItem('?id', userID);
+            localStorage.setItem('?id', userID);
 
         }else {
-            sessionStorage.removeItem('?id', userID);
+            localStorage.removeItem('?id', userID);
             
         }
     }
@@ -58,10 +58,10 @@ export const ContextAPI = ({children}) => {
         _setRole(role)
 
         if(role) {
-            sessionStorage.setItem('?role', role);
+            localStorage.setItem('?role', role);
 
         }else {
-            sessionStorage.removeItem('?role', role);
+            localStorage.removeItem('?role', role);
             
         }
     }

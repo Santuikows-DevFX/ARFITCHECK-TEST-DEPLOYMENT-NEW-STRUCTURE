@@ -48,6 +48,7 @@ function ClothingSize() {
     return sizes.sort((a, b) => a.sizeInfo.length - b.sizeInfo.length);
   };
 
+  //TODO: VALIDATE THE CHANGES IT MUST HAVE MIN AND MAX TO PREVENT UNREALISTIC CHANGES
   const handleSaveChanges = async () => {
     try {
       setIsSaveLoading(true);

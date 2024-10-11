@@ -582,7 +582,7 @@ class DataController extends Controller
     public function addAdmin(Request $request)
     {
         try {
-            $adminDefaultIconURL = "https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Icon.png?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=gpUfVg%2BwhGJf90IHQjXcJBegfoGnNF1epPK2OXX1KOgyY2ZS6WNGs9AXVltoQaIAuD0gqxMZ0EwG7MHgdRsuLHechscbQLWlKkgy1Tu35NjJEEOKpRunUX38IQgA2se2c5HiFu1yg2dmz65FyqiNgajC98yxxor4t4IVLrz6fuv0FpoQDBpV%2BC1o7gM1hMyi8tedofX1GdmFKnqsD03aq2cSEj3MHBSzPbCnJxYggwH%2BHLle3HIFpUC1oFwqhGQHMvw38YaIdcL4GJThTtAje04b94eylHh6oDbjmyW8thcyrbbQgoPU9JNxZoTTSQBOCvt8fulWPyWZhXSV4I12dw%3D%3D";
+            $adminDefaultIconURL = "https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Icon.png?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=O%2F1tLuD5AGzq%2BS1CK%2FHeRl6zvfdo%2FNskPPkp0SDbbsG6toQc%2BHKul%2BuJoCHHB5xbGuo5fupDinpsezfVZL2P3GJimQhe%2BCTjr%2FV3IMYHcV1iB8TApFzsU63WxSOS3%2FPfJtx%2BooYye4TQPm6K0atkVcmo4GQUX%2FobbaxhZr4SENeJ4r8%2Bs5hjkHzgQ2Nc%2Fkt96wAzPU4ulBwT%2BYNofrYopIKAu%2BbGxX38%2FMj3I3lE6R1QLwVjcrKikJQ3QA%2B6ysdNSfFRZUjxW%2B7e3JjxIcJJc4gOthBMekUjhuluf8Zen6ZFY8EulSSCWrylVKFZ6G6TijjXedD2RMdAPl7pU2LErQ%3D%3D";
 
             $admin = $this->auth->createUserWithEmailAndPassword($request->email, $request->password);
             $this->auth->sendEmailVerificationLink($request->email);

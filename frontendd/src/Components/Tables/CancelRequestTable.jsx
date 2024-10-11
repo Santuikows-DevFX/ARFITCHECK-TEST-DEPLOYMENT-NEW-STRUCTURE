@@ -25,6 +25,7 @@ const CancelRequestTable = () => {
   const [sortStatus, setSortStatus] = useState('');
   const [orderIDSearchQuery, setOrderIDSearchQuery] = useState('');
 
+  const [selectedOrder, setSelectedOrder] = useState(null)
 
   useEffect(() => {
     fetchOrders();
@@ -35,7 +36,7 @@ const CancelRequestTable = () => {
       const orderResponse = await axiosClient.get('order/fetchCancelRequestOrders');
       const mergedOrders = mergeOrders(orderResponse.data);
       setOrders(mergedOrders);
-      setFilteredOrders(mergedOrders);
+      // setFilteredOrders(mergedOrders);
     } catch (error) {
       console.error(error);
     }
@@ -133,7 +134,14 @@ const CancelRequestTable = () => {
     return mergedOrders;
   };
 
-  const handleDialogOpen = () => {
+  const handleDialogOpen = (orderID, orderInfo) => {
+
+    const cancelData = {
+      orderID: orderID,
+      orderInfo: orderInfo
+    };
+
+    setSelectedOrder(cancelData)
     setIsDialogOpen(true)
   }
 
@@ -442,22 +450,22 @@ const CancelRequestTable = () => {
                         <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', fontWeight: 'bold', color: 'black' }}>
                           PRODUCT(s)
                         </Typography>
-                        <Typography sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: 'black' }}>
-                            <Typography sx={{ fontFamily: 'Inter', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                        <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}>
+                            <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
                               <b>ID: {order.orderID}</b>
                             </Typography>
                             {order.orderInfo.productName.split(', ').map((product, index) => (
                               <div key={index}>
-                                <Typography sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: 'black' }}>
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}>
                                   {product}
                                 </Typography>
                                 
                                 {order.orderInfo.orderType === 'default' ? (
-                                  <Typography sx={{ fontFamily: 'Inter', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
                                   <b>Qnt:</b> {order.orderInfo.productQuantity.split(', ')[index]} <b>Size:</b> {order.orderInfo.productSize.split(', ')[index]}
                                 </Typography>
                                 ) : (
-                                  <Typography sx={{ fontFamily: 'Inter', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
                                     <b>Qnt:</b> {order.orderInfo.productQuantity.split(', ')[index]} <b>Size(s): </b>
 
                                     {order.orderInfo.smallQuantity !== "0" ? `S x${order.orderInfo.smallQuantity}${order.orderInfo.mediumQuantity !== "0" || order.orderInfo.largeQuantity !== "0" || order.orderInfo.extraLargeQuantity !== "0" || order.orderInfo.doubleXLQuantity !== "0" || order.orderInfo.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
@@ -503,20 +511,20 @@ const CancelRequestTable = () => {
                           </Typography>
                           {order.orderInfo.paymentMethod === 'cash' ? (
                                   <Typography
-                                  sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: 'black' }}
+                                  sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}
                                   >
                                   <b>Cash</b>
                                 </Typography>
                           ) : (
                                 order.orderInfo.orderType === 'custom' && order.orderInfo.isPaid === false ? (
                                   <Typography
-                                    sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: 'black' }}
+                                    sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}
                                   >
                                     <b>E-Wallet</b>
                                   </Typography>
                                 ) : (
                                   <Typography
-                                    sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: '#1F618D', cursor: 'pointer' }}
+                                    sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: '#1F618D', cursor: 'pointer', textDecoration: 'underline' }}
                                     onClick={() => openImageInNewTab(order.orderInfo.receiptImage)}
                                   >
                                     <b>E-Wallet</b>
@@ -541,7 +549,7 @@ const CancelRequestTable = () => {
                         <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', color: statusColorPicker(order.orderInfo.orderStatus) }}>
                           <b> {order.orderInfo.orderStatus}</b>
                         </Typography>
-                         <Typography sx={{ fontFamily: 'Inter', fontSize: 12, fontWeight: 400, color: 'black'}}>
+                         <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
                               Updated: <b>{order.orderInfo.updateTimeStamp}</b>
                           </Typography>
                       </Grid>
@@ -551,7 +559,7 @@ const CancelRequestTable = () => {
                           fullWidth
                           disabled={loading}
                           onClick={() => {
-                            handleDialogOpen()
+                            handleDialogOpen(order?.orderID, order?.orderInfo)
                           }}
                           variant="contained"
                           sx={{
@@ -563,7 +571,7 @@ const CancelRequestTable = () => {
                           <Typography
                             sx={{
                               fontFamily: 'Kanit',
-                              fontSize: 18,
+                              fontSize: 16,
                               padding: 0.5,
                               visibility: loading ? 'hidden' : 'visible',
                             }}
@@ -587,7 +595,7 @@ const CancelRequestTable = () => {
                       </Grid>
                     </Grid>
                   </Paper>
-                  <ViewCancelOrderRequest open={isDialogOpen} onClose={handleDialogClose} orderInfo={order.orderInfo} orderID={order.orderID} orderType={'Cancel'} zIndex={1000} fetchOrders={fetchOrders} />
+                  <ViewCancelOrderRequest open={isDialogOpen} onClose={handleDialogClose} orderInfo={selectedOrder?.orderInfo} orderID={selectedOrder?.orderID} orderType={'Cancel'} zIndex={1000} fetchOrders={fetchOrders} />
                 </Grid>
             )))}
             

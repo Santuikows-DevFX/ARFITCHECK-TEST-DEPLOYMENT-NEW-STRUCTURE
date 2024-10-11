@@ -68,6 +68,8 @@ import { useNavigate } from 'react-router-dom';
 import { useStateContext } from '../../ContextAPI/ContextAPI';
 import Footer from '../../Components/Footer';
 
+import superAdminBG from '../../../public/assets/shopGraffiti1.png'
+
 const SuperAdmin = (props) => {
   const { window } = props;
   const theme = useTheme();
@@ -428,7 +430,7 @@ const SuperAdmin = (props) => {
      <Box
       sx={{
         display: 'flex',
-        backgroundImage: 'url(/public/assets/shopGraffiti1.png)',
+        backgroundImage: `url(${superAdminBG})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
@@ -472,72 +474,76 @@ const SuperAdmin = (props) => {
                 </Badge>
               </IconButton>
               <Popover
-              id={notificationID}
-              open={openNotication}
-              anchorEl={notificationAnchorEl}
-              onClose={handleNotificationClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'center',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'center',
-              }}
-            >
-              <Typography sx={{ p: 2, fontFamily: 'Kanit', fontWeight: 'bold' }}>Notifications</Typography>
-              <Divider sx={{ backgroundColor: 'black' }} />
-              <List>
-                {notificationData.length > 0 ? (
-                  notificationData.map((notifs, index) => (
-                    <ListItem key={index} sx={{ opacity: notifs.notificationStatus === 'read' ? 0.5 : 1 }}>
-                      <ListItemIcon>
-                        <LocalShippingIcon fontSize="medium" sx={{ margin: 'auto', color: 'green' }} />
-                      </ListItemIcon>
-                      <Box sx={{ flexGrow: 1 }}>
-                      <ListItemText 
-                        primary={notifs.notificationMessage} 
-                        secondary={`${notifs.notificationDate} - ${notifs.notificationTime}`} 
-                        primaryTypographyProps={{ 
-                          fontSize: '0.7rem', 
-                          fontFamily: 'Kanit', 
-                          fontWeight: 650,
-                        }} 
-                        secondaryTypographyProps={{ 
-                          fontSize: '0.6rem', 
-                          fontFamily: 'Kanit',
-                        }} 
-                      />
-                      </Box>
-                    </ListItem>
-                  ))
-                ) : (
-                  <Typography sx={{ p: 2, fontFamily: 'Kanit', fontSize: '0.9rem', alignContent: 'center' }}>No notifications available.</Typography>
-                )}
-              </List>
-              <Divider sx={{ backgroundColor: 'black' }} />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1 }}>
-                <Button
-                  size="small"
-                  startIcon={<MailIcon />}
-                  onClick={handleMarkAllAsRead}
-                  sx={{ fontSize: '0.65rem', color: 'gray' }}
-                  disabled = {notificationData.length == 0 ? true : false}
-                >
-                  Mark All as Read
-                </Button>
-                <Button
-                  size="small"
-                  startIcon={<DeleteIcon />}
-                  onClick={handleDeleteAllNotifications}
-                  sx={{ fontSize: '0.65rem', color: 'gray' }}
-                  disabled = {notificationData.length == 0 ? true : false}
-                >
-                  Delete All 
-                </Button>
-            </Box>
-            </Popover>
-                    <IconButton
+                id={notificationID}
+                open={openNotication}
+                anchorEl={notificationAnchorEl}
+                onClose={handleNotificationClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'center',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'center',
+                }}
+              >
+                <Typography sx={{ p: 2, fontFamily: 'Kanit', fontWeight: 'bold' }}>Notifications</Typography>
+                <Divider sx={{ backgroundColor: 'black' }} />
+                <List sx={{ maxHeight: 300, overflowY: 'auto' }}>
+                  {notificationData.length > 0 ? (
+                    notificationData.map((notifs, index) => (
+                      <ListItem key={index} sx={{ opacity: notifs.notificationStatus === 'read' ? 0.5 : 1 }}>
+                        <ListItemIcon>
+                          <LocalShippingIcon fontSize="medium" sx={{ margin: 'auto', color: 'green' }} />
+                        </ListItemIcon>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <ListItemText 
+                            primary={notifs.notificationMessage} 
+                            secondary={`${notifs.notificationDate} - ${notifs.notificationTime}`} 
+                            primaryTypographyProps={{ 
+                              fontSize: '0.7rem', 
+                              fontFamily: 'Kanit', 
+                              fontWeight: 650,
+                              sx: { wordBreak: 'break-word' },
+                            }} 
+                            secondaryTypographyProps={{ 
+                              fontSize: '0.6rem', 
+                              fontFamily: 'Kanit',
+                              sx: { wordBreak: 'break-word' }, 
+                            }} 
+                          />
+                        </Box>
+                      </ListItem>
+                    ))
+                  ) : (
+                    <Typography sx={{ p: 2, fontFamily: 'Kanit', fontSize: '0.9rem', alignContent: 'center' }}>No notifications available.</Typography>
+                  )}
+                </List>
+                
+                <Divider sx={{ backgroundColor: 'black' }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1 }}>
+                  <Button
+                    size="small"
+                    startIcon={<MailIcon />}
+                    onClick={handleMarkAllAsRead}
+                    sx={{ fontSize: '0.65rem', color: 'gray' }}
+                    disabled={notificationData.length == 0 ? true : false}
+                  >
+                    Mark All as Read
+                  </Button>
+                  <Button
+                    size="small"
+                    startIcon={<DeleteIcon />}
+                    onClick={handleDeleteAllNotifications}
+                    sx={{ fontSize: '0.65rem', color: 'gray' }}
+                    disabled={notificationData.length == 0 ? true : false}
+                  >
+                    Delete All 
+                  </Button>
+                </Box>
+              </Popover>
+
+              <IconButton
                 onClick={handleProfileMenuOpen}
                 color="black"
               >
@@ -545,7 +551,6 @@ const SuperAdmin = (props) => {
               </IconButton>
      
               </Box>
-
 
               <Menu
                   anchorEl={anchorEl}

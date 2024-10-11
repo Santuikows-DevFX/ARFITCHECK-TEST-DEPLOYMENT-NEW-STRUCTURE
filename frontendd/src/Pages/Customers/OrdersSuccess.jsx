@@ -1,6 +1,7 @@
 import React from 'react';
 import { Grid, Box, Typography, Divider, MenuItem, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import Footer from '../../Components/Footer';
+import successImage from '../../../public/assets/success.svg'
 
 function OrderSuccess() {
   return (
@@ -31,7 +32,7 @@ function OrderSuccess() {
               }}
             >
               <img
-                src="/src/assets/success.png"
+                src={successImage}
                 width="100%"
                 maxWidth={600}
                 height="auto"

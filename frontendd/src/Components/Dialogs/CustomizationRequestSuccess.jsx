@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import CustomizationOrderDetails from '../Tables/CustomizationOrderDetails';
 import CustsomizationOrderInfo from '../Tables/CustomizationOrderInfo';
 
+import successImage from '../../../public/assets/success.svg'
+
 function CustomizationRequestSuccess({ onClose, timeStamp }) {
 
   const CartValidationSchema = Yup.object().shape({
@@ -95,7 +97,7 @@ function CustomizationRequestSuccess({ onClose, timeStamp }) {
                     }}
                   >
                     <img
-                      src="/public/assets/success.svg"
+                      src={successImage}
                       width="70%"
                       maxWidth={600}
                       height="auto"

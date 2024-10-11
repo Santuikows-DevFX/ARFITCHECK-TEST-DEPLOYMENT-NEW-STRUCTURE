@@ -460,15 +460,15 @@ function ProductDescription({ product, onClose }) {
                                                 type="submit"
                                                 fullWidth
                                                 variant="contained"
-                                                disabled={isSubmitting || !isValid}
+                                                disabled={isSubmitting || !isValid || addToCartLoading}
                                                 sx={{
                                                     backgroundColor: 'white',
                                                     '&:hover': { backgroundColor: '#414a4c', color: 'white' },
                                                     '&:not(:hover)': { backgroundColor: '#3d4242', color: 'white' },
                                                     mb: 3,
                                                     mt: 2,
-                                                    opacity: (isSubmitting || !isValid) ? 0.5 : 1,
-                                                    cursor: (isSubmitting || !isValid) ? 'not-allowed' : 'pointer',
+                                                    opacity: (isSubmitting || !isValid || addToCartLoading) ? 0.5 : 1,
+                                                    cursor: (isSubmitting || !isValid || addToCartLoading) ? 'not-allowed' : 'pointer',
                                                     background: 'linear-gradient(to right, #414141  , #000000)'
                                                 }}
                                             >

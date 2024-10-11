@@ -23,8 +23,6 @@ import {
   Collapse
 } from '@mui/material';
 
-import { HoverableListItem, SubHoverableListItem } from '../../Components/UI/Buttons';
-import PreLoader from '../../Components/PreLoader';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 
 import { useCookies } from 'react-cookie';
@@ -51,18 +49,18 @@ import CheckroomIcon from '@mui/icons-material/Checkroom';
 import StraightenIcon from '@mui/icons-material/Straighten';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import CancelScheduleSendIcon from '@mui/icons-material/CancelScheduleSend';
-import OrderStatusTable from '../../Components/Tables/OrderStatusTable';
 import HistoryIcon from '@mui/icons-material/History';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import { useNavigate } from 'react-router-dom';
 import { useStateContext } from '../../ContextAPI/ContextAPI';
-import Footer from '../../Components/Footer';
 import ProductInventory from '../SuperAdmins/ProductInventory';
 import Orders from '../SuperAdmins/Orders';
 import CancelOrderRequest from '../SuperAdmins/CancelOrderRequest';
 import CustomRequest from '../SuperAdmins/CustomRequest';
 import TransactionHistory from '../SuperAdmins/TransactionHistory';
 import ClothingSize from '../SuperAdmins/ClothingSize';
+
+import adminBG from '../../../public/assets/shopGraffiti1.png'
 
 const SuperAdmin = (props) => {
   const { window } = props;
@@ -417,7 +415,7 @@ const SuperAdmin = (props) => {
      <Box
       sx={{
         display: 'flex',
-        backgroundImage: 'url(/public/assets/shopGraffiti1.png)',
+        backgroundImage: `url(${adminBG})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
@@ -461,72 +459,76 @@ const SuperAdmin = (props) => {
                 </Badge>
               </IconButton>
               <Popover
-              id={notificationID}
-              open={openNotication}
-              anchorEl={notificationAnchorEl}
-              onClose={handleNotificationClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'center',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'center',
-              }}
-            >
-              <Typography sx={{ p: 2, fontFamily: 'Kanit', fontWeight: 'bold' }}>Notifications</Typography>
-              <Divider sx={{ backgroundColor: 'black' }} />
-              <List>
-                {notificationData.length > 0 ? (
-                  notificationData.map((notifs, index) => (
-                    <ListItem key={index} sx={{ opacity: notifs.notificationStatus === 'read' ? 0.5 : 1 }}>
-                      <ListItemIcon>
-                        <LocalShippingIcon fontSize="medium" sx={{ margin: 'auto', color: 'green' }} />
-                      </ListItemIcon>
-                      <Box sx={{ flexGrow: 1 }}>
-                      <ListItemText 
-                        primary={notifs.notificationMessage} 
-                        secondary={`${notifs.notificationDate} - ${notifs.notificationTime}`} 
-                        primaryTypographyProps={{ 
-                          fontSize: '0.7rem', 
-                          fontFamily: 'Kanit', 
-                          fontWeight: 650,
-                        }} 
-                        secondaryTypographyProps={{ 
-                          fontSize: '0.6rem', 
-                          fontFamily: 'Kanit',
-                        }} 
-                      />
-                      </Box>
-                    </ListItem>
-                  ))
-                ) : (
-                  <Typography sx={{ p: 2, fontFamily: 'Kanit', fontSize: '0.9rem', alignContent: 'center' }}>No notifications available.</Typography>
-                )}
-              </List>
-              <Divider sx={{ backgroundColor: 'black' }} />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1 }}>
-                <Button
-                  size="small"
-                  startIcon={<MailIcon />}
-                  onClick={handleMarkAllAsRead}
-                  sx={{ fontSize: '0.65rem', color: 'gray' }}
-                  disabled = {notificationData.length == 0 ? true : false}
-                >
-                  Mark All as Read
-                </Button>
-                <Button
-                  size="small"
-                  startIcon={<DeleteIcon />}
-                  onClick={handleDeleteAllNotifications}
-                  sx={{ fontSize: '0.65rem', color: 'gray' }}
-                  disabled = {notificationData.length == 0 ? true : false}
-                >
-                  Delete All 
-                </Button>
-            </Box>
-            </Popover>
-                    <IconButton
+                id={notificationID}
+                open={openNotication}
+                anchorEl={notificationAnchorEl}
+                onClose={handleNotificationClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'center',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'center',
+                }}
+              >
+                <Typography sx={{ p: 2, fontFamily: 'Kanit', fontWeight: 'bold' }}>Notifications</Typography>
+                <Divider sx={{ backgroundColor: 'black' }} />
+                <List sx={{ maxHeight: 300, overflowY: 'auto' }}>
+                  {notificationData.length > 0 ? (
+                    notificationData.map((notifs, index) => (
+                      <ListItem key={index} sx={{ opacity: notifs.notificationStatus === 'read' ? 0.5 : 1 }}>
+                        <ListItemIcon>
+                          <LocalShippingIcon fontSize="medium" sx={{ margin: 'auto', color: 'green' }} />
+                        </ListItemIcon>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <ListItemText 
+                            primary={notifs.notificationMessage} 
+                            secondary={`${notifs.notificationDate} - ${notifs.notificationTime}`} 
+                            primaryTypographyProps={{ 
+                              fontSize: '0.7rem', 
+                              fontFamily: 'Kanit', 
+                              fontWeight: 650,
+                              sx: { wordBreak: 'break-word' },
+                            }} 
+                            secondaryTypographyProps={{ 
+                              fontSize: '0.6rem', 
+                              fontFamily: 'Kanit',
+                              sx: { wordBreak: 'break-word' }, 
+                            }} 
+                          />
+                        </Box>
+                      </ListItem>
+                    ))
+                  ) : (
+                    <Typography sx={{ p: 2, fontFamily: 'Kanit', fontSize: '0.9rem', alignContent: 'center' }}>No notifications available.</Typography>
+                  )}
+                </List>
+                
+                <Divider sx={{ backgroundColor: 'black' }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1 }}>
+                  <Button
+                    size="small"
+                    startIcon={<MailIcon />}
+                    onClick={handleMarkAllAsRead}
+                    sx={{ fontSize: '0.65rem', color: 'gray' }}
+                    disabled={notificationData.length == 0 ? true : false}
+                  >
+                    Mark All as Read
+                  </Button>
+                  <Button
+                    size="small"
+                    startIcon={<DeleteIcon />}
+                    onClick={handleDeleteAllNotifications}
+                    sx={{ fontSize: '0.65rem', color: 'gray' }}
+                    disabled={notificationData.length == 0 ? true : false}
+                  >
+                    Delete All 
+                  </Button>
+                </Box>
+              </Popover>
+
+              <IconButton
                 onClick={handleProfileMenuOpen}
                 color="black"
               >

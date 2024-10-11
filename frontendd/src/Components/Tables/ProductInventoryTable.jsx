@@ -57,6 +57,7 @@ const ProductInventoryTable = ({ products, fetchProducts }) => {
     },
   }));
 
+
   const handleProductConfig = (product, productID) => {
     setIsDialogOpen(true);
     setSelectedProduct(product);
@@ -87,7 +88,6 @@ const ProductInventoryTable = ({ products, fetchProducts }) => {
           : b.productInfo.productPrice - a.productInfo.productPrice;
       }
 
-
       if (sortConfig.key) {
         if (a.productInfo[sortConfig.key] < b.productInfo[sortConfig.key]) {
           return sortConfig.direction === 'asc' ? -1 : 1;
@@ -101,6 +101,7 @@ const ProductInventoryTable = ({ products, fetchProducts }) => {
   });
   
   const filteredProducts = sortedProducts.filter((product) => {
+
     const productNameMatches = product.productInfo.productName.toLowerCase().includes(searchQuery.toLowerCase());
     const categoryMatches = sortCategory === 'All' || product.productInfo.productCategory === sortCategory || sortCategory === '';
   

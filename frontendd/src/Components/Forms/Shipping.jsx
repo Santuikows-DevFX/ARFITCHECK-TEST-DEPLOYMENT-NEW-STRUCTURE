@@ -105,7 +105,7 @@ function Shipping() {
           <AccordionSummary expandIcon={<ExpandMoreIcon />} >
             <Typography sx={{ fontFamily: 'Kanit',fontSize: { xs: 20, md: 25 }, fontWeight: 'bold', color: 'black'}}>
               Shipping Details <br/>
-              <Typography sx={{ fontFamily: 'Inter', fontSize: { xs: 10, md: 15 }, fontWeight: '300', color: 'black' }}>
+              <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 15 }, fontWeight: '300', color: 'black' }}>
                 Update your shipping details.
               </Typography>
             </Typography>
@@ -325,7 +325,29 @@ function Shipping() {
                       }}
                       disabled = {isSubmitting || loading}
                     >
-                      {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> :<Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 18, md: 25 }, padding: 0.5 }}>UPDATE SHIPPING DETAILS</Typography>}
+                    <Typography
+                      sx={{
+                        fontFamily: 'Kanit',
+                        fontSize: { xs: 18, md: 25 },
+                        padding: 0.5,
+                        visibility: loading ? 'hidden' : 'visible',
+                      }}
+                    >
+                      UPDATE SHIPPING DETAILS
+                    </Typography>
+                    {loading && (
+                      <CircularProgress
+                        size={24}
+                        color="inherit"
+                        sx={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          marginTop: '-12px',
+                          marginLeft: '-12px',
+                        }}
+                      />
+                    )}
                     </Button>
                   </Grid>
                 </Form>

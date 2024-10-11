@@ -489,11 +489,12 @@ class OrderController extends Controller
 
       // variables for finding the target order
       $targetOrder = null;
+      $firstName = '';
       foreach ($orders as $orderID => $orderInfo) {
         if ($request->orderID == $orderID) {
 
           $targetOrder = $orderInfo;
-
+          $firstName = $this->database->getReference('users/' . $orderInfo['uid'] . '/firstName')->getSnapshot()->getValue();
           break;
         }
       }
@@ -517,6 +518,7 @@ class OrderController extends Controller
 
       // notify the user about the rejection of the cancellation of the request
       $this->notifyUserForCancellationRequestRejection($orderID, $targetOrder['uid']);
+      $this->sendEmailForCancelRequestStatus($orderID, $targetOrder['uid'], $targetOrder['email'], 'rejectCancelReq', $firstName);
     } catch (\Exception $e) {
 
       return response($e->getMessage());
@@ -592,7 +594,7 @@ class OrderController extends Controller
 
           'orderDate' => Carbon::now()->toDateString(),
           'orderTimeStamp' => Carbon::now('Asia/Manila')->format('h:i A'),
-          'updateTimeStamp' => Carbon::now('Asia/Manila')->format('h:i A'),
+          'updateTimeStamp' => '',
 
           'fullShippingAddress' => $fullAddress,
           'mobileNumber' => $mobilePhone,
@@ -707,7 +709,7 @@ class OrderController extends Controller
 
             'orderDate' => Carbon::now()->toDateString(),
             'orderTimeStamp' => Carbon::now('Asia/Manila')->format('h:i A'),
-            'updateTimeStamp' => Carbon::now('Asia/Manila')->format('h:i A'),
+            'updateTimeStamp' => '',
 
             'fullShippingAddress' => $fullAddress,
             'mobileNumber' => $mobilePhone,
@@ -782,7 +784,6 @@ class OrderController extends Controller
     }
   }
 
-  // TODO: CREATE NOTIF WHEN ADMIN CANCELLED ORDER, IT INCLUDES CANCEL REASON
   public function updateOrderStatus(Request $request)
   {
     try {
@@ -852,14 +853,23 @@ class OrderController extends Controller
           switch ($request->orderType) {
             case 'Confirm':
               $orderStatus = 'Order Confirmed';
+
+              //check first if the order was not a bulky order (an order is considered bulky if there are more than 1 products placed in one order.) This will prevent to run the loop many times which results in sending the email multiple times.
               if (!$isBulkyOrder) {
                 $this->sendEmailNotificationForReceipt($orderID, $email, $firstName, $lastName, $orderInfo['orderDate'], $totalAmountToPay - 100, $mobilePhone, $fullAddress, 'confirm', null, null);
               }
+
               break;
             case 'Cancel':
               $orderStatus = 'Order Cancelled';
               if (!$isBulkyOrder) {
                 $this->sentNotificationIfAdminCancelOrder($orderID, $email, $firstName, $lastName, $orderInfo['orderDate'], $totalAmountToPay - 100, $mobilePhone, $fullAddress, $request->cancelReason, null);
+              }
+
+              //since this function is also being called when the admin approved a cancellation request, we will also put here a condition to determine if its a cancellation request or not
+              if ($request->isCancellationRequest && !$isBulkyOrder) {
+                $this->notifyUserForCancellationRequestApproval($orderID, $targetOrder['uid']);
+                $this->sendEmailForCancelRequestStatus($orderID, $targetOrder['uid'], $email, 'cancelReq', $firstName);
               }
 
               break;
@@ -896,15 +906,24 @@ class OrderController extends Controller
         $this->sendEmailNotificationForReceipt($request->orderID, $email, $firstName, $lastName, Carbon::now()->toDateString(), $totalAmountToPay - 100, $mobilePhone, $fullAddress, 'delivery', $request->trackingNumber, $request->estimatedTimeOfDelivery);
       }
 
+
+      //this handles bulky orders to which prevents the multple sending of emails for each products / orders
+
       if ($orderStatus == 'Order Confirmed' && $isBulkyOrder && !$emailSent) {
 
         $this->sendEmailNotificationForReceipt($request->orderID, $email, $firstName, $lastName, Carbon::now()->toDateString(), $totalAmountToPay - 100, $mobilePhone, $fullAddress, 'confirm', null, null);
         $emailSent = true;
       }
 
-      if ($orderStatus == 'Order Cancelled' && $isBulkyOrder && !$emailSent) {
+      if ($orderStatus == 'Order Cancelled' && $isBulkyOrder && !$emailSent && !$request->isCancellationRequest) {
 
         $this->sentNotificationIfAdminCancelOrder($orderID, $email, $firstName, $lastName, $orderInfo['orderDate'], $totalAmountToPay - 100, $mobilePhone, $fullAddress, $request->cancelReason, null);
+        $emailSent = true;
+      }
+
+      if ($orderStatus == 'Order Cancelled' && $isBulkyOrder && !$emailSent && $request->isCancellationRequest) {
+        $this->notifyUserForCancellationRequestApproval($orderID, $targetOrder['uid']);
+        $this->sendEmailForCancelRequestStatus($orderID, $targetOrder['uid'], $email, 'cancelReq', $firstName);
         $emailSent = true;
       }
 
@@ -1106,10 +1125,132 @@ class OrderController extends Controller
         'uid' => $uid
       ];
       $this->database->getReference('notificationForUsers')->push($userNotificationData);
+
     } catch (\Exception $e) {
       return response($e->getMessage());
     }
   }
+
+  public function notifyUserForCancellationRequestApproval($orderID, $uid)
+  {
+    try {
+
+      //insert into notification node
+      $userNotificationData = [
+        'notificationMessage' => 'Your request to cancel ' . $orderID . ' was approved. Order was moved to order history.',
+        'notificationDate' => Carbon::now()->toDateString(),
+        'notificationTime' => Carbon::now('Asia/Manila')->format('h:i A'),
+        'status' => 'unread',
+        'uid' => $uid
+      ];
+      $this->database->getReference('notificationForUsers')->push($userNotificationData);
+    } catch (\Exception $e) {
+      return response($e->getMessage());
+    }
+  }
+
+  public function sendEmailForCancelRequestStatus($orderID, $uid, $email, $type, $recipient) {
+
+    try {
+
+      $status = $type === 'rejectCancelReq' ? 'was rejected. Order goes back to its original status.' : 'was approved. Your order has been moved to order history.';
+
+      $emailNotificationData = [
+        'subject' => 'Your order ' . $orderID . ' cancellation update.',
+        'email' =>  $email,
+        'status' => $status,
+        'orderID' => $orderID,
+        'recipient' => $recipient,
+        'uid' => $uid,
+        'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
+      ];
+
+      Mail::send([], [], function ($message) use ($emailNotificationData) {
+        $htmlBody = '
+         <html>
+           <head>
+             <style>
+               body {
+                 font-family: Arial, sans-serif;
+                 background-color: #f4f4f4;
+                 padding: 20px;
+               }
+               .container {
+                 max-width: 600px;
+                 margin: 0 auto;
+                 background-color: #ffffff;
+                 padding: 20px;
+                 border-radius: 8px;
+                 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+               }
+               h1, h2, h3 {
+                 color: #333333;
+               }
+               p {
+                 color: #555555;
+                 line-height: 1.6;
+               }
+               .divider {
+                 border-top: 1px solid #dddddd;
+                 margin: 20px 0;
+               }
+               .order-id {
+                 font-weight: bold;
+               }
+               .footer {
+                 margin-top: 20px;
+                 text-align: center;
+                 color: #888888;
+                 font-size: 12px;
+               }
+               .logo {
+                 text-align: center;
+                 margin-bottom: 20px;
+               }
+               .logo img {
+                 max-width: 100px; /* Adjust the size of the image */
+               }
+             </style>
+           </head>
+           <body>
+             <div class="container">
+               <div class="logo">
+                 <img src="' . $emailNotificationData['url'] . '" alt="Logo" style="width: 200px; height: auto;">
+               </div>
+               
+               <p>Hi ' . $emailNotificationData['recipient'] . ',</p>
+               <p>Your request to cancel <span class="order-id">' . $emailNotificationData['orderID'] . '</span> '. $emailNotificationData['status'] .' </p>
+               
+               <div class="divider"></div>
+         
+               <p>
+                <a href="https://www.facebook.com/bmic.clothing" target="_blank">Visit BMIC on Facebook</a>
+              </p>
+             </div>
+         
+             <div class="footer">
+               <p>&copy; ' . date('Y') . ' ARFITCHECK. All rights reserved.</p>
+             </div>
+           </body>
+         </html>
+         ';
+
+        $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+        $message->to($emailNotificationData['email'])
+          ->subject($emailNotificationData['subject'])
+          ->html($htmlBody);
+      });
+
+      return response()->json([
+        'message' => 'Email sent to ' . $email . '.'
+      ], 200);
+      
+    }catch(\Exception $e) {
+      return response($e->getMessage());
+    }
+
+  }
+
   public function automNotifyUsersWhenEstHrsMet()
   {
     try {
@@ -1269,6 +1410,9 @@ class OrderController extends Controller
          
                <h3>WHAT\'S NEXT</h3>
                <p>Kindly wait for your shipment. Once you receive and accept the product(s), kindly confirm this in ARFITCHECK Web.</p>
+               <p>
+                <a href="https://www.facebook.com/bmic.clothing" target="_blank">Visit BMIC on Facebook</a>
+              </p>
              </div>
          
              <div class="footer">
@@ -1385,7 +1529,7 @@ class OrderController extends Controller
                <p>For more details, you may contact BMIC on their Facebook page.</p>
                <p>
                 <a href="https://www.facebook.com/bmic.clothing" target="_blank">Visit BMIC on Facebook</a>
-              </p>
+               </p>
              </div>
          
              <div class="footer">
@@ -1513,6 +1657,9 @@ class OrderController extends Controller
          
                <h3>WHAT\'S NEXT</h3>
                <p>Kindly wait for your shipment. Once you receive and accept the product(s), kindly confirm this in ARFITCHECK Web. If we dont hear from you, the payment will be automatically transferred to BMIC.</p>
+               <p>
+                <a href="https://www.facebook.com/bmic.clothing" target="_blank">Visit BMIC on Facebook</a>
+              </p>
              </div>
          
              <div class="footer">
@@ -1535,4 +1682,133 @@ class OrderController extends Controller
       return response($e->getMessage());
     }
   }
+
+  // public function testingEmailWithButton($orderID, $email, $firstName, $lastName, $orderDate, $subtotal, $phoneNumber, $fullAddress, $type, $trackingNumber)
+  // {
+  //   try {
+
+  //     $status = $type == 'place' ? 'has been received. Kindly wait until BMIC confirmed your order(s).' : ($type == 'confirm' ? 'has been confirmed. BMIC has been notified to start preparing and shipping your item(s).' :
+  //       'is now out for delivery. REMINDER: Once you received your item(s), please confirm it in the ARFITCHECK Website, if we dont hear from you, payment will be automatically transferred to BMIC.'
+  //     );
+
+  //     $emailNotificationData = [
+  //       'subject' => 'Your order ' . $orderID . ' has been delivered.',
+  //       'email' =>  $email,
+  //       'status' => $status,
+  //       'orderID' => $orderID,
+  //       'orderDate' => $orderDate,
+  //       'subtotal' => $subtotal,
+  //       'phoneNumber' => $phoneNumber,
+  //       'trackingNumber' => $trackingNumber,
+  //       'fullAddress' => $fullAddress,
+  //       'recipient' => $firstName,
+  //       'recipientLN' => $lastName,
+  //       'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
+  //     ];
+
+  //     Mail::send([], [], function ($message) use ($emailNotificationData) {
+  //       $htmlBody = '
+  //        <html>
+  //          <head>
+  //            <style>
+  //              body {
+  //                font-family: Arial, sans-serif;
+  //                background-color: #f4f4f4;
+  //                padding: 20px;
+  //              }
+  //              .container {
+  //                max-width: 600px;
+  //                margin: 0 auto;
+  //                background-color: #ffffff;
+  //                padding: 20px;
+  //                border-radius: 8px;
+  //                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  //              }
+  //              h1, h2, h3 {
+  //                color: #333333;
+  //              }
+  //              p {
+  //                color: #555555;
+  //                line-height: 1.6;
+  //              }
+  //              .divider {
+  //                border-top: 1px solid #dddddd;
+  //                margin: 20px 0;
+  //              }
+  //              .order-id {
+  //                font-weight: bold;
+  //              }
+  //              .footer {
+  //                margin-top: 20px;
+  //                text-align: center;
+  //                color: #888888;
+  //                font-size: 12px;
+  //              }
+  //              .logo {
+  //                text-align: center;
+  //                margin-bottom: 20px;
+  //              }
+  //              .logo img {
+  //                max-width: 100px; /* Adjust the size of the image */
+  //              }
+  //            </style>
+  //          </head>
+  //          <body>
+  //            <div class="container">
+  //              <div class="logo">
+  //                <img src="' . $emailNotificationData['url'] . '" alt="Logo" style="width: 200px; height: auto;">
+  //              </div>
+               
+  //              <p>Hi ' . $emailNotificationData['recipient'] . ',</p>
+  //              <p>Your order request with an order ID of <span class="order-id">' . $emailNotificationData['orderID'] . '</span> has been delivered. Once your received your product(s) kindly CONFIRM it on the ARFITCHECK Website by ' .  Carbon::now()->addDay(2)->toDateString() . ', if we did not hear from you, payment will be automatically transferred to BMIC. </p>
+               
+  //              <div class="divider"></div>
+         
+  //              <h3>ORDER DETAILS</h3>
+  //              <p><strong>Order ID:</strong> ' . $emailNotificationData['orderID'] . '</p>
+  //              <p><strong>Order Date:</strong> ' . $emailNotificationData['orderDate'] . '</p>
+               
+  //              <div class="divider"></div>
+         
+  //              <p><strong>Subtotal:</strong> P' . $emailNotificationData['subtotal'] . '</p>
+  //              <p><strong>Shipping Fee:</strong> P100</p>
+  //              <p><strong>Total Payment:</strong> P' . ($emailNotificationData['subtotal'] + 100) . '</p>
+         
+  //              <div class="divider"></div>
+         
+  //              <h3>DELIVERY DETAILS</h3>
+  //              <p><strong>Recipient Name:</strong> ' . $emailNotificationData['recipient'] . ' ' . $emailNotificationData['recipientLN'] . '</p>
+  //              <p><strong>Phone Number:</strong> ' . $emailNotificationData['phoneNumber'] . '</p>
+  //              <p><strong>Shipping Address:</strong> ' . $emailNotificationData['fullAddress'] . '</p>
+  //              <p><strong>Tracking Number:</strong> ' . $emailNotificationData['trackingNumber'] . '</p>
+         
+  //              <div class="divider"></div>
+         
+  //              <h3>WHAT\'S NEXT</h3>
+  //              <p>Kindly wait for your shipment. Once you receive and accept the product(s), kindly confirm this in ARFITCHECK Web. If we dont hear from you, the payment will be automatically transferred to BMIC.</p>
+  //              <p>
+  //               <a href="https://www.facebook.com/bmic.clothing" target="_blank">Visit BMIC on Facebook</a>
+  //             </p>
+  //            </div>
+         
+  //            <div class="footer">
+  //              <p>&copy; ' . date('Y') . ' ARFITCHECK. All rights reserved.</p>
+  //            </div>
+  //          </body>
+  //        </html>
+  //        ';
+
+  //       $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+  //       $message->to($emailNotificationData['email'])
+  //         ->subject($emailNotificationData['subject'])
+  //         ->html($htmlBody);
+  //     });
+
+  //     return response()->json([
+  //       'message' => 'Email sent to ' . $email . '.'
+  //     ], 200);
+  //   } catch (\Exception $e) {
+  //     return response($e->getMessage());
+  //   }
+  // }
 }

@@ -88,7 +88,7 @@ const RejectOrder = ({ open, onClose, reqData, zIndex, fetchOrders}) => {
 
           }}
         >
-          {({ isSubmitting, isValid }) => (
+          {({ isSubmitting, isValid, values }) => (
             <Form>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
@@ -116,8 +116,8 @@ const RejectOrder = ({ open, onClose, reqData, zIndex, fetchOrders}) => {
                 </Grid>
               </Grid>
               <DialogActions>
-                <Button  type = 'submit' color="primary" disabled={isSubmitting || !isValid}>
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'black'}}>
+                <Button  type = 'submit' color="primary" disabled={isSubmitting || !isValid || Object.values(values).some(value => value === '')}>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'black', opacity: !isValid || isSubmitting || Object.values(values).some(value => value === '') ? 0.7 : 1}}>
                     PROCEED
                   </Typography>
                 </Button>

@@ -2,6 +2,8 @@ import React from 'react';
 import { Grid, Typography, ThemeProvider } from '@mui/material';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import { createTheme } from '@mui/material/styles';
+import Logo from '../../public/assets/Logo.jpg'
+
 const theme = createTheme();
 
 const Footer = () => {
@@ -12,7 +14,7 @@ const Footer = () => {
           <Grid container spacing={2} sx={{ padding: { xs: 2, md: 2 } }}>
             <Grid item xs={12} md={3} sx={{ textAlign: { xs: 'center', md: 'left' } }}>
               <img
-                src="/public/assets/Logo.jpg"
+                src={Logo}
                 style={{ width: '100%', maxWidth: '30%', height: 'auto' }}
                 alt="Logo"
               />

@@ -18,9 +18,12 @@ import AOS from 'aos';
 import 'aos/dist/aos.css'
 import { useStateContext } from '../ContextAPI/ContextAPI.jsx';
 import { useCookies } from 'react-cookie';
-import ResendCodeTimer from '../WIdgets/ResendCodeTimer.jsx';
 import Navbar from '../Widgets/Navbar.jsx';
 import SignupImage from '../../public/assets/Signup.png'
+import phIcon from '../../public/assets/phIcon.png'
+import signUpGraffitiBG from '../../public/assets/signupGraffiti.png'
+import icon from '../../public/assets/Icon.png'
+
 
 const provinceOptions = [ 
   'Metro Manila'
@@ -73,7 +76,13 @@ function SignUp() {
   const navigator = useNavigate();
 
   const validationSchemaStep1 = Yup.object().shape({
-    email: Yup.string().email('Invalid email').required('Email is required'),
+    email: Yup.string()
+      .email('Invalid email')
+      .matches(
+        /^[a-zA-Z0-9._%+-]+@(gmail\.com|outlook\.com|caloocan\.sti\.edu\.ph)$/,
+        'Email must be a valid email from Gmail or Outlook'
+      )
+      .required('Email is required'),
     firstName: Yup.string().required('First name is required'),
     lastName: Yup.string().required('Last name is required'),
     password: Yup.string()
@@ -128,7 +137,7 @@ function SignUp() {
   }
 
   const PhilippineIcon = () => (
-    <img src= '../public/assets/phIcon.png' alt="Philippine Flag" style={{ width: 24, height: 24 }} />
+    <img src= {phIcon} alt="Philippine Flag" style={{ width: 24, height: 24 }} />
   );
   
   function censorPhoneNumber(phoneNumber) {
@@ -312,10 +321,10 @@ function SignUp() {
               alt="Login"
             />
           </Grid>
-          <Grid item container  xs={12} md={6} style={{ backgroundImage: 'url(../public/assets/signupGraffiti.png)', backgroundSize: 'cover', backgroundRepeat: 'no-repeat', alignItems: "center", justifyContent: "center" }}>
+          <Grid item container  xs={12} md={6} style={{ backgroundImage: `url(${signUpGraffitiBG})`, backgroundSize: 'cover', backgroundRepeat: 'no-repeat', alignItems: "center", justifyContent: "center" }}>
             <Grid item container xs={12} direction="row" style={{ alignItems: "center", justifyContent: "center" }} rowGap={3.3}>
               <Grid item xs={10} style={{ display: 'flex', justifyContent: 'center' }} data-aos="fade-up">
-                <img src="./public/assets/Icon.png" style={{ width: '20%', height: '20%', objectFit: 'contain', marginTop: 20 }} alt="Icon" />
+                <img src={icon} style={{ width: '20%', height: '20%', objectFit: 'contain', marginTop: 20 }} alt="Icon" />
               </Grid>
               <Grid item xs={10} data-aos="fade-up" data-aos-delay="200">
                 <Stepper activeStep={activeStep} alternativeLabel>

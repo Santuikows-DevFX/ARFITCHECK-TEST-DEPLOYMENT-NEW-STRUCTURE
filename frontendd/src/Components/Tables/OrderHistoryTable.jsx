@@ -398,13 +398,13 @@ const OrderHistoryTable = () => {
                   }}
                 >
                   <MenuItem value="" disabled>
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Sort by Amount</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Sort by Amount</Typography>
                   </MenuItem>
                   <MenuItem value="asc">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Lowest To Highest</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Lowest To Highest</Typography>
                   </MenuItem>
                   <MenuItem value="desc">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Highest To Lowest</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Highest To Lowest</Typography>
                   </MenuItem>
                 </Select>
               </FormControl>
@@ -462,19 +462,19 @@ const OrderHistoryTable = () => {
                   }}
                 >
                   <MenuItem value="All">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>All Status</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>All Status</Typography>
                   </MenuItem>
                   <MenuItem value="Order Completed">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Order Completed</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Order Completed</Typography>
                   </MenuItem>
                   <MenuItem value="Order Cancelled">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Order Cancelled</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Order Cancelled</Typography>
                   </MenuItem>
                   <MenuItem value="Request Rejected">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Request Rejected</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Request Rejected</Typography>
                   </MenuItem>
                   <MenuItem value="Request Cancelled">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Request Cancelled</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Request Cancelled</Typography>
                   </MenuItem>
                 </Select>
               </FormControl>
@@ -554,22 +554,22 @@ const OrderHistoryTable = () => {
                       <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', fontWeight: 'bold', color: 'black' }}>
                         PRODUCT(s)
                       </Typography>
-                      <Typography sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: 'black' }}>
-                          <Typography sx={{ fontFamily: 'Inter', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                      <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}>
+                          <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
                             <b>ID: {order.orderID}</b>
                           </Typography>
                           {order.orderInfo?.productName.split(', ').map((product, index) => (
                             <div key={index}>
-                              <Typography sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: 'black' }}>
+                              <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}>
                                 {product}
                               </Typography>
                               
                               {order.orderInfo?.orderType === 'default' ? (
-                                <Typography sx={{ fontFamily: 'Inter', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
                                  <b>Qnt:</b> {order.orderInfo?.productQuantity.split(', ')[index]} <b>Size:</b> {order.orderInfo?.productSize.split(', ')[index] || '-'}
                                </Typography>
                               ) : (
-                                <Typography sx={{ fontFamily: 'Inter', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
                                   <b>Qnt:</b> {order.orderInfo?.productQuantity.split(', ')[index]} <b>Size(s): </b>
                                   {order.orderInfo?.smallQuantity !== "0" ? `S x${order.orderInfo?.smallQuantity}${order.orderInfo?.mediumQuantity !== "0" || order.orderInfo?.largeQuantity !== "0" || order.orderInfo?.extraLargeQuantity !== "0" || order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
                                   {order.orderInfo?.mediumQuantity !== "0" ? `M x${order.orderInfo?.mediumQuantity}${order.orderInfo?.largeQuantity !== "0" || order.orderInfo?.extraLargeQuantity !== "0" || order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
@@ -611,20 +611,20 @@ const OrderHistoryTable = () => {
                         </Typography>
                         {order.orderInfo?.paymentMethod === 'cash' ? (
                                 <Typography
-                                sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: 'black' }}
+                                sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}
                                 >
                                 <b>Cash</b>
                               </Typography>
                         ) : (
                               order.orderInfo?.orderType === 'custom' && order.orderInfo?.isPaid === false ? (
                                 <Typography
-                                  sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: 'black' }}
+                                  sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}
                                 >
                                   <b>E-Wallet</b>
                                 </Typography>
                               ) : (
                                 <Typography
-                                  sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: '#1F618D', cursor: 'pointer' }}
+                                  sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: '#1F618D', cursor: 'pointer', textDecoration: 'underline' }}
                                   onClick={() => openImageInNewTab(order.orderInfo?.receiptImage)}
                                 >
                                   <b>E-Wallet</b>
@@ -651,29 +651,29 @@ const OrderHistoryTable = () => {
                       </Typography>
                         {order.orderInfo?.cancelReason === "None" && order.orderInfo?.userCancelReason === "None" ? (
                             <>
-                              <Typography sx={{ fontFamily: 'Inter', fontSize: 12, fontWeight: 400, color: 'black'}}>
+                              <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
                                 {order.orderInfo?.trackingNumber}
                               </Typography>
-                              <Typography sx={{ fontFamily: 'Inter', fontSize: 12, fontWeight: 400, color: 'black'}}>
+                              <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
                                 Updated: <b>{order.orderInfo?.updateTimeStamp}</b>
                               </Typography>
                             </>
                         ) : (
                             order.orderInfo?.userCancelReason === "None" ? (
                               <>
-                                <Typography sx={{ fontFamily: 'Inter', fontSize: 12, fontWeight: 400, color: 'black'}}>
-                                  Reason: Order Cancelled (<b>{order.orderInfo?.cancelReason}</b>)
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
+                                  Reason: {order.orderInfo?.orderType === 'default' ? 'Order' : 'Request'} Cancelled (<b>{order.orderInfo?.cancelReason}</b>)
                                 </Typography>
-                                <Typography sx={{ fontFamily: 'Inter', fontSize: 12, fontWeight: 400, color: 'black'}}>
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
                                   Updated: <b>{order.orderInfo?.updateTimeStamp}</b>
                                 </Typography>
                               </>
                             ) : (
                               <>
-                                <Typography sx={{ fontFamily: 'Inter', fontSize: 12, fontWeight: 400, color: 'black'}}>
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
                                 Reason: You Cancelled (<b>{order.orderInfo?.userCancelReason}</b>)
                                 </Typography>
-                                <Typography sx={{ fontFamily: 'Inter', fontSize: 12, fontWeight: 400, color: 'black'}}>
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
                                   Updated: <b>{order.orderInfo?.updateTimeStamp}</b>
                                 </Typography>
                               </>
@@ -682,7 +682,7 @@ const OrderHistoryTable = () => {
                     </Grid>
                       {/* buttons */}
                     <Grid item xs={12} sm={6} md={1.5}>
-                    {order.orderInfo?.orderStatus === 'Order Cancelled' || order.orderInfo?.isRated === true  ? (
+                    {order.orderInfo?.orderStatus === 'Order Cancelled' || order.orderInfo?.isRated === true || order.orderInfo?.orderStatus === 'Request Cancelled'  ? (
                         <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', fontWeight: 'bold', color: 'gray', textAlign: "center"}}>
                              -
                         </Typography>
@@ -713,9 +713,8 @@ const OrderHistoryTable = () => {
           count={Math.ceil(filteredOrders.length / itemsPerPage)}
           page={currentPage}
           onChange={paginate}
-          shape="rounded"
           color="primary"
-          sx={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}
+          sx={{ display: 'flex', justifyContent: 'center', marginTop: '2rem', fontFamily: 'Kanit' }}
         />
       </Box>
       <div style={styles.modalContent}>

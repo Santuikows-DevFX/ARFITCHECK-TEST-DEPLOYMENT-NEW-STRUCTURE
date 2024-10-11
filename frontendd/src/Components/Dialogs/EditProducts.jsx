@@ -66,11 +66,46 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
   }
 
   const ProductValidationSchema = Yup.object().shape({
-      productName: Yup.string().required('Product Name is required'),
-      price: Yup.string().required('Price is required'),
-      criticalLevelQuantity: Yup.string().required('Price is required'),
-      category:  Yup.string().required('Category is required'),
+    productName: Yup.string().required('Product Name is required'),
+    price: Yup.number().required('Price is required'),
+    criticalLevelQuantity: Yup.number()
+        .required('Critical Level Qnt is required')
+        .min(0, 'Critical Level Qnt cannot be less than 0'),
+    category: Yup.string().required('Category is required'),
+    description: Yup.string().optional(),
+    smallQuantity: Yup.number()
+        .min(0, 'Small Quantity cannot be less than 0')
+        .max(5000, 'Please input a much more realistic quantity.'),
+    mediumQuantity: Yup.number()
+        .min(0, 'Medium Quantity cannot be less than 0')
+        .max(5000, 'Please input a much more realistic quantity.'),
+    largeQuantity: Yup.number()
+        .min(0, 'Large Quantity cannot be less than 0')
+        .max(5000, 'Please input a much more realistic quantity.'),
+    extraLargeQuantity: Yup.number()
+        .min(0, 'Extra Large Quantity cannot be less than 0')
+        .max(5000, 'Please input a much more realistic quantity.'),
+    doubleXLQuantity: Yup.number()
+        .min(0, 'Double XL Quantity cannot be less than 0')
+        .max(5000, 'Please input a much more realistic quantity.'),
+    tripleXLQuantity: Yup.number()
+        .min(0, 'Triple XL Quantity cannot be less than 0')
+        .max(5000, 'Please input a much more realistic quantity.'),
   });
+
+
+ const ProductValidationSchemaIfCaps = Yup.object().shape({
+  productName: Yup.string().required('Product Name is required'),
+  price: Yup.number().required('Price is required'),
+  criticalLevelQuantity: Yup.number()
+      .required('Critical Level Qnt is required')
+      .min(0, 'Critical Level Qnt cannot be less than 0'),
+  category: Yup.string().required('Category is required'),
+  description: Yup.string().optional(),
+  totalQuantity: Yup.number()
+      .min(0, 'Total Quantity cannot be less than 0')
+      .max(5000, 'Please input a much more realistic quantity.'),
+ });
   
   const categoryOptions = [
       'Hoodies',
@@ -113,12 +148,13 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
         editProductVal.append('productPrice', values.price)
         editProductVal.append('productCategory', values.category)
         editProductVal.append('productDescription', values.description)
-        editProductVal.append('productCriticalLevelQuantity', values.criticalLevelQuantity)
+        editProductVal.append('productCriticalLevelQuantity', parseInt(values.criticalLevelQuantity))
         editProductVal.append('isUnlisted', productVisible)
-        editProductVal.append('smallQuantity', values.smallQuantity)
-        editProductVal.append('mediumQuantity', values.mediumQuantity)
-        editProductVal.append('largeQuantity', values.largeQuantity)
-        editProductVal.append('extraLargeQuantity', values.extraLargeQuantity)
+        editProductVal.append('totalQuantity', parseInt(values.totalQuantity))
+        editProductVal.append('smallQuantity', parseInt(values.smallQuantity))
+        editProductVal.append('mediumQuantity', parseInt(values.mediumQuantity))
+        editProductVal.append('largeQuantity', parseInt(values.largeQuantity))
+        editProductVal.append('extraLargeQuantity', parseInt(values.extraLargeQuantity))
         editProductVal.append('productID', productID)
   
         files.forEach((file, index) => {
@@ -126,7 +162,7 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
             editProductVal.append(`productFile${index + 1}`, file); 
           }
         });
-  
+
         axiosClient.post('prd/editProduct', editProductVal)
         .then(({data}) => {
           
@@ -205,8 +241,6 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
     }
   };
   
-
-  
   const handleChooseFileClick = () => {
     setIsImageDialogOpen(true)
   };
@@ -228,8 +262,8 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
         </DialogTitle> 
         <DialogContent >
         <Formik
-        initialValues={{ productName: product.productName || '', price:product.productPrice || '',description : product.productDescription || '', criticalLevelQuantity: product.productCriticalLevel || '', category:  product.productCategory || '', smallQuantity: product.smallQuantity || '0', mediumQuantity: product.mediumQuantity || '0', largeQuantity: product.largeQuantity || '0', extraLargeQuantity: product.extraLargeQuantity || '0',  doubleXLQuantity: product.doubleXLQuantity || '0', tripleXLQuantity: product.tripleXLQuantity || '0', productVisible: false }}
-        validationSchema={ProductValidationSchema}
+        initialValues={{ productName: product?.productName || '', price:product?.productPrice || '',description : product?.productDescription || '', criticalLevelQuantity: product?.productCriticalLevel || '', category:  product?.productCategory || '', smallQuantity: product?.smallQuantity || '0', mediumQuantity: product?.mediumQuantity || '0', largeQuantity: product?.largeQuantity || '0', extraLargeQuantity: product?.extraLargeQuantity || '0',  doubleXLQuantity: product?.doubleXLQuantity || '0', tripleXLQuantity: product?.tripleXLQuantity || '0', productVisible: product?.isVisible, totalQuantity: '0' }}
+        validationSchema={product?.productCategory === 'Caps' ? ProductValidationSchemaIfCaps : ProductValidationSchema}
         onSubmit={(values, { setSubmitting }) => {
           handleEditProduct(values)
           setSubmitting(false);
@@ -411,150 +445,159 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
               </Grid>
             </Grid>
             </Grid>
-            <Grid item xs={12}>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={4}>
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
-                    Small
-                  </Typography>
-                </Grid>
-                <Grid item xs={8}>
-                  <Field name="smallQuantity">
-                    {({ field, meta }) => (
-                      <StyledTextFields 
-                      field={{ 
-                        ...field,
-                        onChange: (e) => field.onChange(e),
-                        }} 
-                      meta={meta} 
-                      id="smallQuantity" 
-                      label="Quantity" 
-                      type= 'number'/>
-                    )}
-                  </Field>
+            {product?.productCategory !== 'Caps' ? (
+             <Grid container spacing={2}>
+               <Grid item xs={12}>
+              </Grid>
+              <Grid item xs={12}>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={4}>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
+                      Small
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={8}>
+                    <Field name="smallQuantity">
+                      {({ field, meta }) => (
+                        <StyledTextFields field={field} meta={meta} id="smallQuantity" label="Quantity" type= 'number'/>
+                      )}
+                    </Field>
+                  </Grid>
                 </Grid>
               </Grid>
-            </Grid>
-            <Grid item xs={12}>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={4}>
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
-                    Medium
-                  </Typography>
-                </Grid>
-                <Grid item xs={8}>
-                  <Field name="mediumQuantity">
-                    {({ field, meta }) => (
-                      <StyledTextFields 
-                      field={{ ...field,
-                        onChange: (e) => field.onChange(e),
-                      }
-                      }
-                      meta={meta} 
-                      id="mediumQuantity" 
-                      label="Quantity" 
-                      type= 'number'/>
-                    )}
-                  </Field>
+              <Grid item xs={12}>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={4}>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
+                      Medium
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={8}>
+                    <Field name="mediumQuantity">
+                      {({ field, meta }) => (
+                        <StyledTextFields field={field} meta={meta} id="mediumQuantity" label="Quantity" type= 'number'/>
+                      )}
+                    </Field>
+                  </Grid>
                 </Grid>
               </Grid>
-            </Grid>
-            <Grid item xs={12}>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={4}>
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
-                    Large
-                  </Typography>
-                </Grid>
-                <Grid item xs={8}>
-                  <Field name="largeQuantity">
-                    {({ field, meta }) => (
-                      <StyledTextFields 
-                      field={{ ...field,
-                        onChange: (e) => field.onChange(e),
-                        }} 
-                      meta={meta} 
-                      id="largeQuantity" 
-                      label="Quantity" 
-                      type= 'number' />
-                    )}
-                  </Field>
+              <Grid item xs={12}>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={4}>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
+                      Large
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={8}>
+                    <Field name="largeQuantity">
+                      {({ field, meta }) => (
+                        <StyledTextFields field={field} meta={meta} id="largeQuantity" label="Quantity" type= 'number' />
+                      )}
+                    </Field>
+                  </Grid>
                 </Grid>
               </Grid>
-            </Grid>
-            <Grid item xs={12}>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={4}>
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
-                    Extra Large
-                  </Typography>
-                </Grid>
-                <Grid item xs={8}>
+              <Grid item xs={12}>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={4}>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
+                      Extra Large
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={8}>
                   <Field name="extraLargeQuantity">
-                    {({ field, meta }) => (
-                      <StyledTextFields 
-                      field={{ ...field,
-                        onChange: (e) => field.onChange(e),
-                        }} 
-                      meta={meta} 
-                      id="extraLargeQuantity" 
-                      label="Quantity" 
-                      type= 'number' />
-                    )}
-                  </Field>
+                      {({ field, meta }) => (
+                        <StyledTextFields field={field} meta={meta} id="extraLargeQuantity" label="Quantity" type= 'number' />
+                      )}
+                    </Field>
+                  </Grid>
                 </Grid>
               </Grid>
-            </Grid>
-            <Grid item xs={12}>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={4}>
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
-                    2XL
-                  </Typography>
-                </Grid>
-                <Grid item xs={8}>
-                <Field name="doubleXLQuantity">
-                    {({ field, meta }) => (
-                      <StyledTextFields field={field} meta={meta} id="doubleXLQuantity" label="Quantity" type= 'number' />
-                    )}
-                  </Field>
-                </Grid>
-              </Grid>
-            </Grid>
-            <Grid item xs={12}>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={4}>
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
-                    3XL
-                  </Typography>
-                </Grid>
-                <Grid item xs={8}>
-                <Field name="tripleXLQuantity">
-                    {({ field, meta }) => (
-                      <StyledTextFields field={field} meta={meta} id="tripleXLQuantity" label="Quantity" type= 'number' />
-                    )}
-                  </Field>
+              <Grid item xs={12}>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={4}>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
+                      2XL
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={8}>
+                  <Field name="doubleXLQuantity">
+                      {({ field, meta }) => (
+                        <StyledTextFields field={field} meta={meta} id="doubleXLQuantity" label="Quantity" type= 'number' />
+                      )}
+                    </Field>
+                  </Grid>
                 </Grid>
               </Grid>
-            </Grid>
-            <Grid item xs={12} sx={{ mt: 1 }}>
-            <Field name="description">
-                {({ field, meta }) => (
-                  <StyledTextFields field={field} meta={meta} id="description" label="Description" />
-                )}
-              </Field>
-            </Grid>
-            <Grid item xs={12}>
-              <Field name="productVisible">
-                {({ field }) => (
-                  <FormControlLabel
-                    control={<Checkbox {...field} checked={productVisible} onChange={handleProductVisibleChange} sx={{ '& .MuiSvgIcon-root': { fontSize: 18 } }}/>}
-                    label={<Typography sx={{ fontSize: 16, fontFamily: 'Inter' }}>{productVisible === true ? 'List this product' : 'Unlist this product'}</Typography>}
-                    sx={{ fontSize: '10px' }}
-                  />
-                )}
-              </Field>
-            </Grid>
+              <Grid item xs={12}>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={4}>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
+                      3XL
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={8}>
+                  <Field name="tripleXLQuantity">
+                      {({ field, meta }) => (
+                        <StyledTextFields field={field} meta={meta} id="tripleXLQuantity" label="Quantity" type= 'number' />
+                      )}
+                    </Field>
+                  </Grid>
+                </Grid>
+              </Grid>
+              <Grid item xs={12} sx={{ mt: 1 }}>
+              <Field name="description">
+                  {({ field, meta }) => (
+                    <StyledTextFields field={field} meta={meta} id="description" label="Description" />
+                  )}
+                </Field>
+              </Grid>
+              <Grid item xs={12}>
+                <Field name="productVisible">
+                  {({ field }) => (
+                    <FormControlLabel
+                      control={<Checkbox {...field} checked={productVisible} onChange={handleProductVisibleChange} sx={{ '& .MuiSvgIcon-root': { fontSize: 18 } }}/>}
+                      label={<Typography sx={{ fontSize: 16, fontFamily: 'Inter' }}>{productVisible === true ? 'List this product' : 'Unlist this product'}</Typography>}
+                      sx={{ fontSize: '10px' }}
+                    />
+                  )}
+                </Field>
+              </Grid>
+              </Grid>
+              ) : (
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={4}>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
+                      Add Quantity
+                    </Typography>
+                  </Grid>
+                    <Grid item xs={8}>
+                      <Field name="totalQuantity">
+                        {({ field, meta }) => (
+                          <StyledTextFields field={field} meta={meta} id="totalQuantity" label="Quantity" type= 'number'/>
+                        )}
+                      </Field>
+                    </Grid>
+                    <Grid item xs={12} sx={{ mt: 1 }}>
+                      <Field name="description">
+                          {({ field, meta }) => (
+                            <StyledTextFields field={field} meta={meta} id="description" label="Description" />
+                          )}
+                        </Field>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Field name="productVisible">
+                          {({ field }) => (
+                            <FormControlLabel
+                              control={<Checkbox {...field} checked={productVisible} onChange={handleProductVisibleChange} sx={{ '& .MuiSvgIcon-root': { fontSize: 18 } }}/>}
+                              label={<Typography sx={{ fontSize: 16, fontFamily: 'Kanit' }}>{productVisible === true ? 'List this product' : 'Unlist this product'}</Typography>}
+                              sx={{ fontSize: '10px' }}
+                            />
+                          )}
+                        </Field>
+                      </Grid>
+                </Grid>
+           )}
             </Grid>
             <Dialog open={isImageDialogOpen} onClose={handleImageDialogClose}>
               <DialogTitle>
@@ -573,6 +616,7 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
                     padding: '20px',
                     textAlign: 'center',
                     transition: 'border-color 0.2s ease-in-out',
+                    cursor: 'pointer'
                   }}
                   
                 >

@@ -17,7 +17,7 @@ import Close from '@mui/icons-material/Close';
 
 const AddProduct= ({ open, onClose, fetchProducts }) => {
 
- const ProductValidationSchema = Yup.object().shape({
+  const ProductValidationSchema = Yup.object().shape({
     productName: Yup.string().required('Product Name is required'),
     price: Yup.number().required('Price is required'),
     criticalLevelQuantity: Yup.number()
@@ -26,18 +26,25 @@ const AddProduct= ({ open, onClose, fetchProducts }) => {
     category: Yup.string().required('Category is required'),
     description: Yup.string().optional(),
     smallQuantity: Yup.number()
-        .min(0, 'Small Quantity cannot be less than 0'),
+        .min(0, 'Small Quantity cannot be less than 0')
+        .max(5000, 'Please input a much more realistic quantity.'),
     mediumQuantity: Yup.number()
-        .min(0, 'Medium Quantity cannot be less than 0'),
+        .min(0, 'Medium Quantity cannot be less than 0')
+        .max(5000, 'Please input a much more realistic quantity.'),
     largeQuantity: Yup.number()
-        .min(0, 'Large Quantity cannot be less than 0'),
+        .min(0, 'Large Quantity cannot be less than 0')
+        .max(5000, 'Please input a much more realistic quantity.'),
     extraLargeQuantity: Yup.number()
-        .min(0, 'Extra Large Quantity cannot be less than 0'),
+        .min(0, 'Extra Large Quantity cannot be less than 0')
+        .max(5000, 'Please input a much more realistic quantity.'),
     doubleXLQuantity: Yup.number()
-        .min(0, 'Double XL Quantity cannot be less than 0'),
+        .min(0, 'Double XL Quantity cannot be less than 0')
+        .max(5000, 'Please input a much more realistic quantity.'),
     tripleXLQuantity: Yup.number()
-        .min(0, 'Triple XL Quantity cannot be less than 0'),
- });
+        .min(0, 'Triple XL Quantity cannot be less than 0')
+        .max(5000, 'Please input a much more realistic quantity.'),
+  });
+
 
  const ProductValidationSchemaIfCaps = Yup.object().shape({
   productName: Yup.string().required('Product Name is required'),
@@ -48,7 +55,8 @@ const AddProduct= ({ open, onClose, fetchProducts }) => {
   category: Yup.string().required('Category is required'),
   description: Yup.string().optional(),
   totalQuantity: Yup.number()
-      .min(0, 'Total Quantity cannot be less than 0'),
+      .min(0, 'Total Quantity cannot be less than 0')
+      .max(5000, 'Please input a much more realistic quantity.'),
  });
 
   const categoryOptions = [
@@ -479,6 +487,13 @@ const AddProduct= ({ open, onClose, fetchProducts }) => {
                     )}
                   </Field>
                 </Grid>
+                <Grid item xs={12} sx={{ mt: 1 }}>
+                  <Field name="description">
+                    {({ field, meta }) => (
+                      <StyledTextFields field={field} meta={meta} id="description" label="Description" />
+                    )}
+                 </Field>
+                </Grid>
               </Grid>
             </Grid>
               </Grid>
@@ -502,6 +517,7 @@ const AddProduct= ({ open, onClose, fetchProducts }) => {
                   padding: '20px',
                   textAlign: 'center',
                   transition: 'border-color 0.2s ease-in-out',
+                  cursor: 'pointer'
                 }}
                 
               >

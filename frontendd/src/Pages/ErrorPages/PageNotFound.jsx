@@ -12,7 +12,7 @@ const PageNotFound = () => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundImage: 'url(/src/Pages/Customers/SingleProdCheckout/shopGraffiti.png)',
+        backgroundColor: 'white',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',

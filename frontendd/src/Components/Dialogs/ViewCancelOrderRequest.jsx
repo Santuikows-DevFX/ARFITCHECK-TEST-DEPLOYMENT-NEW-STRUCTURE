@@ -23,7 +23,8 @@ const ViewCancelOrderRequest = ({ open, onClose, zIndex, orderInfo, orderID, fet
                 orderID: orderID,
                 orderType: orderType,
                 cancelReason: '', //since di naman to galing sa s.admin / admin
-                associatedOrderID: orderID
+                associatedOrderID: orderID,
+                isCancellationRequest: true
             }
 
             Swal.fire({

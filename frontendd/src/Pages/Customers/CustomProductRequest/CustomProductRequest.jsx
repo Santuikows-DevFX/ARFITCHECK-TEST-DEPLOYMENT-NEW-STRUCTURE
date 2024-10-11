@@ -795,12 +795,12 @@ function CustomProductRequest() {
                                 fullWidth
                                 onClick={formik.handleSubmit}
                                 variant="contained"
-                                disabled={!enablePlaceOrder}
+                                disabled={!enablePlaceOrder || submitLoading}
                                 sx={{
                                   backgroundColor: 'White',
                                   '&:hover': { backgroundColor: '#414a4c', color: 'white' },
                                   '&:not(:hover)': { backgroundColor: '#3d4242', color: 'white' },
-                                  opacity: enablePlaceOrder ? 1 : 0.5,
+                                  opacity: !enablePlaceOrder || submitLoading ? 0.7 : 1,
                                   background: 'linear-gradient(to right, #414141, #000000)'
                                 }}
                               >

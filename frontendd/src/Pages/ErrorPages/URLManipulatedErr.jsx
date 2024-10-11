@@ -2,6 +2,8 @@ import React from 'react';
 import { Button, Typography, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
+import shopGraffitiBG from '../Customers/SingleProdCheckout/shopGraffiti.png'
+
 const URLManipulated = () => {
   const navigate = useNavigate();
 
@@ -12,7 +14,7 @@ const URLManipulated = () => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundImage: 'url(/src/Pages/Customers/SingleProdCheckout/shopGraffiti.png)',
+        backgroundColor: 'white',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',

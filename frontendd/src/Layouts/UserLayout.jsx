@@ -8,10 +8,10 @@ const UserLayout = () => {
 
   const [cookie, setCookie, removeCookie] = useCookies(['?sessiontoken', '?role'])
   
-  if(sessionStorage.getItem('?sessiontoken') == null || !cookie['?sessiontoken']) {
+  if(localStorage.getItem('?sessiontoken') == null || !cookie['?sessiontoken']) {
     return <Navigate to= '/login'/>
 
-  }else if(sessionStorage.getItem('?sessiontoken') && cookie['?sessiontoken'] && cookie['?role'] != 'user') {
+  }else if(localStorage.getItem('?sessiontoken') && cookie['?sessiontoken'] && cookie['?role'] != 'user') {
     if(cookie['?role'] === 'superadmin') {
       return <Navigate to= '/analytics'/>
     }else if(cookie['?role'] === 'admin') {

@@ -24,6 +24,8 @@ import Navbar from '../../../Widgets/Navbar';
 import Footer from '../../../Components/Footer';
 import { useCart } from '../../../ContextAPI/CartProvider';
 
+import shopGraffitiBG from '../../../../public/assets/shopGraffiti1.png'
+
 const provinceOptions = ['Metro Manila'];
 
 function SingleProductCheckout() {
@@ -283,7 +285,7 @@ function SingleProductCheckout() {
         <Navbar />
           <Grid container  sx={{ pt: '5vh', minHeight: 0, flex: '1', overflowX: 'hidden' }}>
             <Grid item xs={12} md={7} sx={{
-              backgroundImage: 'url(/public/assets/shopGraffiti.png)',
+              backgroundImage: `url(${shopGraffitiBG})`,
               backgroundSize: 'cover',
               backgroundRepeat: 'no-repeat',
               display: 'flex',

@@ -182,7 +182,8 @@ const OrderStatusTable = () => {
       const orderData = {
         orderID: orderID,
         orderType: orderType,
-        associatedOrderID: orderID
+        associatedOrderID: orderID,
+        isCancellationRequest: false
       };
 
       if (paymentMethod === 'ewallet' && orderType === 'Confirm') {
@@ -532,22 +533,22 @@ const OrderStatusTable = () => {
                         <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', fontWeight: 'bold', color: 'black' }}>
                           PRODUCT(s)
                         </Typography>
-                        <Typography sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: 'black' }}>
-                            <Typography sx={{ fontFamily: 'Inter', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                        <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}>
+                            <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
                               <b>ID: {order.orderID}</b>
                             </Typography>
                             {order.orderInfo?.productName.split(', ').map((product, index) => (
                               <div key={index}>
-                                <Typography sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: 'black' }}>
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}>
                                   {product}
                                 </Typography>
                                 
                                 {order.orderInfo?.orderType === 'default' ? (
-                                  <Typography sx={{ fontFamily: 'Inter', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
                                   <b>Qnt:</b> {order.orderInfo?.productQuantity.split(', ')[index]} <b>Size:</b> {order.orderInfo?.productSize.split(', ')[index] || '-'}
                                 </Typography>
                                 ) : (
-                                  <Typography sx={{ fontFamily: 'Inter', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
                                     <b>Qnt:</b> {order.orderInfo?.productQuantity.split(', ')[index]} <b>Size(s): </b>
 
                                     {order.orderInfo?.smallQuantity !== "0" ? `S x${order.orderInfo?.smallQuantity}${order.orderInfo?.mediumQuantity !== "0" || order.orderInfo?.largeQuantity !== "0" || order.orderInfo?.extraLargeQuantity !== "0" || order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}

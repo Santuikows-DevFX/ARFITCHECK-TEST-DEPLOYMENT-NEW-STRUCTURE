@@ -16,19 +16,27 @@ const AddStaff = ({ open, onClose, fetchAdminInfo, zIndex }) => {
   const StaffValidationSchema = Yup.object().shape({
     firstName: Yup.string().required('First Name is required'),
     lastName: Yup.string().required('Last Name is required'),
-    eMail: Yup.string().email('Invalid email').required('Email is required'),
-    password: Yup.string().required('Password is required'),
-    confirmpassword: Yup.string()
-    .oneOf([Yup.ref('password'), null], 'Passwords must match')
-    .required('Confirm Password is required'),
+    eMail: Yup.string()
+      .email('Invalid email')
+      .matches(
+        /^[a-zA-Z0-9._%+-]+@(gmail\.com|outlook\.com|caloocan\.sti\.edu\.ph)$/,
+        'Email must be a valid email from Gmail or Outlook'
+      )
+      .required('Email is required'),
+     password: Yup.string()
+      .required('Password is required')
+      .min(8, 'Password must be at least 8 characters')
+      .matches(/^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+$/, 'Password can only contain alphanumeric characters and safe special characters')
+      .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must contain at least one special character'),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref('password'), null], 'Passwords must match')
+      .required('Confirm Password is required'),
     mobileNum: Yup.string()
-      .matches(/^[0-9]{10}$/, {
-        message: 'Mobile Number must be only numeric characters and consists of 11 digits',
-        excludeEmptyString: true,
-      })
-      .required('Mobile Number is required'),
+    .required('Mobile Number is required')
+    .test('is-numeric', 'Mobile Number must be a number', (value) => /^\d+$/.test(value))
+    .matches(/^\d{10}$/, 'Mobile Number must be exactly 10 digits and follow Philippine format')
   });
-
+  
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -77,6 +85,7 @@ const AddStaff = ({ open, onClose, fetchAdminInfo, zIndex }) => {
               });
 
               fetchAdminInfo()
+              onClose();
 
             }else { 
 
@@ -101,162 +110,166 @@ const AddStaff = ({ open, onClose, fetchAdminInfo, zIndex }) => {
       console.log(error);
     }
   }
+
   return (
     <div>
       <Dialog open={open} onClose={onClose} style={{ zIndex: zIndex }}>
-      <DialogTitle sx={{ background: 'linear-gradient(to left, #414141  , #000000)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-            <Typography  sx={{ fontFamily: 'Kanit', fontWeight: 'bold', fontSize: 34 }}>
-                ADD ADMIN
-            </Typography>
-            <Close onClick={onClose} sx={{ cursor: 'pointer' }} />
+        <DialogTitle sx={{ background: 'linear-gradient(to left, #414141  , #000000)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <Typography  sx={{ fontFamily: 'Kanit', fontWeight: 'bold', fontSize: 34 }}>
+                  ADD ADMIN
+              </Typography>
+              <Close onClick={onClose} sx={{ cursor: 'pointer' }} />
         </DialogTitle> 
-       
-      <Divider sx={{ borderTopWidth: 0, mb : 1 , backgroundColor: 'black'}}/>
-      <DialogContent>
-        <Formik
-          initialValues={{ firstName: '', lastName: '', eMail: '', mobileNum: '', password : ''}}
-          validationSchema={StaffValidationSchema}
-          onSubmit={(values, { setSubmitting }) => {
+        <Divider sx={{ borderTopWidth: 0, mb : 1 , backgroundColor: 'black'}}/>
+        <DialogContent>
+          <Formik
+            initialValues={{ firstName: '', lastName: '', eMail: '', mobileNum: '', password : '', confirmPassword: ''}}
+            validationSchema={StaffValidationSchema}
+            onSubmit={(values, { setSubmitting }) => {
 
-            handleAddAdmin(values)
-            setSubmitting(false);
+              handleAddAdmin(values)
+              setSubmitting(false);
 
-          }}
-        >
-          {({ isSubmitting, isValid }) => (
-            <Form>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Field name="firstName">
+            }}
+          >
+            {({ isSubmitting, isValid, values }) => (
+              <Form>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Field name="firstName">
+                      {({ field, meta }) => (
+                        <StyledTextFields field={field} meta={meta} id="firstName" label="First Name" />
+                      )}
+                    </Field>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Field name="lastName">
+                      {({ field, meta }) => (
+                        <StyledTextFields field={field} meta={meta} id="lastName" label="Last Name" />
+                      )}
+                    </Field>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Field name="eMail">
+                      {({ field, meta }) => (
+                        <StyledTextFields field={field} meta={meta} id="eMail" label="Email" type= 'email' />
+                      )}
+                    </Field>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Field name="mobileNum">
+                      {({ field, meta }) => (
+                        <StyledTextFields field={field} meta={meta} id="mobileNum" label="Mobile Number" type= 'number'/>
+                      )}
+                    </Field>
+                  </Grid>
+                  <Grid item xs={12}>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 25, fontWeight: 'bold', color: 'black' }}>
+                    SET ADMIN PASWORD
+                  </Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Divider sx={{ borderTopWidth: 1, mb : 0, backgroundColor: 'black'}}/>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Field name="password">
                     {({ field, meta }) => (
-                      <StyledTextFields field={field} meta={meta} id="firstName" label="First Name" />
-                    )}
-                  </Field>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Field name="lastName">
-                    {({ field, meta }) => (
-                      <StyledTextFields field={field} meta={meta} id="lastName" label="Last Name" />
-                    )}
-                  </Field>
-                </Grid>
-                <Grid item xs={12}>
-                  <Field name="eMail">
-                    {({ field, meta }) => (
-                      <StyledTextFields field={field} meta={meta} id="eMail" label="Email" type= 'email' />
-                    )}
-                  </Field>
-                </Grid>
-                <Grid item xs={12}>
-                  <Field name="mobileNum">
-                    {({ field, meta }) => (
-                      <StyledTextFields field={field} meta={meta} id="mobileNum" label="Mobile Number" type= 'number'/>
-                    )}
-                  </Field>
-                </Grid>
-                <Grid item xs={12}>
-                <Typography sx={{ fontFamily: 'Kanit', fontSize: 25, fontWeight: 'bold', color: 'black' }}>
-                  SET ADMIN PASWORD
-                </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <Divider sx={{ borderTopWidth: 1, mb : 0, backgroundColor: 'black'}}/>
-                </Grid>
-                <Grid item xs={12}>
-                  <Field name="password">
-                  {({ field, meta }) => (
-                    <div>
-                    <TextField
-                        {...field}
-                        id="password"
-                        label="Admin Password"
-                        variant="filled"
-                        fullWidth
-                        type={showPassword ? "text" : "password"}
-                        InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: 20 } }}
-                        sx={{ '& input': { fontSize: 25, pt: 4 } }}
-                        inputProps={{ style: { fontSize: 16, fontFamily: 'Kanit' } }}
-                        error={meta.touched && Boolean(meta.error)}
-                        InputProps={{
-                          endAdornment: (
-                              <>
-                                <InputAdornment position="end">
-                                  <IconButton
-                                      onClick={() => setShowPassword((prev) => !prev)}
-                                  >
-                                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                                  </IconButton>
-                              </InputAdornment>
-                              </>
-                          )
-                      }}
-                    />
-                    {meta.touched && meta.error && (
-                        <FormHelperText sx={{ fontFamily: 'Kanit', fontSize: 14, color: 'red' }}>
-                            {meta.error}
-                        </FormHelperText>
-                    )}
-                    </div>
-                  )}
-                  </Field>                     
-                </Grid>
-                <Grid item xs={12}>
-                <Field name="confirmpassword">
-                  {({ field, meta }) => (
-                    <div>
-                    <TextField
-                        {...field}
-                        id="confirmpassword"
-                        label="Admin Password Confirm"
-                        variant="filled"
-                        fullWidth
-                        type={showConfirmPassword ? "text" : "password"}
-                        InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: 20 } }}
-                        sx={{ '& input': { fontSize: 25, pt: 4 } }}
-                        inputProps={{ style: { fontSize: 16, fontFamily: 'Kanit' } }}
-                        error={meta.touched && Boolean(meta.error)}
-                        InputProps={{
-                          endAdornment: (
-                              <>
-                                <InputAdornment position="end">
+                      <div>
+                      <TextField
+                          {...field}
+                          id="password"
+                          label="Admin Password"
+                          variant="filled"
+                          fullWidth
+                          type={showPassword ? "text" : "password"}
+                          InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: 20 } }}
+                          sx={{ '& input': { fontSize: 25, pt: 4 } }}
+                          inputProps={{ style: { fontSize: 16, fontFamily: 'Kanit' } }}
+                          error={meta.touched && Boolean(meta.error)}
+                          InputProps={{
+                            endAdornment: (
+                                <>
+                                  <InputAdornment position="end">
                                     <IconButton
-                                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                                        onClick={() => setShowPassword((prev) => !prev)}
                                     >
-                                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                        {showPassword ? <VisibilityOff /> : <Visibility />}
                                     </IconButton>
                                 </InputAdornment>
-                              </>
-                          )
-                      }}
-                    />
-                    {meta.touched && meta.error && (
-                        <FormHelperText sx={{ fontFamily: 'Kanit', fontSize: 14, color: 'red' }}>
-                            {meta.error}
-                        </FormHelperText>
+                                </>
+                            )
+                        }}
+                      />
+                      {meta.touched && meta.error && (
+                          <FormHelperText sx={{ fontFamily: 'Kanit', fontSize: 14, color: 'red' }}>
+                              {meta.error}
+                          </FormHelperText>
+                      )}
+                      </div>
                     )}
-                    </div>
-                  )}
-                  </Field>     
+                    </Field>                     
+                  </Grid>
+                  <Grid item xs={12}>
+                  <Field name="confirmPassword">
+                    {({ field, meta }) => (
+                      <div>
+                      <TextField
+                          {...field}
+                          id="confirmPassword"
+                          label="Admin Password Confirm"
+                          variant="filled"
+                          fullWidth
+                          type={showConfirmPassword ? "text" : "password"}
+                          InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: 20 } }}
+                          sx={{ '& input': { fontSize: 25, pt: 4 } }}
+                          inputProps={{ style: { fontSize: 16, fontFamily: 'Kanit' } }}
+                          error={meta.touched && Boolean(meta.error)}
+                          InputProps={{
+                            endAdornment: (
+                                <>
+                                  <InputAdornment position="end">
+                                      <IconButton
+                                          onClick={() => setShowConfirmPassword((prev) => !prev)}
+                                      >
+                                          {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                      </IconButton>
+                                  </InputAdornment>
+                                </>
+                            )
+                        }}
+                      />
+                      {meta.touched && meta.error && (
+                          <FormHelperText sx={{ fontFamily: 'Kanit', fontSize: 14, color: 'red' }}>
+                              {meta.error}
+                          </FormHelperText>
+                      )}
+                      </div>
+                    )}
+                    </Field>     
+                  </Grid>
                 </Grid>
-              </Grid>
-              <DialogActions>
-                <Button onClick={onClose}>
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'red' }}>
-                    Cancel
-                  </Typography>
-                </Button>
-                <Button  type = 'submit' color="primary" disabled={isSubmitting || !isValid}>
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'black'}}>
-                    Add
-                  </Typography>
-                </Button>
-              </DialogActions>
-            </Form>
-          )}
-        </Formik>
-      </DialogContent>
-    </Dialog>
-    <ToastContainer/>
+                <DialogActions>
+                  <Button onClick={onClose}>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'red' }}>
+                      Cancel
+                    </Typography>
+                  </Button>
+                  <Button 
+                    type='submit' 
+                    color="primary" 
+                    disabled={isSubmitting || !isValid || Object.values(values).some(value => value === '')}
+                  >
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'black', opacity: isSubmitting || !isValid || Object.values(values).some(value => value === '') ? 0.5 : 1 }}>
+                      Add
+                    </Typography>
+                  </Button>
+                </DialogActions>
+              </Form>
+            )}
+          </Formik>
+        </DialogContent>
+      </Dialog>
+      <ToastContainer/>
     </div>
   );
 };

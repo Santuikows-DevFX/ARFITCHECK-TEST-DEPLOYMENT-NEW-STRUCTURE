@@ -15,6 +15,10 @@ import { Warning } from '@mui/icons-material';
 import { FilledButton } from '../Components/UI/Buttons.jsx';
 import Navbar from '../Widgets/Navbar.jsx';
 import ProductDescription from './Customers/ProductDescription.jsx';
+import newsLetterBG from '../../public/assets/newsletter.png'
+import homeSliderImageOne from '../../public/assets/Announcement/Eventsv2.png'
+import homeSliderVideo from '../../public/assets/nigg/Ads.mp4'
+import categoriesTempPics from '../../public/assets/log.png'
 
 const Home = () => {
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -33,7 +37,7 @@ const Home = () => {
     root: {
       display: 'flex',
       flexDirection: 'column',
-      backgroundImage: 'url("../public/assets/newsletter.png")',
+      backgroundImage: `url(${newsLetterBG})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
     },
@@ -108,9 +112,11 @@ const Home = () => {
       const timeDiff = currDate.getTime() - approveDate.getTime();
       const dayDiff = timeDiff / (1000 * 3600 * 24);
 
+      
+
       //check if the day diff is > 2 which means lagpas na siya sa 2 day policy natin
       if (dayDiff >= 2 && !isPaid) {
-        handleAutomaticCancelCustomRequests({requestID, associatedOrderID: requestID, orderType: 'Cancel', cancelReason: 'User didn\'t pay in time'})
+        handleAutomaticCancelCustomRequests({orderID: requestID, orderType: 'Cancel', cancelReason: 'User didn\'t pay in time'})
       } 
 
     }catch(error) {
@@ -121,6 +127,7 @@ const Home = () => {
 
   const handleAutomaticCancelCustomRequests = (requestData) => {
     try {
+
       axiosClient.post('/custom/updateRequest', requestData)
     } catch (error) {
       console.log(error);
@@ -279,18 +286,19 @@ const Home = () => {
     switch (currentPage) {
       case 1:
         return (
-          <Box sx={{ width: '100%',height: { xs: '50%', sm: '40vh', md: '95vh' }, overflow: 'hidden' }}>
-            <video autoPlay loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }}>
-              <source src="../public/assets/nigg/Ads.mp4" type="video/mp4" />
-            </video>
+          <Box sx={{ width: '100%', height: { xs: '60%', sm: '40vh', md: '95vh' }, overflow: 'hidden' }}>
+            <img src= {homeSliderImageOne} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </Box>
         );
       case 2:
         return (
-          <Box sx={{ width: '100%', height: { xs: '60%', sm: '40vh', md: '95vh' }, overflow: 'hidden' }}>
-            <img src="../public/assets/Announcement/Eventsv2.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <Box sx={{ width: '100%',height: { xs: '50%', sm: '40vh', md: '95vh' }, overflow: 'hidden' }}>
+            <video autoPlay loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }}>
+              <source src= {homeSliderVideo} type="video/mp4" />
+            </video>
           </Box>
         );
+        
       default:
         return null;
     }
@@ -358,7 +366,7 @@ const Home = () => {
               >
                 <CardMedia
                   component="img"
-                  image="/public/assets/log.png"
+                  image={categoriesTempPics}
                   alt="Category Image"
                   sx={{
                     height: {xs:100, sm: 150, md:200},

@@ -54,13 +54,14 @@ function ProductInventory() {
 
       const csvRows = products.map(products => {
 
+        const productID = products?.productID;
         const productName = products.productInfo?.productName.split(', ').join(' | ');
         const productCategory = products.productInfo?.productCategory;
         const productQuantity = products.productInfo?.productQuantity;
         const productPrice = products.productInfo?.productPrice;
         const productTotalSold = products.productInfo?.totalSold;
          
-        return [productName, productCategory, productQuantity, productPrice, productTotalSold].join(',');
+        return [productID,productName, productCategory, productQuantity, productPrice, productTotalSold].join(',');
       });
 
       //what this does is it joins the headers and the rows data together

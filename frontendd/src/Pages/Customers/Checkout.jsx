@@ -25,6 +25,8 @@ import CheckoutTermsAndConditions from '../../Components/Dialogs/CheckoutTermsAn
 import { useCart } from '../../ContextAPI/CartProvider';
 import dayjs from 'dayjs';
 
+import shopGraffitiBG from '../../../public/assets/shopGraffiti1.png'
+
 const provinceOptions = ['Metro Manila'];
 
 function Checkout() {
@@ -285,7 +287,7 @@ function Checkout() {
           <Grid container  sx={{ pt: '5vh', minHeight: 0, flex: '1', overflowX: 'hidden' }}>
         <Grid item xs={12} md={7} sx={{
 
-          backgroundImage: 'url(../public/assets/shopGraffiti.png)',
+          backgroundImage: `url(${shopGraffitiBG})`,
           backgroundSize: 'cover',
           backgroundRepeat: 'no-repeat',
           display: 'flex',
@@ -449,7 +451,7 @@ function Checkout() {
                           sx={{ transform: 'scale(0.9)' }}
                         />
                       }
-                      label={<Typography variant="body2">Ship to different address?</Typography>}
+                      label={<Typography sx = {{ fontFamily: 'Kanit', fontSize: {xs: 16 , md: 18} }}>Ship to different address?</Typography>}
                     />
                   </Grid>
                 </Grid>
@@ -556,7 +558,7 @@ function Checkout() {
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography sx={{ fontFamily: 'Kanit', fontSize:  { xs: 25, md: 30 }, fontWeight: 'bold', color: 'black' }}>
                      PAYMENT METHOD <br />
-                    <Typography sx={{ fontFamily: 'Inter', fontSize: { xs: 12, md: 20 }, fontWeight: '300', color: 'black' }}>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 }, fontWeight: '300', color: 'black' }}>
                      View all the available payment method along with its respective qr codes
                     </Typography>
                   </Typography>
@@ -649,7 +651,7 @@ function Checkout() {
               transform: 'scale(0.8)' 
             }} />}
             label={
-              <Typography sx={{ fontFamily: 'Inter', display: 'flex', alignItems: 'center', fontSize: 16 }}>
+              <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: 16 }}>
                 I Agree with the&nbsp;
                 <span style={{ color: "#1A5276" }}>
                   <b onClick={(event) => {
@@ -666,7 +668,7 @@ function Checkout() {
             fullWidth
             onClick={formik.handleSubmit}
             variant="contained"
-            disabled={!enablePlaceOrder}
+            disabled={!enablePlaceOrder || submitLoading}
             sx={{
               backgroundColor: 'White',
               '&:hover': { backgroundColor: '#414a4c', color: 'white' },

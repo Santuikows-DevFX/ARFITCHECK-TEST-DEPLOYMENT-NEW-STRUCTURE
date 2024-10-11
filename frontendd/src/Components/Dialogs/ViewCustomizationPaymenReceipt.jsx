@@ -12,7 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Bounce } from 'react-toastify';
 import { useCookies } from 'react-cookie';
 
-const ViewCustomizationPaymentReceipt = ({ open, onClose, requestData, fetchMyOrders ,zIndex }) => {
+const ViewCustomizationPaymentReceipt = ({ open, onClose, requestData, fetchOrders ,zIndex }) => {
 
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [isEulaChecked, setEulaChecked] = useState(false);
@@ -40,18 +40,55 @@ const ViewCustomizationPaymentReceipt = ({ open, onClose, requestData, fetchMyOr
       if (result.isConfirmed) {
 
         setSubmitLoading(true)
-        
-        // const paymentValues = new FormData();
-        // paymentValues.append('requestID', requestData?.orderID);
-        // paymentValues.append('receiptFile', uploadedImage);
-        // paymentValues.append('uid', cookie['?id']);
+
+        const reqData = {
+          orderID: requestData?.orderID,
+          orderType: 'Prepare'
+        };
     
-        // await axiosClient.post('/custom/updateRequestWhenPaid', paymentValues)
-        // .then(( {data} ) => {
-        //     setSubmitLoading(false);
-        //     fetchMyOrders();
-        //     onClose();
-        // });
+        await axiosClient.post('/custom/updateRequest', reqData)
+        .then(( {data} ) => {
+            setSubmitLoading(false);
+
+            if (data.message === 'Request Status Updated') {
+
+              toast.success(`${data.message}`, {
+                position: "top-right",
+                autoClose: 800,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "colored",
+                onClose: () => {
+                  fetchOrders()
+                  onClose();
+                },
+                transition: Bounce,
+                style: { fontFamily: "Kanit", fontSize: "16px" },
+              });
+
+            }else {
+
+              toast.error('Something went wrong.', {
+                position: "top-right",
+                autoClose: 800,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "colored",
+                transition: Bounce,
+                onClose: () => {
+                  onClose();
+                },
+                style: { fontFamily: "Kanit", fontSize: "16px" },
+              });
+            }
+
+        });
       }
     });
 
@@ -138,11 +175,14 @@ const ViewCustomizationPaymentReceipt = ({ open, onClose, requestData, fetchMyOr
             <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 16, md: 18 }, color: 'black', marginBottom: 1 }}>
               <b>Amount Paid</b>: <br /> ₱{(requestData?.orderInfo?.amountToPay)?.toFixed(2)}
             </Typography>
+            <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 16, md: 18 }, color: 'black', marginBottom: 1 }}>
+              <b>Mobile Number</b>: <br /> {requestData?.orderInfo?.mobileNumber}
+            </Typography>
           </Grid>
         </Grid>
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
-        <Button color="primary" onClick={() => handleConfirmPayment()}>
+        <Button color="primary" onClick={() => handleConfirmPayment()} disabled = {submitLoading}>
           <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'black' }}>
             Confirm and Prepare
           </Typography>

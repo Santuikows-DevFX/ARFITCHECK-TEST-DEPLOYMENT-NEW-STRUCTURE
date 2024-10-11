@@ -147,6 +147,7 @@ const OrdersTable = () => {
   const openImageInNewTab = (imageUrl) => {
     window.open(imageUrl, '_blank');
   };
+  
   const handleReceiveOrder = (orderID) => {
     Swal.fire({
       title: "Received the order?",
@@ -248,6 +249,7 @@ const OrdersTable = () => {
   const paginate = (event, pageNumber) => {
     setCurrentPage(pageNumber);
   };
+  
   return (
     <>
       <Box >
@@ -325,7 +327,7 @@ const OrdersTable = () => {
                   displayEmpty
                   sx={{
                     fontFamily: 'Kanit',
-                    fontSize: 22,
+                    fontSize: {xs: 12, md: 22},
                     '& .MuiOutlinedInput-notchedOutline': { 
                       borderTop: 'none',
                       borderLeft: 'none',
@@ -367,13 +369,13 @@ const OrdersTable = () => {
                   }}
                 >
                   <MenuItem value="" disabled>
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Sort by Amount</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Sort by Amount</Typography>
                   </MenuItem>
                   <MenuItem value="asc">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Lowest To Highest</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Lowest To Highest</Typography>
                   </MenuItem>
                   <MenuItem value="desc">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Highest To Lowest</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Highest To Lowest</Typography>
                   </MenuItem>
                 </Select>
               </FormControl>
@@ -431,19 +433,19 @@ const OrdersTable = () => {
                   }}
                 >
                   <MenuItem value="All">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>All Status</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>All Status</Typography>
                   </MenuItem>
                   <MenuItem value="Waiting for Confirmation">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Waiting for Confirmation</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Waiting for Confirmation</Typography>
                   </MenuItem>
                   <MenuItem value="Order Confirmed">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Order Confirmed</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Order Confirmed</Typography>
                   </MenuItem>
                   <MenuItem value="Preparing Order to Ship">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Preparing Order to Ship</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Preparing Order to Ship</Typography>
                   </MenuItem>
                   <MenuItem value="Parcel out for delivery">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Parcel out for delivery</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Parcel out for delivery</Typography>
                   </MenuItem>
                 </Select>
               </FormControl>
@@ -568,14 +570,14 @@ const OrdersTable = () => {
                              >
                             <b>Cash</b>
                            </Typography>
-                        ) : (
+                    ) : (
                           <Typography
                             sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: '#1F618D', cursor: 'pointer', textDecoration: 'underline' }}
                             onClick={() => openImageInNewTab(order.orderInfo?.receiptImage)}
                           >
                             <b>E-Wallet</b>
                           </Typography>
-                        )}
+                    )}
                   </Grid>
                   {/* shipping address */}
                   <Grid item xs={12} sm={6} md={1.6}>

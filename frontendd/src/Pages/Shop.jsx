@@ -20,6 +20,13 @@ import 'aos/dist/aos.css'
 import Navbar from '../WIdgets/Navbar';
 import { useParams } from 'react-router-dom';
 
+import allIcon from '../../public/assets/all.png'
+import shirtIcon from '../../public/assets/shirt.png'
+import shortIcon from '../../public/assets/short.png'
+import capIcon from '../../public/assets/cap.png'
+import hoodieIcon from '../../public/assets/hoodie.png'
+import shopGraffitiBG from '../../public/assets/shopGraffiti1.png'
+
 AOS.init({
     duration: 600, 
     easing: 'ease-out-back', 
@@ -30,7 +37,7 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
       
-        backgroundImage: `url("../public/assets/shopGraffiti1.png")`,
+        backgroundImage: `url(${shopGraffitiBG})`,
         backgroundSize: 'cover', 
         backgroundPosition: 'center',
     },
@@ -90,11 +97,11 @@ function Shop() {
     }, [category]);
 
     const categories = [
-        { name: 'All', icon: <img src='../public/assets/all.png' alt='icon' style={{ width: '35px', height: '35px' }}/>, count: categoryCount.totalProduct},
-        { name: 'T-shirts', icon: <img src='../public/assets/shirt.png' alt='icon' style={{ width: '35px', height: '35px' }}/> ,count: categoryCount.totalTShirt },
-        { name: 'Shorts', icon: <img src='../public/assets/short.png' alt='icon' style={{ width: '35px', height: '35px' }}/>, count: categoryCount.totalShorts },
-        { name: 'Caps', icon: <img src='../public/assets/cap.png' alt='icon' style={{ width: '35px', height: '35px' }}/> , count: categoryCount.totalCaps},
-        { name: 'Hoodies', icon: <img src='../public/assets/hoodie.png' alt='icon' style={{ width: '35px', height: '35px' }}/>, count: categoryCount.totalHoodies},
+        { name: 'All', icon: <img src={allIcon} alt='icon' style={{ width: '35px', height: '35px' }}/>, count: categoryCount.totalProduct},
+        { name: 'T-shirts', icon: <img src={shirtIcon} alt='icon' style={{ width: '35px', height: '35px' }}/> ,count: categoryCount.totalTShirt },
+        { name: 'Shorts', icon: <img src={shortIcon} alt='icon' style={{ width: '35px', height: '35px' }}/>, count: categoryCount.totalShorts },
+        { name: 'Caps', icon: <img src={capIcon} alt='icon' style={{ width: '35px', height: '35px' }}/> , count: categoryCount.totalCaps},
+        { name: 'Hoodies', icon: <img src={hoodieIcon} alt='icon' style={{ width: '35px', height: '35px' }}/>, count: categoryCount.totalHoodies},
     ];
 
     const fetchProductsByChosenCateg = async () => {

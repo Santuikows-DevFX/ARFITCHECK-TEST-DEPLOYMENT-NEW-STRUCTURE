@@ -22,6 +22,7 @@ import Swal from 'sweetalert2';
 
 import Navbar from '../../Widgets/Navbar';
 import Footer from '../Footer';
+import cartGraffitiBG from '../../../public/assets/cartGraffiti.png'
 
 const CartTable = () => {
   const [cart, setCart] = useState([]);
@@ -169,7 +170,7 @@ const CartTable = () => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundImage: 'url(../public/assets/cartGraffiti.png)',
+          backgroundImage: `url(${cartGraffitiBG})`,
           backgroundSize: 'cover',
           backgroundRepeat: 'no-repeat',
         }}
@@ -343,7 +344,7 @@ const CartTable = () => {
                     backgroundColor: 'White',
                     '&:hover': { backgroundColor: '#414a4c', color: 'white' },
                     '&:not(:hover)': { backgroundColor: '#3d4242', color: 'white' },
-                    opacity: cart.length > 0 ? 1 : 0.5,
+                    opacity: cart.length === 0 || loading ? 0.7 : 1,
                     position: 'relative',
                     background: 'linear-gradient(to right, #414141  , #000000)',
                   }}

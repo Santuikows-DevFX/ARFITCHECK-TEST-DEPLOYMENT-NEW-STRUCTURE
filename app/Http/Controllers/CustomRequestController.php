@@ -93,7 +93,7 @@ class CustomRequestController extends Controller
 
                 'orderDate' => Carbon::now()->toDateString(),
                 'orderTimeStamp' => Carbon::now('Asia/Manila')->format('h:i A'),
-                'updateTimeStamp' => Carbon::now('Asia/Manila')->format('h:i A'),
+                'updateTimeStamp' => '',
 
                 'fullShippingAddress' => $fullAddress,
                 'mobileNumber' => $mobilePhone,
@@ -170,7 +170,6 @@ class CustomRequestController extends Controller
     }
 
     //admin side fetching
-
     public function fetchCustomizationRequest()
     {
         $customizationRequest = [];
@@ -331,7 +330,7 @@ class CustomRequestController extends Controller
 
 
                     //i did this because it updates the prev removed request when rejected causing some issues and errors
-                    if ($requestStatus != 'Request Rejected' && $requestStatus != 'Request Status') {
+                    if ($requestStatus != 'Request Rejected' && $requestStatus != 'Request Cancelled') {
                         $requestUpdates = [
                             'orderStatus' => $requestStatus,
                             'approvedDate' => Carbon::now()->toDateString(),
@@ -635,6 +634,10 @@ class CustomRequestController extends Controller
                         <p>If your customization request has been rejected, it might be due to the following reasons, over complicated design, your design contains inappropriate graphics, etc. For more details, you may contact BMIC on their Facebook. </p>
 
                         <p>Once you process your payment kindly wait for your shipment. Once your receive and accept the product(s), kindly confirm this in ARFITCHECK Web. </p>
+
+                         <p>
+                            <a href="https://www.facebook.com/bmic.clothing" target="_blank">Visit BMIC on Facebook</a>
+                        </p>
                     </div>
                 
                     <div class="footer">
@@ -761,6 +764,10 @@ class CustomRequestController extends Controller
                         <p>If your customization request has been rejected, it might be due to the following reasons, over complicated design, your design contains inappropriate graphics, etc. For more details, you may contact BMIC on their Facebook. </p>
 
                         <p>Once you process your payment kindly wait for your shipment. Once your receive and accept the product(s), kindly confirm this in ARFITCHECK Web. </p>
+
+                         <p>
+                            <a href="https://www.facebook.com/bmic.clothing" target="_blank">Visit BMIC on Facebook</a>
+                        </p>
                     </div>
                 
                     <div class="footer">
@@ -977,6 +984,9 @@ class CustomRequestController extends Controller
                         <p><strong>Method:</strong> ' . $emailNotificationData['paymentMethod'] . '</p>
                         
                         <div class="divider"></div>
+                         <p>
+                            <a href="https://www.facebook.com/bmic.clothing" target="_blank">Visit BMIC on Facebook</a>
+                        </p>
                     <div class="footer">
                         <p>&copy; ' . date('Y') . ' ARFITCHECK. All rights reserved.</p>
                     </div>

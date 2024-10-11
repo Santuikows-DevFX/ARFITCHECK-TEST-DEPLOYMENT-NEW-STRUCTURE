@@ -8,9 +8,9 @@ const AdminLayout = () => {
   // const { token } = useStateContext();
 
 
-  if(sessionStorage.getItem('?sessiontoken') == null || !cookie['?sessiontoken']) {
+  if(localStorage.getItem('?sessiontoken') == null || !cookie['?sessiontoken']) {
     return <Navigate to= '/login'/>
-  }else if(sessionStorage.getItem('?sessiontoken') && cookie['?sessiontoken'] && cookie['?role'] != 'admin') {
+  }else if(localStorage.getItem('?sessiontoken') && cookie['?sessiontoken'] && cookie['?role'] != 'admin') {
     if(cookie['?role'] === 'superadmin') {
       return <Navigate to= '/analytics'/>
     }else if(cookie['?role'] === 'user'){

@@ -6,6 +6,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useCookies } from 'react-cookie';
 import axiosClient from '../axios-client';
 
+import defaultProfileImage from '../../public/assets/defaultProfile/pesonicon.png'
+
 const Details = ({ avatarUrl, name, email }) => {
 
   const [cookie] = useCookies(['?id']);
@@ -48,7 +50,7 @@ const Details = ({ avatarUrl, name, email }) => {
           ) : (
             <Avatar
               alt="Avatar"
-              src="./public/assets/defaultProfile/pesonicon.png"
+              src={defaultProfileImage}
               sx={{
                 width: { xs: 90, sm: 80, md: 150 },
                 height: { xs: 90, sm: 80, md: 150 },

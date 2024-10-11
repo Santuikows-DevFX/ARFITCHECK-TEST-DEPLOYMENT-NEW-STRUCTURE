@@ -9,6 +9,7 @@ import { useStateContext } from '../ContextAPI/ContextAPI';
 import axiosClient from '../axios-client';
 import Swal from 'sweetalert2';
 import { useCart } from '../ContextAPI/CartProvider';
+import logo from '../../public/assets/Logo.jpg'
 
 function Navbar() {
   
@@ -38,7 +39,7 @@ function Navbar() {
       console.log(error);
     }
 
-    if (sessionStorage.getItem('?sessiontoken') == null || !cookie['?sessiontoken']) {
+    if (localStorage.getItem('?sessiontoken') == null || !cookie['?sessiontoken']) {
       setShowLogout(false);
     } else {
       setShowLogout(true);
@@ -97,7 +98,7 @@ function Navbar() {
                 </IconButton>
               <Box
                 component="img"
-                src="/public/assets/Logo.jpg"
+                src={logo}
                 alt="Logo"
                 sx={{
                   width: { xs: 80, sm: 100, md: 120 },
@@ -277,7 +278,7 @@ function Navbar() {
                 
                 <Box
                   component="img"
-                  src="/public/assets/Logo.jpg"
+                  src={logo}
                   alt="Logo"
                   sx={{
                     width: { xs: 80, sm: 100, md: 120 },

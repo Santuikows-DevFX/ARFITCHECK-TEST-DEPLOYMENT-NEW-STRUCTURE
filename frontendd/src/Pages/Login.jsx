@@ -27,6 +27,9 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import ForgotPassword from "../Components/Dialogs/ForgotPassword.jsx";
 import Navbar from "../Widgets/Navbar.jsx";
+import loginPic from '../../public/assets/log.png'
+import loginGraffitiBG from '../../public/assets/loginGraffiti.png'
+import icon from '../../public/assets/Icon.png'
 
 function Login() {
   const [isLoading, setIsLoading] = useState(true);
@@ -183,7 +186,7 @@ function Login() {
             validationSchema={validationSchema}
             onSubmit={handleSubmit}
           >
-          {({ isValid }) => (
+          {({ isValid, values }) => (
                 <Form>
                 <Grid
                   container
@@ -204,7 +207,7 @@ function Login() {
                     }}
                   >
                     <img
-                      src="./public/assets/log.png"
+                      src={loginPic}
                       style={{
                         width: "100%",
                         height: "100%",
@@ -220,7 +223,7 @@ function Login() {
                     xs={12}
                     md={6}
                     sx={{
-                      backgroundImage: "url(../public/assets/loginGraffiti.png)",
+                      backgroundImage: `url(${loginGraffitiBG})`,
                       backgroundSize: "cover",
                       backgroundRepeat: "no-repeat",
                       backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -243,7 +246,7 @@ function Login() {
                         data-aos="fade-up"
                       >
                         <img
-                          src="/public/assets/Icon.png"
+                          src={icon}
                           style={{
                             width: "20%",
                             height: "20%",
@@ -261,6 +264,7 @@ function Login() {
                             <Button
                               type="submit"
                               fullWidth
+                              disabled = {sessionLogin}
                               onClick={handleLoginWhenThereIsSession}
                               variant="contained"
                               sx={{
@@ -414,7 +418,7 @@ function Login() {
                               type="submit"
                               fullWidth
                               variant="contained"
-                              disabled ={!isValid}
+                              disabled ={!isValid || isLogginIn || Object.values(values).some(value => value === '')}
                               sx={{
                                 backgroundColor: "White",
                                 "&:hover": {
@@ -427,7 +431,7 @@ function Login() {
                                 },
                                 background:
                                   "linear-gradient(to right, #414141, #000000)",
-                                opacity: !isValid? 0.7 : 1,
+                                opacity: !isValid || isLogginIn || Object.values(values).some(value => value === '') ? 0.7 : 1,
                               }}
                           
                             >

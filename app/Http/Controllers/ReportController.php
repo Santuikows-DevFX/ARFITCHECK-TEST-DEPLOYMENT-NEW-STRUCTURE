@@ -82,10 +82,32 @@ class ReportController extends Controller
         $dayOfWeek = null;
 
         $weeklyRevenue = [];
+        $test = [];
 
         foreach (range(0, 6) as $day) {
             $currentWeekRevenue[Carbon::now()->startOfWeek(Carbon::MONDAY)->addDays($day)->dayName] = 0;
             $lastWeekRevenue[Carbon::now()->subWeek()->startOfWeek(Carbon::MONDAY)->addDays($day)->dayName] = 0;
+        }
+
+        //this is for customization request when order is being approved, and the user paid
+        foreach($this->database->getReference('customizedRequest')->getSnapshot()->getValue() as $requestID => $weeklyCustomizationRequestInfo) {
+            $requestDate = Carbon::parse($weeklyCustomizationRequestInfo['orderDate']);
+            $dayOfWeek = $requestDate->dayName;
+
+            if ($requestDate->between($startOfCurrentWeek, $endOfCurrentWeek) && $weeklyCustomizationRequestInfo['isPaid'] && $weeklyCustomizationRequestInfo['orderStatus'] != 'Waiting for Approval' && $weeklyCustomizationRequestInfo['orderStatus'] != 'Request Cancelled' && $weeklyCustomizationRequestInfo['orderStatus'] != 'Request Cancelled') {
+
+                $currentWeekRevenue[$dayOfWeek] += $weeklyCustomizationRequestInfo['amountToPay'];
+                $currSalesWithEwallet += $weeklyCustomizationRequestInfo['amountToPay'];
+
+            }
+
+            if ($requestDate->between($startOfLastWeek, $endOfLastWeek) && $weeklyCustomizationRequestInfo['isPaid'] && $weeklyCustomizationRequestInfo['orderStatus'] != 'Waiting for Approval' && $weeklyCustomizationRequestInfo['orderStatus'] != 'Request Cancelled' && $weeklyCustomizationRequestInfo['orderStatus'] != 'Request Cancelled') {
+
+                $lastWeekRevenue[$dayOfWeek] += $weeklyCustomizationRequestInfo['amountToPay'];
+                $pastSalesWithEwallet += $weeklyCustomizationRequestInfo['amountToPay'];
+
+            }
+
         }
 
         foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $weeklyRevenueInfo) {
@@ -94,7 +116,7 @@ class ReportController extends Controller
             $dayOfWeek = $orderDate->dayName;
 
             //current week
-            if ($orderDate->between($startOfCurrentWeek, $endOfCurrentWeek) && $weeklyRevenueInfo['paymentMethod'] === 'ewallet' && $weeklyRevenueInfo['orderStatus'] != 'Order Completed' && $weeklyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $weeklyRevenueInfo['orderStatus'] != 'Order Cancelled' && $weeklyRevenueInfo['orderStatus'] != 'Request Rejected') {
+            if ($orderDate->between($startOfCurrentWeek, $endOfCurrentWeek) && $weeklyRevenueInfo['paymentMethod'] === 'ewallet' && $weeklyRevenueInfo['orderStatus'] != 'Order Completed' && $weeklyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $weeklyRevenueInfo['orderStatus'] != 'Order Cancelled' && $weeklyRevenueInfo['orderStatus'] != 'Request Rejected' && $weeklyRevenueInfo['orderStatus'] != 'Request Cancelled') {
 
                 if (!$weeklyRevenueInfo['isBulkyOrder']) {
                     $currentWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
@@ -106,16 +128,19 @@ class ReportController extends Controller
                     $currentWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
                     $currSalesWithEwallet += $weeklyRevenueInfo['amountToPay'];
                 }
+
             }
 
             if ($orderDate->between($startOfCurrentWeek, $endOfCurrentWeek) && $weeklyRevenueInfo['orderStatus'] === 'Order Completed') {
 
-                $currentWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
-                $currSales += $weeklyRevenueInfo['amountToPay'];
+                if (!$weeklyRevenueInfo['isBulkyOrder']) {
+                    $currentWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
+                    $currSalesWithEwallet += $weeklyRevenueInfo['amountToPay'];
+                }
 
                 if ($orderID === $weeklyRevenueInfo['associatedOrderID'] && $weeklyRevenueInfo['isBulkyOrder'] === true) {
-                    $currentWeekRevenue[$dayOfWeek] -= $weeklyRevenueInfo['amountToPay'];
-                    $currSales -= $weeklyRevenueInfo['amountToPay'];
+                    $currentWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
+                    $currSales += $weeklyRevenueInfo['amountToPay'];
                 }
             }
 

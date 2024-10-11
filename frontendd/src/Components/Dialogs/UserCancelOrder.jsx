@@ -180,8 +180,8 @@ const UserCancelOrder = ({ open, onClose, zIndex, orderInfo, orderID, fetchMyOrd
                                             Close
                                         </Typography>
                                     </Button>
-                                    <Button type='submit' color="primary" disabled={isSubmitting || !isValid} onClick={() => handleCancelOrderRequest(values)}>
-                                        <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'black', opacity: !isValid ? 0.5 : 1, cursor: !isValid ? 'not-allowed' : 'default' }}>
+                                    <Button type='submit' color="primary" disabled={isSubmitting || !isValid || Object.values(values).some(value => value === '')} onClick={() => handleCancelOrderRequest(values)}>
+                                        <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'black', opacity: !isValid || isSubmitting || Object.values(values).some(value => value === '') ? 0.5 : 1, cursor: !isValid || isSubmitting || Object.values(values).some(value => value === '') ? 'not-allowed' : 'default' }}>
                                             PROCEED
                                         </Typography>
                                     </Button>

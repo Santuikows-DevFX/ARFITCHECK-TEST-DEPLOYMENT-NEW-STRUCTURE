@@ -38,7 +38,7 @@ class ProductController extends Controller
             } else {
 
                 foreach ($this->database->getReference('products')->getSnapshot()->getValue() as $productID => $productInfo) {
-                    if ($productInfo['isVisible'] === true) {
+                    if ($productInfo['isVisible'] === true && $productInfo['productQuantity'] > 0) {
                         $productData[] = [
                             'productID' => $productID,
                             'productInfo' => $productInfo
@@ -342,7 +342,14 @@ class ProductController extends Controller
         foreach ($this->database->getReference('products')->getSnapshot()->getValue() as $productID => $productInfo) {
             if ($request->productID == $productID) {
 
-                $newTotalQnt = $request->smallQuantity + $request->mediumQuantity + $request->largeQuantity + $request->extraLargeQuantity;
+                $newTotalQnt = ($request->smallQuantity ?? 0) 
+                + ($request->mediumQuantity ?? 0) 
+                + ($request->largeQuantity ?? 0) 
+                + ($request->extraLargeQuantity ?? 0) 
+                + ($request->doubleXLQuantity ?? 0) 
+                + ($request->tripleXLQuantity ?? 0) 
+                + ($request->totalQuantity ?? 0);
+   
                 $request->isUnlisted === 'false' ? $visiblity = true : $visiblity = false;
                 //update the child based on product ID
                 $this->database->getReference('products/' . $request->productID)->update([
@@ -360,12 +367,12 @@ class ProductController extends Controller
                     'productCriticalLevel' => $request->productCriticalLevelQuantity ? $request->productCriticalLevelQuantity : $productInfo['productCriticalLevel'],
                     'productDescription' => $request->productDescription ? $request->productDescription : $productInfo['productDescription'],
                     'productQuantity' => $newTotalQnt,
-                    'smallQuantity' => $request->smallQuantity ? $request->smallQuantity : $productInfo['smallQuantity'],
-                    'mediumQuantity' => $request->mediumQuantity ? $request->mediumQuantity : $productInfo['mediumQuantity'],
-                    'largeQuantity' => $request->largeQuantity ? $request->largeQuantity : $productInfo['largeQuantity'],
-                    'extraLargeQuantity' => $request->extraLargeQuantity ? $request->extraLargeQuantity : $productInfo['extraLargeQuantity'],
-                    'doubleXLQuantity' => $request->doubleXLQuantity ? $request->doubleXLQuantity : $productInfo['doubleXLQuantity'],
-                    'tripleXLQuantity' => $request->tripleXLQuantity ? $request->tripleXLQuantity : $productInfo['tripleXLQuantity'],
+                    'smallQuantity' => $request->smallQuantity ?? $productInfo['smallQuantity'],
+                    'mediumQuantity' => $request->mediumQuantity ?? $productInfo['mediumQuantity'],
+                    'largeQuantity' => $request->largeQuantity ?? $productInfo['largeQuantity'],
+                    'extraLargeQuantity' => $request->extraLargeQuantity ?? $productInfo['extraLargeQuantity'],
+                    'doubleXLQuantity' => $request->doubleXLQuantity ?? $productInfo['doubleXLQuantity'],
+                    'tripleXLQuantity' => $request->tripleXLQuantity ?? $productInfo['tripleXLQuantity'],
                     'totalSold' => $productInfo['totalSold'],
                     'productRatings' => $productInfo['productRatings'],
 

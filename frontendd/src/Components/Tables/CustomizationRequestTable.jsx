@@ -107,7 +107,9 @@ const CustomizationRequestTable = () => {
     setViewCustomizationPaymentReceiptDialog(true)
   }
 
-  const handleCloseCustomizationPaymentDialog = () => setViewCustomizationPaymentReceiptDialog(false)
+  const handleCloseCustomizationPaymentDialog = () => {
+    setViewCustomizationPaymentReceiptDialog(false)
+  }
   
   const statusColorPicker = (status) => {
     if (status === 'Waiting for Confirmation' || status === 'Waiting for Approval') {
@@ -516,22 +518,22 @@ const CustomizationRequestTable = () => {
                     <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', fontWeight: 'bold', color: 'black' }}>
                       PRODUCT(s)
                     </Typography>
-                    <Typography sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: 'black' }}>
-                        <Typography sx={{ fontFamily: 'Inter', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}>
+                        <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
                           <b>ID: {order.orderID}</b>
                         </Typography>
                         {order.orderInfo?.productName.split(', ').map((product, index) => (
                           <div key={index}>
-                            <Typography sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: 'black' }}>
+                            <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}>
                               {product}
                             </Typography>
                             
                             {order.orderInfo.orderType === 'default' ? (
-                              <Typography sx={{ fontFamily: 'Inter', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                              <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
                               <b>Qnt:</b> {order.orderInfo?.productQuantity?.split(', ')[index]} <b>Size:</b> {order.orderInfo?.productSize?.split(', ')[index]}
                             </Typography>
                             ) : (
-                              <Typography sx={{ fontFamily: 'Inter', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                              <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
                                 <b>Qnt:</b> {order.orderInfo?.productQuantity?.split(', ')[index]} <b>Size(s): </b>
                                 {order.orderInfo?.smallQuantity !== "0" ? `S x${order.orderInfo?.smallQuantity}${order.orderInfo?.mediumQuantity !== "0" || order.orderInfo?.largeQuantity !== "0" || order.orderInfo?.extraLargeQuantity !== "0" || order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
                                 {order.orderInfo?.mediumQuantity !== "0" ? `M x${order.orderInfo?.mediumQuantity}${order.orderInfo?.largeQuantity !== "0" || order.orderInfo?.extraLargeQuantity !== "0" || order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
@@ -572,20 +574,20 @@ const CustomizationRequestTable = () => {
                       </Typography>
                       {order.orderInfo.paymentMethod === 'cash' ? (
                               <Typography
-                              sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: 'black' }}
+                              sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}
                               >
                               <b>Cash</b>
                             </Typography>
                       ) : (
                             order.orderInfo.orderType === 'custom' && order.orderInfo.isPaid === false ? (
                               <Typography
-                                sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: 'black' }}
+                                sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}
                               >
                                 <b>E-Wallet</b>
                               </Typography>
                             ) : (
                               <Typography
-                                sx={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 500, color: '#1F618D', cursor: 'pointer' }}
+                                sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: '#1F618D', cursor: 'pointer', textDecoration: 'underline' }}
                                 onClick={() => openImageInNewTab(order.orderInfo.receiptImage)}
                               >
                                 <b>E-Wallet</b>
@@ -642,6 +644,7 @@ const CustomizationRequestTable = () => {
                         type="button"
                         onClick={() => handleViewCustomPrdOpen(order.orderInfo)}
                         fullWidth
+                        disabled = {loading}
                         variant="contained"
                         sx={{
                           backgroundColor: 'White',
@@ -683,6 +686,7 @@ const CustomizationRequestTable = () => {
                         type="submit"
                         onClick={() => handleUpdateOrderStatus(order.orderID, 'Approve', order.orderInfo.paymentMethod)}
                         fullWidth
+                        disabled = {loading}
                         variant="contained"
                         sx={{
                           backgroundColor: 'White',
@@ -723,6 +727,7 @@ const CustomizationRequestTable = () => {
                       <Button
                         type="submit"
                         fullWidth
+                        disabled = {loading}
                         onClick={() => handleDialogOpen(order.orderID, 'reject')}
                         variant="contained"
                         sx={{
@@ -770,6 +775,7 @@ const CustomizationRequestTable = () => {
                               type="button"
                               onClick={() => handleViewCustomPrdOpen(order.orderInfo)}
                               fullWidth
+                              disabled = {loading}
                               variant="contained"
                               sx={{
                                 backgroundColor: 'White',
@@ -811,6 +817,7 @@ const CustomizationRequestTable = () => {
                             type="submit"
                             onClick={() => handleOpenCustomizationPaymentDialog(order.orderID, order.orderInfo)}
                             fullWidth
+                            disabled = {loading}
                             variant="contained"
                             sx={{
                               backgroundColor: 'White',
@@ -854,6 +861,7 @@ const CustomizationRequestTable = () => {
                               fullWidth
                               onClick={() => handleDialogOpen(order.orderID, 'cancel')}
                               variant="contained"
+                              disabled = {loading}
                               sx={{
                                 backgroundColor: 'White',
                                 '&:hover': { backgroundColor: '#943126', color: 'white' },
@@ -895,6 +903,7 @@ const CustomizationRequestTable = () => {
                             type="button"
                             onClick={() => handleViewCustomPrdOpen(order.orderInfo)}
                             fullWidth
+                            disabled = {loading}
                             variant="contained"
                             sx={{
                               backgroundColor: 'White',
@@ -936,6 +945,47 @@ const CustomizationRequestTable = () => {
                   ) : (
                         order.orderInfo.orderStatus === 'Preparing Request to Ship' ? (
                           <>
+                            {/* VIEW button */}
+                            <Button
+                              type="button"
+                              onClick={() => handleViewCustomPrdOpen(order.orderInfo)}
+                              fullWidth
+                              disabled = {loading}
+                              variant="contained"
+                              sx={{
+                                backgroundColor: 'White',
+                                '&:hover': { backgroundColor: 'black', color: 'white' },
+                                '&:not(:hover)': { backgroundColor: '#232323', color: 'white' },
+                                mb: 0.5,
+                                padding: '0.3rem',
+                                minWidth: 'fit-content',
+                                fontSize: '12px',
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  fontFamily: 'Kanit',
+                                  fontSize: 14,
+                                  padding: 0.5,
+                                  visibility: loading ? 'hidden' : 'visible',
+                                }}
+                              >
+                                VIEW REQ.
+                              </Typography>
+                              {loading && (
+                                <CircularProgress
+                                  size={16}
+                                  color="inherit"
+                                  sx={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    marginTop: '-8px',
+                                    marginLeft: '-8px',
+                                  }}
+                                />
+                              )}
+                            </Button>
                             <Button
                               type="submit"
                               onClick={() => handleUpdateOrderStatus(order.orderID, 'Deliver')}
@@ -951,7 +1001,7 @@ const CustomizationRequestTable = () => {
                               <Typography
                                 sx={{
                                   fontFamily: 'Kanit',
-                                  fontSize: 20,
+                                  fontSize: 14,
                                   padding: 0.5,
                                   visibility: loading ? 'hidden' : 'visible',
                                 }}
@@ -998,7 +1048,7 @@ const CustomizationRequestTable = () => {
       </Box>
       <RejectOrder open={isDialogOpen} onClose={handleDialogClose} reqData={selectedRequest} zIndex={1000} fetchOrders={fetchOrders} />
       <ViewCustomProductDetails open={viewCustomizedProductDialog} onClose={handleViewCustomPrdClose} orderInfo={selectedOrder} />
-      <ViewCustomizationPaymentReceipt open={viewCustomizationPaymentReceiptDialog} onClose={handleCloseCustomizationPaymentDialog} requestData={selectedOrder} zIndex={1000}/>
+      <ViewCustomizationPaymentReceipt open={viewCustomizationPaymentReceiptDialog} onClose={handleCloseCustomizationPaymentDialog} requestData={selectedOrder} fetchOrders={fetchOrders} zIndex={1000}/>
     </div>
   );
 };
