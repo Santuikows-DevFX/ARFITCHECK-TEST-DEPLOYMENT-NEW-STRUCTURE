@@ -37,6 +37,9 @@ import MyCustomizationRequests from './MyCustomizationRequests';
 import { ToastContainer } from 'react-toastify';
 
 import userGraffitiBG from '../../../public/assets/customerGraffiti.png'
+import LogoImage from '../../../public/assets/Logo.jpg';
+import { onValue, ref } from 'firebase/database';
+import { db } from '../../firebase';
 
 const drawerWidth = 240;
 
@@ -61,7 +64,19 @@ function Users(props) {
   const notificationID = open ? 'notification-popover' : undefined;
 
   React.useEffect(() => {
-    fetchNotificationData()
+    const dbRef = ref(db, 'notificationForUsers');
+  
+    const listener = onValue(dbRef, (snapshot) => {
+      if (snapshot.exists()) {
+        fetchNotificationData()
+      } else {
+        console.log("No data available");
+      }
+    }, (error) => {
+      console.error("Error listening to Realtime Database: ", error);
+    });
+  
+    return () => listener();
   }, [])
 
   const fetchNotificationData = async () => {
@@ -86,7 +101,6 @@ function Users(props) {
     }
   };
   
-
   //notification panel
   const handleNotificationOpen = (event) => {
     setNotificationAnchroEl(event.currentTarget)
@@ -265,7 +279,8 @@ function Users(props) {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          backgroundColor: '#F4F4F4'
+          backgroundColor: '#F4F4F4',
+          zIndex: 1
         }}
       >
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -280,7 +295,7 @@ function Users(props) {
           </IconButton>
           <Box
                 component="img"
-                src="../public/assets/Logo.jpg"
+                src= {LogoImage}
                 alt="Logo"
                 sx={{
                   width: { xs: 80, sm: 100, md: 120 },
@@ -451,7 +466,7 @@ function Users(props) {
    
     </Box>
        <Footer/>
-       <ToastContainer/>
+       {/* <ToastContainer/> */}
       </div>
   );
 }

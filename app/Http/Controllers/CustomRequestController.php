@@ -64,7 +64,7 @@ class CustomRequestController extends Controller
                 'extraLargeQuantity' => $request->extraLargeQnt,
                 'doubleXLQuantity' => $request->doubleXLQnt,
                 'tripleXLQuantity' => $request->tripleXLQnt,
-                'productQuantity' => $totalCustomizedPrdQnt,
+                'productQuantity' => strval($totalCustomizedPrdQnt),
 
                 'associatedOrderID' => 'None',
                 'cancelReason' => 'None',
@@ -114,10 +114,10 @@ class CustomRequestController extends Controller
             ]);
 
             //notify admin
-            $this->notifyAdmin(Carbon::now()->toDateString(), Carbon::now('Asia/Manila')->format('h:i A'));
+            $this->notifyAdmin(Carbon::now()->toDateString(), Carbon::now('Asia/Manila')->format('h:i A'), 'Place');
 
             //send email when a customization request has been placed
-            $this->sendEmailNotificationForReceipt($firstOrderKey, $email, $firstName, $lastName, Carbon::now()->toDateString(), $request->amountToPay, $mobilePhone, $fullAddress, 'place');
+            $this->sendEmailNotificationForReceipt($firstOrderKey, $email, $firstName, $lastName, Carbon::now()->toDateString(), $request->amountToPay, $mobilePhone, $fullAddress, 'place', null, null);
         } catch (\Exception $e) {
             return response($e->getMessage());
         }
@@ -178,10 +178,12 @@ class CustomRequestController extends Controller
 
             if ($this->database->getReference('customizedRequest')->getSnapshot()->exists()) {
                 foreach ($this->database->getReference('customizedRequest')->getSnapshot()->getValue() as $customRequestID => $customRequestInfo) {
-                    $customizationRequest[] = [
-                        'orderID' => $customRequestID,
-                        'orderInfo' => $customRequestInfo
-                    ];
+                    if ($customRequestInfo['orderStatus'] != 'Cancellation Requested') {
+                        $customizationRequest[] = [
+                            'orderID' => $customRequestID,
+                            'orderInfo' => $customRequestInfo
+                        ];
+                    }
                 }
             }
 
@@ -191,31 +193,52 @@ class CustomRequestController extends Controller
         }
     }
 
+    public function fetchCustomizationCancelRequests()
+    {
+        $cancelCustomizationRequestData = [];
+        try {
+
+            if ($this->database->getReference('customizedRequest')->getSnapshot()->exists()) {
+                foreach ($this->database->getReference('customizedRequest')->getSnapshot()->getValue() as $customRequestID => $customRequestInfo) {
+                    if ($customRequestInfo['orderStatus'] === 'Cancellation Requested') {
+                        $cancelCustomizationRequestData[] = [
+                            'orderID' => $customRequestID,
+                            'orderInfo' => $customRequestInfo
+                        ];
+                    }
+                }
+            }
+
+            return response()->json($cancelCustomizationRequestData);
+        } catch (\Exception $e) {
+            return response($e->getMessage());
+        }
+    }
+
     public function fetchCustomizationRequestByDate($dataSortRequest)
     {
-        try{
+        try {
 
             $customizationData = [];
             if ($this->database->getReference('customizedRequest')->getSnapshot()->exists()) {
-              foreach ($this->database->getReference('customizedRequest')->getSnapshot()->getValue() as $requestID => $requestInfo) {
-                if (Carbon::parse($dataSortRequest)->isSameDay(Carbon::parse($requestInfo['orderDate']))) {
-                  if ($requestInfo['orderStatus'] != 'Order Completed' && $requestInfo['orderStatus'] != 'Order Cancelled' && $requestInfo['orderStatus'] != 'Request Rejected' && $requestInfo['orderStatus'] != 'Request Cancelled') {
-                    $customizationData[] = [
-                      'orderID' => $requestID,
-                      'orderInfo' => $requestInfo,
-                    ];
-                  }
+                foreach ($this->database->getReference('customizedRequest')->getSnapshot()->getValue() as $requestID => $requestInfo) {
+                    if (Carbon::parse($dataSortRequest)->isSameDay(Carbon::parse($requestInfo['orderDate']))) {
+                        if ($requestInfo['orderStatus'] != 'Order Completed' && $requestInfo['orderStatus'] != 'Order Cancelled' && $requestInfo['orderStatus'] != 'Request Rejected' && $requestInfo['orderStatus'] != 'Request Cancelled') {
+                            $customizationData[] = [
+                                'orderID' => $requestID,
+                                'orderInfo' => $requestInfo,
+                            ];
+                        }
+                    }
                 }
-              }
             }
             $message = "No Customized Orders Found!";
             if (count($customizationData) == 0) {
-              return response(compact('message'));
+                return response(compact('message'));
             }
-      
-            return response()->json($customizationData);
 
-        }catch(\Exception $e) {
+            return response()->json($customizationData);
+        } catch (\Exception $e) {
             return response($e->getMessage());
         }
     }
@@ -227,26 +250,46 @@ class CustomRequestController extends Controller
 
             //will be used as storage to save the customization request data before removing it from the collection
             $customRequestDataToBeMoved = null;
+            $updateTimeStamp = Carbon::now('Asia/Manila')->format('h:i A');
+            $statusBeforeCancel = "";
 
             foreach ($this->database->getReference('customizedRequest')->getSnapshot()->getValue() as $customRequestID => $customRequestInfo) {
                 if ($request->orderID == $customRequestID) {
 
-                    $customRequestDataToBeMoved = $customRequestInfo;
+                    $statusBeforeCancel = $customRequestInfo['orderStatus'];
 
-                    //push through the orders collection so we can read it on the transaction / order history
-                    $pushedDataRef = $this->database->getReference('orders')->push($customRequestDataToBeMoved);
-                    $pushedCustomizationDataKey = $pushedDataRef->getKey();
+                    //check the order status so we can move it automatically if it is still on waiting for approval status
+                    if ($customRequestInfo['orderStatus'] === 'Waiting for Approval') {
 
-                    //update the new pushed data in the orders 
-                    $this->database->getReference('orders/' . $pushedCustomizationDataKey)->update([
-                        'associatedOrderID' => $pushedCustomizationDataKey,
-                        'userCancelReason' => $request->reason,
-                        'userCancelReasonAdditional' => $request->additionalInformation ? $request->additionalInformation : 'None',
-                        'orderStatus' => $customRequestInfo['orderStatus'] == 'Waiting for Approval' ? 'Request Cancelled' : 'Cancellation Requested'
-                    ]);
+                        $customRequestDataToBeMoved = $customRequestInfo;
 
-                    //delete the request from this collection
-                    $this->database->getReference('customizedRequest/' . $customRequestID)->remove();
+                        //push through the orders collection so we can read it on the transaction / order history
+                        $pushedDataRef = $this->database->getReference('orders')->push($customRequestDataToBeMoved);
+                        $pushedCustomizationDataKey = $pushedDataRef->getKey();
+
+                        //update the new pushed data in the orders 
+                        $this->database->getReference('orders/' . $pushedCustomizationDataKey)->update([
+                            'associatedOrderID' => $pushedCustomizationDataKey,
+                            'userCancelReason' => $request->reason,
+                            'userCancelReasonAdditional' => $request->additionalInformation ? $request->additionalInformation : 'None',
+                            'orderStatus' => 'Request Cancelled',
+                            'updateTimeStamp' => $updateTimeStamp
+                        ]);
+
+                        //delete the request from this collection
+                        $this->database->getReference('customizedRequest/' . $customRequestID)->remove();
+                    } else {
+
+                        $this->database->getReference('customizedRequest/' . $request->orderID)->update([
+
+                            'statusBeforeCancel' => $statusBeforeCancel,
+                            'userCancelReason' => $request->reason,
+                            'userCancelReasonAdditional' => $request->additionalInformation ? $request->additionalInformation : 'None',
+                            'orderStatus' => 'Cancellation Requested',
+                            'updateTimeStamp' => $updateTimeStamp
+
+                        ]);
+                    }
                 }
             }
 
@@ -260,7 +303,50 @@ class CustomRequestController extends Controller
         }
     }
 
-    //TODO: UPDATE THE SEND EMAIL FOR REJECTION SINCE IT DOES NOT PROVIDE THE REJECTION REASON
+    public function rejectCancelCustomizationRequest(Request $request)
+    {
+        try {
+
+            $customizationRequest = $this->database->getReference('customizedRequest')->getSnapshot()->getValue();
+
+            // variables for finding the target order
+            $targetRequest = null;
+            $firstName = '';
+            foreach ($customizationRequest as $requestID => $customizationRequestInfo) {
+                if ($request->orderID == $requestID) {
+
+                    $targetRequest = $customizationRequestInfo;
+                    $firstName = $this->database->getReference('users/' . $customizationRequestInfo['uid'] . '/firstName')->getSnapshot()->getValue();
+                    break;
+                }
+            }
+
+            //loop through the orders again and look for the order with the same timestamp and uid
+            foreach ($customizationRequest as $requestID => $customizationRequestInfo) {
+                if (($customizationRequestInfo['uid'] == $targetRequest['uid'] && $request->associatedOrderID == $customizationRequestInfo['associatedOrderID'])) {
+                    //update the order info
+                    $updateRequestInfo = [
+                        'orderStatus' => $customizationRequestInfo['statusBeforeCancel'],
+                        'statusBeforeCancel' => "None",
+                        'userCancelReason' => "None",
+                        'userCancelReasonAdditional' => "None",
+                        'isRated' => false
+                    ];
+
+                    //push the update
+                    $this->database->getReference('customizedRequest/' . $requestID)->update($updateRequestInfo);
+                }
+            }
+
+            // notify the user about the rejection of the cancellation of the request
+            $this->notifyUserForCancellationRequestRejection($requestID, $targetRequest['uid']);
+            $this->sendEmailForCancelRequestStatus($requestID, $targetRequest['uid'], $targetRequest['email'], 'rejectCancelReq', $firstName);
+        } catch (\Exception $e) {
+
+            return response($e->getMessage());
+        }
+    }
+
     //updating
     public function updateRequestStatus(Request $request)
     {
@@ -294,28 +380,34 @@ class CustomRequestController extends Controller
                             $requestStatusType = "Approve";
 
                             //send email to user oncr approved
-                            $this->sendEmailNotificationForReceipt($customRequestID, $email, $firstName, $lastName, $customRequestInfo['orderDate'], $totalAmountToPay - 100, $mobilePhone, $fullAddress, 'approve');
+                            $this->sendEmailNotificationForReceipt($customRequestID, $email, $firstName, $lastName, $customRequestInfo['orderDate'], $totalAmountToPay - 100, $mobilePhone, $fullAddress, 'approve', null, null);
                             break;
                         case 'Reject':
                             $requestStatusType = "Reject";
                             $requestStatus = "Request Rejected";
 
-                            //send email to user oncr rejected
-                            $this->sendEmailNotificationForReceipt($customRequestID, $email, $firstName, $lastName, $customRequestInfo['orderDate'], $totalAmountToPay - 100, $mobilePhone, $fullAddress, 'reject');
+                            //send email to user once admin rejected the request
+                            $this->sendEmailNotificationIfAdminRejectOrder($orderIDReq, $email, $firstName, $lastName, $customRequestInfo['orderDate'], $totalAmountToPay - 100, $mobilePhone, $fullAddress, $request->cancelReason, $request->cancelReasonAdditional);
 
                             //call the reject function to move the req when rejected by the admin
-                            $this->moveCustomizationRequestIfCancelledOrRejected($orderIDReq, $request->cancelReason, 'reject');
+                            $this->moveCustomizationRequestIfCancelledOrRejected($orderIDReq, $request->cancelReason, 'reject', $updateTimeStamp);
 
                             break;
                         case 'Cancel':
                             $requestStatusType = "Cancel";
                             $requestStatus = "Request Cancelled";
 
-                            //send email to user oncr rejected
-                            $this->sentNotificationIfAdminCancelOrder($orderIDReq, $email, $firstName, $lastName, $customRequestInfo['orderDate'], $totalAmountToPay - 100, $mobilePhone, $fullAddress, $request->cancelReason, null);
+                            //determine if it is a cancellation request approval
+                            if ($request->isCancellationRequest) {
+                                $this->sendEmailForCancelRequestStatus($orderIDReq, $targetUID, $email, 'cancelReq', $firstName);
+                                $this->notifyUserForCancellationRequestApproval($orderIDReq, $targetUID);
+                            } else {
+                                //send email to user once admin cancelled the request (this is when the admin chose to cancel it based on a given reason such as Inappropriate Design or what...)
+                                $this->sentNotificationIfAdminCancelOrder($orderIDReq, $email, $firstName, $lastName, $customRequestInfo['orderDate'], $totalAmountToPay - 100, $mobilePhone, $fullAddress, $request->cancelReason, $request->cancelReasonAdditional);
+                            }
 
                             //call this function again but this time the type is cancelled by the admin
-                            $this->moveCustomizationRequestIfCancelledOrRejected($orderIDReq, $request->cancelReason, 'cancel');
+                            $this->moveCustomizationRequestIfCancelledOrRejected($orderIDReq, $request->cancelReason, 'cancel', $updateTimeStamp);
 
                             break;
                         case 'Prepare':
@@ -323,14 +415,20 @@ class CustomRequestController extends Controller
                             break;
                         case 'Deliver':
                             $requestStatus = "Parcel out for delivery";
-
-                            //move the customize request into orders collection
                             break;
                     }
 
+                    if ($requestStatus === 'Parcel out for delivery') {
 
-                    //i did this because it updates the prev removed request when rejected causing some issues and errors
-                    if ($requestStatus != 'Request Rejected' && $requestStatus != 'Request Cancelled') {
+                        //send SMS to user 
+                        $this->notifyUsersForOrderDelivery($mobilePhone, $totalAmountToPay, $request->orderID, $paymentMethod, $targetUID, $request->trackingNumber, $request->estimatedTimeOfDelivery);
+
+                        //send also email to user for delivery notice
+                        $this->sendEmailNotificationForReceipt($request->orderID, $email, $firstName, $lastName, Carbon::now()->toDateString(), $totalAmountToPay - 100, $mobilePhone, $fullAddress, 'delivery', $request->trackingNumber, $request->estimatedTimeOfDelivery);
+
+                        //move the data from the customizedRequest collection into the orders collection since out for delivery na siya.
+                        $this->moveCustomizationRequestWhenOutForDelivery($request->orderID, $request->estimatedTimeOfDelivery, $request->trackingNumber, $updateTimeStamp);
+                    } else if ($requestStatus != 'Request Rejected' && $requestStatus != 'Request Cancelled') {
                         $requestUpdates = [
                             'orderStatus' => $requestStatus,
                             'approvedDate' => Carbon::now()->toDateString(),
@@ -345,10 +443,6 @@ class CustomRequestController extends Controller
 
             //notify users upon rejection or approve
             $this->notifyUsersCustomizationRequestStatus($updateTimeStamp, $orderIDReq, $targetUID, $requestStatusType);
-
-            if ($requestStatus == 'Parcel out for delivery') {
-                $this->notifyUsersForOrderDelivery($mobilePhone, $totalAmountToPay, $request->orderID, $paymentMethod, $targetUID);
-            }
 
             $message = 'Request Status Updated';
             return response(compact('message'));
@@ -406,7 +500,7 @@ class CustomRequestController extends Controller
     }
 
     // not routed functions
-    public function notifyAdmin($dateOrdered, $timeStamp)
+    public function notifyAdmin($dateOrdered, $timeStamp, $type)
     {
         try {
 
@@ -416,7 +510,7 @@ class CustomRequestController extends Controller
 
                     $notificationData = [
                         'adminID' => $adminID,
-                        'notificationMessage' => 'A customized product request has been submitted',
+                        'notificationMessage' => $type === 'Place' ? 'A customized product request has been submitted' : 'A cancellation request been submitted',
                         'notificationDate' => $dateOrdered,
                         'notificationTime' => $timeStamp,
                         'status' => 'unread'
@@ -451,7 +545,7 @@ class CustomRequestController extends Controller
                 'form_params' => [
                     'apikey' => env('SEMAPHORE_API_KEY'),
                     'number' => $mobilePhone,
-                    'message' => 'ARFITCHECK: Your parcel with an order ID of ' . $orderID . ' with payment method ' . $paymentMethod . ' ' . $totalAmountToPay . ' PHP is out for delivery. REMINDER: Once you received and accepted the product(s), please confirm it in ARFITCHECK Website by ' . Carbon::now()->addDay(3)->toDateString() . ', if we dont here from you, payment will be automatically transferred to BMIC.',
+                    'message' => 'ARFITCHECK: Your parcel with an order ID of ' . $orderID . ' with payment method ' . $paymentMethod . ' ' . $totalAmountToPay . ' PHP is out for delivery. REMINDER: Once you received and accepted the product(s), please confirm it in ARFITCHECK Website by ' . Carbon::now()->addDay(2)->toDateString() . ', if we dont here from you, payment will be automatically transferred to BMIC.',
                     'sendername' => env('SEMAPHORE_SENDER_NAME')
                 ]
             ]);
@@ -506,15 +600,52 @@ class CustomRequestController extends Controller
         }
     }
 
+
+    public function notifyUserForCancellationRequestApproval($orderID, $uid)
+    {
+        try {
+
+            //insert into notification node
+            $userNotificationData = [
+                'notificationMessage' => 'Your request to cancel ' . $orderID . ' was approved. Order was moved to order history.',
+                'notificationDate' => Carbon::now()->toDateString(),
+                'notificationTime' => Carbon::now('Asia/Manila')->format('h:i A'),
+                'status' => 'unread',
+                'uid' => $uid
+            ];
+            $this->database->getReference('notificationForUsers')->push($userNotificationData);
+        } catch (\Exception $e) {
+            return response($e->getMessage());
+        }
+    }
+
+    public function notifyUserForCancellationRequestRejection($orderID, $uid)
+    {
+        try {
+
+            //insert into notification node
+            $userNotificationData = [
+                'notificationMessage' => 'Your request to cancel ' . $orderID . ' was rejected.',
+                'notificationDate' => Carbon::now()->toDateString(),
+                'notificationTime' => Carbon::now('Asia/Manila')->format('h:i A'),
+                'status' => 'unread',
+                'uid' => $uid
+            ];
+            $this->database->getReference('notificationForUsers')->push($userNotificationData);
+        } catch (\Exception $e) {
+            return response($e->getMessage());
+        }
+    }
+
     // EMAIL SHITS
-    public function sendEmailNotificationForReceipt($requestID, $email, $firstName, $lastName, $requestDate, $subtotal, $phoneNumber, $fullAddress, $type)
+    public function sendEmailNotificationForReceipt($requestID, $email, $firstName, $lastName, $requestDate, $subtotal, $phoneNumber, $fullAddress, $type, $trackingNumber, $estimatedTimeOfDelivery)
     {
         try {
 
             $status = $type == 'place'
-                ? 'has been received. Kindly wait until for the approval of your customization request'
+                ? 'has been received by the system. Kindly wait until for the approval of your customization request'
                 : ($type == 'approve'
-                    ? 'has been approved. BMIC has been notified to start processing your request. You may now also process the payment for this request until ' . Carbon::now()->addDay(2)->toDateString() . ', if you did not process your payment within the set timeframe, your customization request will be automatically cancelled.'
+                    ? 'has been approved. You may now also process the payment for this request until ' . Carbon::now()->addDay(2)->toDateString() . ', if you did not process your payment within the set timeframe, your customization request will be automatically cancelled.'
                     : ($type == 'reject'
                         ? 'has been rejected. Your customize request might be over complicated, your design contains inappropriate graphics, etc. For more details, you may contact BMIC on their Facebook.'
                         : ($type == 'cancel'
@@ -525,7 +656,7 @@ class CustomRequestController extends Controller
                 );
 
             $subjectStatus = $type == 'place'
-                ? 'has been received.'
+                ? 'has been received by the system.'
                 : ($type == 'approve'
                     ? 'has been approved.'
                     : ($type == 'reject'
@@ -536,6 +667,8 @@ class CustomRequestController extends Controller
                         )
                     )
                 );
+
+            $estTimeManipulator = $estimatedTimeOfDelivery === 1 ? '1 - 2' : ($estimatedTimeOfDelivery === 2 ? '2 - 3' : ($estimatedTimeOfDelivery === 3 ? '3 - 4' : ($estimatedTimeOfDelivery === 4 ? '4 - 5' : '5+')));
 
             $emailNotificationData = [
                 'subject' => 'Your customized request ' . $requestID . ' ' . $subjectStatus,
@@ -548,6 +681,8 @@ class CustomRequestController extends Controller
                 'fullAddress' => $fullAddress,
                 'recipient' => $firstName,
                 'recipientLN' => $lastName,
+                'trackingNumber' => $trackingNumber != null ? $trackingNumber : '-',
+                'estimatedTimeOfDelivery' => $estimatedTimeOfDelivery != null ? $estTimeManipulator : '-',
                 'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
             ];
 
@@ -625,11 +760,13 @@ class CustomRequestController extends Controller
                         <p><strong>Recipient Name:</strong> ' . $emailNotificationData['recipient'] . ' ' . $emailNotificationData['recipientLN'] . '</p>
                         <p><strong>Phone Number:</strong> ' . $emailNotificationData['phoneNumber'] . '</p>
                         <p><strong>Shipping Address:</strong> ' . $emailNotificationData['fullAddress'] . '</p>
+                        <p><strong>Tracking Number:</strong> ' . $emailNotificationData['trackingNumber'] . '</p>
+                        <p><strong>Estimated Hrs. of Delivery:</strong> ' . $emailNotificationData['estimatedTimeOfDelivery'] . ' hr(s)</p>
                 
                         <div class="divider"></div>
                 
                         <h3>WHAT\'S NEXT</h3>
-                        <p>Kindly wait for BMIC to process your request, if your customization request was approved you will be notified in app and email, you have 3 days to process the payment. If we didnt here from you, your customization request will be cancelled. </p>
+                        <p>Kindly wait for BMIC to process your request, if your customization request was approved you will be notified in app and email, you have 2 days to process the payment. If we didnt here from you, your customization request will be cancelled. </p>
 
                         <p>If your customization request has been rejected, it might be due to the following reasons, over complicated design, your design contains inappropriate graphics, etc. For more details, you may contact BMIC on their Facebook. </p>
 
@@ -736,7 +873,7 @@ class CustomRequestController extends Controller
                         </div>
                         
                         <p>Hi ' . $emailNotificationData['recipient'] . ',</p>
-                        <p>You have succesfull sent the payment for your customization request with a request ID of <span class="order-id">' . $emailNotificationData['requestID'] . '</span>.</p>
+                        <p>You have succesfully sent the payment for your customization request with a request ID of <span class="order-id">' . $emailNotificationData['requestID'] . '</span>.</p>
                         
                         <div class="divider"></div>
                 
@@ -759,7 +896,7 @@ class CustomRequestController extends Controller
                         <div class="divider"></div>
                 
                         <h3>WHAT\'S NEXT</h3>
-                        <p>Kindly wait for BMIC to process your request, if your customization request was approved you will be notified in app and email, you have 3 days to process the payment. If we didnt here from you, your customization request will be cancelled. </p>
+                        <p>Kindly wait for BMIC to process your request, if your customization request was approved you will be notified in app and email, you have 2 days to process the payment. If we didnt here from you, your customization request will be cancelled. </p>
 
                         <p>If your customization request has been rejected, it might be due to the following reasons, over complicated design, your design contains inappropriate graphics, etc. For more details, you may contact BMIC on their Facebook. </p>
 
@@ -793,26 +930,26 @@ class CustomRequestController extends Controller
 
     public function sentNotificationIfAdminCancelOrder($orderID, $email, $firstName, $lastName, $orderDate, $subtotal, $phoneNumber, $fullAddress, $cancelReason, $cancelReasonAdditional)
     {
-      try {
-  
-        $emailNotificationData = [
-          'subject' => 'Your customization request ' . $orderID . ' ' . 'has been cancelled.',
-          'email' =>  $email,
-          'status' => 'has been cancelled due to the following reason, "' . $cancelReason . '".',
-          'cancelReason' => $cancelReason,
-          'cancelReasongAdditional' => $cancelReasonAdditional != null ? $cancelReasonAdditional : '-',
-          'orderID' => $orderID,
-          'orderDate' => $orderDate,
-          'subtotal' => $subtotal,
-          'phoneNumber' => $phoneNumber,
-          'fullAddress' => $fullAddress,
-          'recipient' => $firstName,
-          'recipientLN' => $lastName,
-          'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
-        ];
-  
-        Mail::send([], [], function ($message) use ($emailNotificationData) {
-          $htmlBody = '
+        try {
+
+            $emailNotificationData = [
+                'subject' => 'Your customization request ' . $orderID . ' ' . 'has been cancelled.',
+                'email' =>  $email,
+                'status' => 'has been cancelled due to the following reason, "' . $cancelReason . '".',
+                'cancelReason' => $cancelReason,
+                'cancelReasongAdditional' => $cancelReasonAdditional != null ? $cancelReasonAdditional : '-',
+                'orderID' => $orderID,
+                'orderDate' => $orderDate,
+                'subtotal' => $subtotal,
+                'phoneNumber' => $phoneNumber,
+                'fullAddress' => $fullAddress,
+                'recipient' => $firstName,
+                'recipientLN' => $lastName,
+                'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
+            ];
+
+            Mail::send([], [], function ($message) use ($emailNotificationData) {
+                $htmlBody = '
            <html>
              <head>
                <style>
@@ -865,7 +1002,7 @@ class CustomRequestController extends Controller
                  </div>
                  
                  <p>Hi ' . $emailNotificationData['recipient'] . ',</p>
-                 <p>Your order request with an order ID of <span class="order-id">' . $emailNotificationData['orderID'] . '</span> ' . $emailNotificationData['status'] . '</p>
+                 <p>Your customization request with an order ID of <span class="order-id">' . $emailNotificationData['orderID'] . '</span> ' . $emailNotificationData['status'] . '</p>
                  
                  <div class="divider"></div>
            
@@ -893,19 +1030,236 @@ class CustomRequestController extends Controller
              </body>
            </html>
            ';
+
+                $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+                $message->to($emailNotificationData['email'])
+                    ->subject($emailNotificationData['subject'])
+                    ->html($htmlBody);
+            });
+
+            return response()->json([
+                'message' => 'Email sent to ' . $email . '.'
+            ], 200);
+        } catch (\Exception $e) {
+            return response($e->getMessage());
+        }
+    }
+
+    public function sendEmailNotificationIfAdminRejectOrder($orderID, $email, $firstName, $lastName, $orderDate, $subtotal, $phoneNumber, $fullAddress, $cancelReason, $cancelReasonAdditional)
+    {
+        try {
+
+            $emailNotificationData = [
+                'subject' => 'Your customization request ' . $orderID . ' ' . 'has been rejected.',
+                'email' =>  $email,
+                'status' => 'has been rejected due to the following reason, "' . $cancelReason . '".',
+                'cancelReason' => $cancelReason,
+                'cancelReasongAdditional' => $cancelReasonAdditional != null ? $cancelReasonAdditional : '-',
+                'orderID' => $orderID,
+                'orderDate' => $orderDate,
+                'subtotal' => $subtotal,
+                'phoneNumber' => $phoneNumber,
+                'fullAddress' => $fullAddress,
+                'recipient' => $firstName,
+                'recipientLN' => $lastName,
+                'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
+            ];
+
+            Mail::send([], [], function ($message) use ($emailNotificationData) {
+                $htmlBody = '
+           <html>
+             <head>
+               <style>
+                 body {
+                   font-family: Arial, sans-serif;
+                   background-color: #f4f4f4;
+                   padding: 20px;
+                 }
+                 .container {
+                   max-width: 600px;
+                   margin: 0 auto;
+                   background-color: #ffffff;
+                   padding: 20px;
+                   border-radius: 8px;
+                   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                 }
+                 h1, h2, h3 {
+                   color: #333333;
+                 }
+                 p {
+                   color: #555555;
+                   line-height: 1.6;
+                 }
+                 .divider {
+                   border-top: 1px solid #dddddd;
+                   margin: 20px 0;
+                 }
+                 .order-id {
+                   font-weight: bold;
+                 }
+                 .footer {
+                   margin-top: 20px;
+                   text-align: center;
+                   color: #888888;
+                   font-size: 12px;
+                 }
+                 .logo {
+                   text-align: center;
+                   margin-bottom: 20px;
+                 }
+                 .logo img {
+                   max-width: 100px;
+                 }
+               </style>
+             </head>
+             <body>
+               <div class="container">
+                 <div class="logo">
+                   <img src="' . $emailNotificationData['url'] . '" alt="Logo" style="width: 200px; height: auto;">
+                 </div>
+                 
+                 <p>Hi ' . $emailNotificationData['recipient'] . ',</p>
+                 <p>Your customization request with an order ID of <span class="order-id">' . $emailNotificationData['orderID'] . '</span> ' . $emailNotificationData['status'] . '</p>
+                 
+                 <div class="divider"></div>
+           
+                 <h3>REQUEST DETAILS</h3>
+                 <p><strong>Request ID:</strong> ' . $emailNotificationData['orderID'] . '</p>
+                 <p><strong>Request Date:</strong> ' . $emailNotificationData['orderDate'] . '</p>
+                 
+                 <div class="divider"></div>
+           
+                 <p><strong>Reason for Cancellation:</strong> ' . $emailNotificationData['cancelReason'] . '</p>
+                 <p><strong>Additional Information:</strong> ' . $emailNotificationData['cancelReasongAdditional'] . '</p>
   
-          $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
-          $message->to($emailNotificationData['email'])
-            ->subject($emailNotificationData['subject'])
-            ->html($htmlBody);
-        });
-  
-        return response()->json([
-          'message' => 'Email sent to ' . $email . '.'
-        ], 200);
-      } catch (\Exception $e) {
-        return response($e->getMessage());
-      }
+                 <div class="divider"></div>
+           
+                 <h3>WHAT\'S NEXT</h3>
+                 <p>For more details, you may contact BMIC on their Facebook page.</p>
+                 <p>
+                  <a href="https://www.facebook.com/bmic.clothing" target="_blank">Visit BMIC on Facebook</a>
+                </p>
+               </div>
+           
+               <div class="footer">
+                 <p>&copy; ' . date('Y') . ' ARFITCHECK. All rights reserved.</p>
+               </div>
+             </body>
+           </html>
+           ';
+
+                $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+                $message->to($emailNotificationData['email'])
+                    ->subject($emailNotificationData['subject'])
+                    ->html($htmlBody);
+            });
+
+            return response()->json([
+                'message' => 'Email sent to ' . $email . '.'
+            ], 200);
+        } catch (\Exception $e) {
+            return response($e->getMessage());
+        }
+    }
+
+    public function sendEmailForCancelRequestStatus($orderID, $uid, $email, $type, $recipient)
+    {
+        try {
+
+            $status = $type === 'rejectCancelReq' ? 'was rejected. customization request goes back to its original status.' : 'was approved. Your customization request has been moved to order history.';
+
+            $emailNotificationData = [
+                'subject' => 'Your customization request ' . $orderID . ' cancellation update.',
+                'email' =>  $email,
+                'status' => $status,
+                'orderID' => $orderID,
+                'recipient' => $recipient,
+                'uid' => $uid,
+                'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
+            ];
+
+            Mail::send([], [], function ($message) use ($emailNotificationData) {
+                $htmlBody = '
+             <html>
+               <head>
+                 <style>
+                   body {
+                     font-family: Arial, sans-serif;
+                     background-color: #f4f4f4;
+                     padding: 20px;
+                   }
+                   .container {
+                     max-width: 600px;
+                     margin: 0 auto;
+                     background-color: #ffffff;
+                     padding: 20px;
+                     border-radius: 8px;
+                     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                   }
+                   h1, h2, h3 {
+                     color: #333333;
+                   }
+                   p {
+                     color: #555555;
+                     line-height: 1.6;
+                   }
+                   .divider {
+                     border-top: 1px solid #dddddd;
+                     margin: 20px 0;
+                   }
+                   .order-id {
+                     font-weight: bold;
+                   }
+                   .footer {
+                     margin-top: 20px;
+                     text-align: center;
+                     color: #888888;
+                     font-size: 12px;
+                   }
+                   .logo {
+                     text-align: center;
+                     margin-bottom: 20px;
+                   }
+                   .logo img {
+                     max-width: 100px; /* Adjust the size of the image */
+                   }
+                 </style>
+               </head>
+               <body>
+                 <div class="container">
+                   <div class="logo">
+                     <img src="' . $emailNotificationData['url'] . '" alt="Logo" style="width: 200px; height: auto;">
+                   </div>
+                   
+                   <p>Hi ' . $emailNotificationData['recipient'] . ',</p>
+                   <p>Your request to cancel <span class="order-id">' . $emailNotificationData['orderID'] . '</span> ' . $emailNotificationData['status'] . ' </p>
+                   
+                   <div class="divider"></div>
+             
+                   <p>
+                    <a href="https://www.facebook.com/bmic.clothing" target="_blank">Visit BMIC on Facebook</a>
+                  </p>
+                 </div>
+             
+                 <div class="footer">
+                   <p>&copy; ' . date('Y') . ' ARFITCHECK. All rights reserved.</p>
+                 </div>
+               </body>
+             </html>
+             ';
+
+                $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+                $message->to($emailNotificationData['email'])
+                    ->subject($emailNotificationData['subject'])
+                    ->html($htmlBody);
+            });
+
+            return response()->json([
+                'message' => 'Email sent to ' . $email . '.'
+            ], 200);
+        } catch (\Exception $e) {
+            return response($e->getMessage());
+        }
     }
 
     //NOTIFY THE ADMIN IF THE CUSTOMIZATION REQUEST HAS BEEN PAID BY THE USER
@@ -1009,7 +1363,7 @@ class CustomRequestController extends Controller
     }
 
     //function for moving the data from the customizedRequest collection into the orders collection
-    public function moveCustomizationRequestIfCancelledOrRejected($requestID, $cancelReason, $type)
+    public function moveCustomizationRequestIfCancelledOrRejected($requestID, $cancelReason, $type, $timeStamp)
     {
         try {
 
@@ -1025,10 +1379,35 @@ class CustomRequestController extends Controller
             //update the new pushed data in the orders 
             $this->database->getReference('orders/' . $pushedCustomizationDataKey)->update([
                 'associatedOrderID' => $pushedCustomizationDataKey,
-                'cancelReason' => $cancelReason,
+                'cancelReason' => $cancelReason === null ? 'None' : $cancelReason,
                 'orderStatus' => $type === 'reject' ? 'Request Rejected' : 'Request Cancelled',
+                'updateTimeStamp' => $timeStamp,
                 'isRated' => true,
                 'isPaid' => false,
+            ]);
+        } catch (\Exception $e) {
+            return response($e->getMessage());
+        }
+    }
+
+    public function moveCustomizationRequestWhenOutForDelivery($requestID, $estimatedTimeOfDelivery, $trackingNumber, $updateTimeStamp)
+    {
+        try {
+
+            $customizeRequestOutForDelivery = $this->database->getReference('customizedRequest/' . $requestID)->getSnapshot()->getValue();
+
+            $pushedDataRef = $this->database->getReference('orders')->push($customizeRequestOutForDelivery);
+            $pushedCustomizationDataKey = $pushedDataRef->getKey();
+
+            $this->database->getReference('customizedRequest/' . $requestID)->remove();
+
+            $this->database->getReference('orders/' . $pushedCustomizationDataKey)->update([
+                'associatedOrderID' => $pushedCustomizationDataKey,
+                'orderStatus' => 'Parcel out for delivery',
+                'trackingNumber' => $trackingNumber,
+                'estimatedTimeOfDelivery' => $estimatedTimeOfDelivery,
+                'orderDateDelivery' => Carbon::now()->toDateString(),
+                'updateTimeStamp' => $updateTimeStamp
             ]);
         } catch (\Exception $e) {
             return response($e->getMessage());

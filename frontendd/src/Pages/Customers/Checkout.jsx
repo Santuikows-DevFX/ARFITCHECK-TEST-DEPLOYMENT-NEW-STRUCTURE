@@ -26,10 +26,13 @@ import { useCart } from '../../ContextAPI/CartProvider';
 import dayjs from 'dayjs';
 
 import shopGraffitiBG from '../../../public/assets/shopGraffiti1.png'
+import { useSnackbar } from 'notistack';
 
 const provinceOptions = ['Metro Manila'];
 
 function Checkout() {
+
+  document.documentElement.style.setProperty('--primary', 'white');
 
   const [cookie] = useCookies(['?id'])
 
@@ -54,6 +57,8 @@ function Checkout() {
   //terms and condition stuff
   const [isEulaChecked, setEulaChecked] = useState(false)
   const [termsAndConditionDialogOpen, setTermsnAndConditionDialog] = useState(false)
+
+  const { enqueueSnackbar  } = useSnackbar();
 
   const navigate = useNavigate()
 
@@ -190,17 +195,19 @@ function Checkout() {
       setUploadedImage(receiptFile);
       // setEnablePlaceOrder(true);
     } else {
-      toast.error('Invalid Image or EULA not checked', {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        transition: Bounce,
-        style: { fontFamily: 'Kanit', fontSize: '16px' }
+
+      enqueueSnackbar(`Invalid Image!`, { 
+        variant: 'error',
+        anchorOrigin: {
+          vertical: 'top',
+          horizontal: 'right'
+        },
+        autoHideDuration: 1800,
+        style: {
+          fontFamily: 'Kanit',
+          fontSize: '16px'
+        },
+        
       });
       setUploadedImage(null);
       setEnablePlaceOrder(false);
@@ -495,7 +502,7 @@ function Checkout() {
                   <React.Fragment key={cartItem.productId}>
                     <Grid container justifyContent="space-between" alignItems="center">
                       <Grid item xs={6}>
-                        <Typography sx={{ fontFamily: 'Inter', fontSize: 20, fontWeight: 'regular', color: 'WHITE' }}>
+                        <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'regular', color: 'WHITE' }}>
                           {cartItem.productName} x{cartItem.productQuantity}
                         </Typography>
                       </Grid>
@@ -521,10 +528,10 @@ function Checkout() {
             <Box sx={{ height: '16px' }} />
             <Grid container justifyContent="space-between" alignItems="center">
               <Grid item sx={{ width: '50%' }}>
-                <Typography sx={{ fontFamily: 'Inter', fontSize: 20, fontWeight: 'regular', color: 'WHITE' }}>
+                <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'regular', color: 'WHITE' }}>
                   Subtotal
                 </Typography>
-                <Typography sx={{ fontFamily: 'Inter', fontSize: 20, fontWeight: 'regular', color: 'WHITE' }}>
+                <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'regular', color: 'WHITE' }}>
                   Shipping Fee
                 </Typography>
                 <Divider sx={{ backgroundColor: 'white', marginTop: '8px', width: '80vh', marginBottom: '10px'}} />
@@ -566,12 +573,12 @@ function Checkout() {
                 <AccordionDetails >
                   <RadioGroup value={paymentMethod} onChange={handlePaymentMethodChange}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography sx={{ fontFamily: 'Kanit' }}>Cash</Typography>
-                            <Radio
-                              value="cash"
-                              name="radio-buttons"
-                              inputProps={{ 'aria-label': 'cash' }}
-                            />
+                        <Typography sx={{ fontFamily: 'Kanit' }}>COD (Cash on Delivery)</Typography>
+                        <Radio
+                          value="cash"
+                          name="radio-buttons"
+                          inputProps={{ 'aria-label': 'cash' }}
+                        />
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Typography sx={{ fontFamily: 'Kanit' }}>G-cash</Typography>
@@ -602,7 +609,7 @@ function Checkout() {
                 {paymentMethod === 'gcash' && (
                   <Accordion>
                     <AccordionDetails>
-                      <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 25 }, color: 'gray' }}>
+                      <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 22 }, color: 'gray' }}>
                         Please upload a screenshot or photo of your <b>Gcash</b> receipt as proof of payment.
                       </Typography>
                         <Box sx={{ mt: 2 }}>
@@ -673,7 +680,7 @@ function Checkout() {
               backgroundColor: 'White',
               '&:hover': { backgroundColor: '#414a4c', color: 'white' },
               '&:not(:hover)': { backgroundColor: '#3d4242', color: 'white' },
-              opacity: enablePlaceOrder ? 1 : 0.5,
+              opacity:  submitLoading || !enablePlaceOrder ? 0.5 : 1,
               background: 'linear-gradient(to right, #414141, #000000)'
             }}
           >
@@ -714,7 +721,7 @@ function Checkout() {
             </div>
         </Dialog>
         <Footer/>
-        <ToastContainer/>
+        {/* <ToastContainer/> */}
         </>
       )}
     </div>

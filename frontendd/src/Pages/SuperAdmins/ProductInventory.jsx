@@ -9,6 +9,8 @@ import axiosClient from '../../axios-client';
 import { useCookies } from 'react-cookie';
 import DownloadIcon from '@mui/icons-material/Download';
 import dayjs from 'dayjs';
+import { db } from '../../firebase';
+import { onValue, ref } from 'firebase/database';
 
 function ProductInventory() {
     const [isLoading, setIsLoading] = React.useState(true);
@@ -24,10 +26,24 @@ function ProductInventory() {
       setIsDialogOpen(false);
     };
 
+    // useEffect(() => {
+    //   fetchProducts();
+    // }, []);
+
     useEffect(() => {
-      fetchProducts();
+      const dbRef = ref(db, 'products');
+    
+      const listener = onValue(dbRef, (snapshot) => {
+        if (snapshot.exists()) {
+          fetchProducts();
+        }
+      }, (error) => {
+        console.error("Error listening to Realtime Database: ", error);
+      });
+    
+      return () => listener();
     }, []);
-  
+
     const fetchProducts = async () => {
   
       try {
@@ -125,7 +141,7 @@ function ProductInventory() {
                   startIcon={<AddIcon />}
 
                 >
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 18, md: 24.5 }, padding: 0.5 }}>Add Products</Typography>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 18, md: 24.5 }, padding: 0.5 }}>Add Product</Typography>
                 </Button>
               </Grid>
               <Grid item xs={6}>
@@ -157,7 +173,7 @@ function ProductInventory() {
             </Grid>
           </Grid>
           <ProductInventoryTable products={products} fetchProducts={fetchProducts}/>
-          <AddProduct open={isDialogOpen} onClose={handleDialogClose} fetchProducts={fetchProducts} />
+          <AddProduct open={isDialogOpen} onClose={handleDialogClose} fetchProducts={fetchProducts} zIndex={1000}/>
         </Box>
        )}
     </div>

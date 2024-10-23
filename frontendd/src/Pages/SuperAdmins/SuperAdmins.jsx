@@ -69,8 +69,13 @@ import { useStateContext } from '../../ContextAPI/ContextAPI';
 import Footer from '../../Components/Footer';
 
 import superAdminBG from '../../../public/assets/shopGraffiti1.png'
+import { onValue, ref } from 'firebase/database';
+import { db } from '../../firebase';
 
 const SuperAdmin = (props) => {
+
+  //TODO: ADD LOADINGS FOR ALL THE DIALOGS
+
   const { window } = props;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -112,8 +117,20 @@ const SuperAdmin = (props) => {
   };
   //notification hook
   React.useEffect(() => {
-    fetchNotificationData();
-    fetchAndHandleNotifyOutForDeliveryOrders();
+    const dbRef = ref(db, 'notificationForAdmins');
+  
+    const listener = onValue(dbRef, (snapshot) => {
+      if (snapshot.exists()) {
+        fetchNotificationData();
+        fetchAndHandleNotifyOutForDeliveryOrders();
+      } else {
+        console.log("No data available");
+      }
+    }, (error) => {
+      console.error("Error listening to Realtime Database: ", error);
+    });
+  
+    return () => listener();
   }, [])
 
   const handleDrawerClose = () => {
@@ -443,8 +460,8 @@ const SuperAdmin = (props) => {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-
-          backgroundColor: '#F4F4F4'
+          backgroundColor: '#F4F4F4',
+          zIndex: 1
         }}
       >
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

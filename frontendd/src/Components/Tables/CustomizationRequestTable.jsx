@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   TableContainer, Table, TableHead, TableRow, TableCell, TableBody,
   Typography, Paper, Box, Button, CircularProgress, Grid, Pagination, FormControl, Select, MenuItem,
-  TextField
+  TextField,
+  Tooltip
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -14,6 +15,9 @@ import dayjs from 'dayjs';
 import ViewCustomProductDetails from '../Dialogs/ViewCustomProductDetails';
 import RejectOrder from '../Dialogs/RejectOrder';
 import ViewCustomizationPaymentReceipt from '../Dialogs/ViewCustomizationPaymenReceipt';
+import TrackingNumber from '../Dialogs/TrackingNumber';
+import { onValue, ref } from 'firebase/database';
+import { db } from '../../firebase';
 
 const CustomizationRequestTable = () => {
 
@@ -26,6 +30,7 @@ const CustomizationRequestTable = () => {
   const [viewCustomizedProductDialog, setViewCustomizedProductDialog] = useState(false)
   const [viewCustomizationPaymentReceiptDialog, setViewCustomizationPaymentReceiptDialog] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [trackingNumberDialogOpen, setTrackingNumberDialogOpen] = useState(false)
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(4); 
@@ -38,7 +43,19 @@ const CustomizationRequestTable = () => {
   const [selectedRequest, setSelectedRequest] = useState('')
 
   useEffect(() => {
-    fetchOrders();
+    const dbRef = ref(db, 'customizedRequest');
+  
+    const listener = onValue(dbRef, (snapshot) => {
+      if (snapshot.exists()) {
+        fetchOrders();
+      } else {
+        console.log("No data available");
+      }
+    }, (error) => {
+      console.error("Error listening to Realtime Database: ", error);
+    });
+  
+    return () => listener();
   }, []);
 
   const fetchOrders = async () => {
@@ -58,7 +75,7 @@ const CustomizationRequestTable = () => {
         : b.orderInfo.amountToPay - a.orderInfo.amountToPay;
     }
     if (sortStatus) {
-      const statuses = ['Waiting for Approval', 'Request Approved'];
+      const statuses = ['Waiting for Approval', 'Request Approved', 'Preparing Request to Ship'];
       return sortStatus === 'asc'
         ? statuses.indexOf(a.orderInfo.orderStatus) - statuses.indexOf(b.orderInfo.orderStatus)
         : statuses.indexOf(b.orderInfo.orderStatus) - statuses.indexOf(a.orderInfo.orderStatus);
@@ -96,6 +113,16 @@ const CustomizationRequestTable = () => {
       );
     }
   });
+
+  const handleOpenTrackingNumberDialog = (orderID) => {
+    setSelectedOrder(orderID)
+    setTrackingNumberDialogOpen(true)
+  }
+
+  const handleCloseTrackingNumberDialog = () => {
+    setTrackingNumberDialogOpen(false)
+  }
+  
 
   const handleOpenCustomizationPaymentDialog = (orderID, orderInfo) => {
     const reqData = {
@@ -440,6 +467,9 @@ const CustomizationRequestTable = () => {
                   <MenuItem value="Request Approved">
                     <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Request Approved</Typography>
                   </MenuItem>
+                  <MenuItem value="Preparing Request to Ship">
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Preparing Request to Ship</Typography>
+                  </MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -528,7 +558,7 @@ const CustomizationRequestTable = () => {
                               {product}
                             </Typography>
                             
-                            {order.orderInfo.orderType === 'default' ? (
+                            {order.orderInfo?.orderType === 'default' ? (
                               <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
                               <b>Qnt:</b> {order.orderInfo?.productQuantity?.split(', ')[index]} <b>Size:</b> {order.orderInfo?.productSize?.split(', ')[index]}
                             </Typography>
@@ -586,12 +616,21 @@ const CustomizationRequestTable = () => {
                                 <b>E-Wallet</b>
                               </Typography>
                             ) : (
-                              <Typography
-                                sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: '#1F618D', cursor: 'pointer', textDecoration: 'underline' }}
-                                onClick={() => openImageInNewTab(order.orderInfo.receiptImage)}
+                              <Tooltip
+                                title={
+                                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 14 }}>
+                                    User's Mobile #: {order.orderInfo?.mobileNumber}
+                                  </Typography>
+                                }
+                                arrow
                               >
-                                <b>E-Wallet</b>
-                              </Typography>
+                                <Typography
+                                  sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: '#1F618D', cursor: 'pointer', textDecoration: 'underline' }}
+                                  onClick={() => openImageInNewTab(order.orderInfo?.receiptImage)}
+                                >
+                                  <b>E-Wallet</b>
+                                </Typography>
+                              </Tooltip>
                             )
                       )}
                     </Grid>
@@ -618,7 +657,7 @@ const CustomizationRequestTable = () => {
                             Payment Status:  <b>User Paid </b>
                           </Typography>
                           <Typography sx={{ fontFamily: 'Kanit', fontSize: '13px', color: 'black' }}>
-                            Updated:  <b> {order.orderInfo.updateTimeStamp}</b>
+                            Updated:  <b> {order.orderInfo.updateTimeStamp || '-'}</b>
                           </Typography>
                         </>
                       ) : (
@@ -630,7 +669,7 @@ const CustomizationRequestTable = () => {
                             Payment Status:  <b>{order.orderInfo.orderStatus === 'Request Approved' ? 'Pending' : '-'}</b>
                           </Typography>
                           <Typography sx={{ fontFamily: 'Kanit', fontSize: '13px', color: 'black' }}>
-                            Updated:  <b> {order.orderInfo.updateTimeStamp}</b>
+                            Updated:  <b> {order.orderInfo.updateTimeStamp || '-'}</b>
                           </Typography>
                       </>
                       )}
@@ -988,7 +1027,7 @@ const CustomizationRequestTable = () => {
                             </Button>
                             <Button
                               type="submit"
-                              onClick={() => handleUpdateOrderStatus(order.orderID, 'Deliver')}
+                              onClick={() => handleOpenTrackingNumberDialog(order.orderID, 'Deliver')}
                               fullWidth
                               variant="contained"
                               sx={{
@@ -1049,6 +1088,7 @@ const CustomizationRequestTable = () => {
       <RejectOrder open={isDialogOpen} onClose={handleDialogClose} reqData={selectedRequest} zIndex={1000} fetchOrders={fetchOrders} />
       <ViewCustomProductDetails open={viewCustomizedProductDialog} onClose={handleViewCustomPrdClose} orderInfo={selectedOrder} />
       <ViewCustomizationPaymentReceipt open={viewCustomizationPaymentReceiptDialog} onClose={handleCloseCustomizationPaymentDialog} requestData={selectedOrder} fetchOrders={fetchOrders} zIndex={1000}/>
+      <TrackingNumber open={trackingNumberDialogOpen} onClose={handleCloseTrackingNumberDialog} orderID={selectedOrder} orderType={'Deliver'} fetchOrders={fetchOrders} type={'custom'} />
     </div>
   );
 };

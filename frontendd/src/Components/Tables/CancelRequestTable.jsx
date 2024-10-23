@@ -8,6 +8,8 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
+import { onValue, ref } from 'firebase/database';
+import { db } from '../../firebase';
 
 const CancelRequestTable = () => {
 
@@ -28,20 +30,40 @@ const CancelRequestTable = () => {
   const [selectedOrder, setSelectedOrder] = useState(null)
 
   useEffect(() => {
-    fetchOrders();
+    const dbRef = ref(db, 'orders');
+  
+    const listener = onValue(dbRef, (snapshot) => {
+      if (snapshot.exists()) {
+        console.log('tae');
+        
+        fetchOrders();
+      } else {
+        console.log("No data available");
+      }
+    }, (error) => {
+      console.error("Error listening to Realtime Database: ", error);
+    });
+  
+    return () => listener();
   }, []);
 
   const fetchOrders = async () => {
     try {
       const orderResponse = await axiosClient.get('order/fetchCancelRequestOrders');
-      const mergedOrders = mergeOrders(orderResponse.data);
-      setOrders(mergedOrders);
+      const customRequestCancelReqrRepsonse = await axiosClient.get('custom/fetchCustomizationCancelRequests');
+      
+      const mergedOrders = [
+        ...orderResponse.data,
+        ...customRequestCancelReqrRepsonse.data
+      ];
+      
+      setOrders(mergeOrders(mergedOrders));
       // setFilteredOrders(mergedOrders);
     } catch (error) {
       console.error(error);
     }
   };
-
+  
   const sortedOrders = [...orders].sort((a, b) => {
     if (sortAmount) {
       return sortAmount === 'asc'
@@ -55,7 +77,10 @@ const CancelRequestTable = () => {
         : statuses.indexOf(b.orderInfo.orderStatus) - statuses.indexOf(a.orderInfo.orderStatus);
     }
   
-    return 0;
+    const dateA = new Date(a.orderInfo.orderDate);
+    const dateB = new Date(b.orderInfo.orderDate);
+
+    return dateB - dateA;
   });
 
   const filteredOrders = sortedOrders.filter((order) => {
@@ -140,7 +165,6 @@ const CancelRequestTable = () => {
       orderID: orderID,
       orderInfo: orderInfo
     };
-
     setSelectedOrder(cancelData)
     setIsDialogOpen(true)
   }
@@ -595,7 +619,7 @@ const CancelRequestTable = () => {
                       </Grid>
                     </Grid>
                   </Paper>
-                  <ViewCancelOrderRequest open={isDialogOpen} onClose={handleDialogClose} orderInfo={selectedOrder?.orderInfo} orderID={selectedOrder?.orderID} orderType={'Cancel'} zIndex={1000} fetchOrders={fetchOrders} />
+                  <ViewCancelOrderRequest equest open={isDialogOpen} onClose={handleDialogClose} orderInfo={selectedOrder?.orderInfo} orderID={selectedOrder?.orderID} orderType={'Cancel'} zIndex={1000} fetchOrders={fetchOrders} type={selectedOrder?.orderInfo.orderType}/>
                 </Grid>
             )))}
             

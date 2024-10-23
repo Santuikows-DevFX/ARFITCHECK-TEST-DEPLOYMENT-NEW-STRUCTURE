@@ -8,7 +8,6 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import OrderStatusTable from '../../Components/Tables/OrderStatusTable';
 import CustomizationRequestTable from '../../Components/Tables/CustomizationRequestTable';
-import { ToastContainer } from 'react-toastify';
 
 function CustomRequest() {
   const [isLoading, setIsLoading] = React.useState(true);
@@ -44,7 +43,6 @@ function CustomRequest() {
       </Grid>
        <CustomizationRequestTable/>
      </Box>
-     <ToastContainer/>
         </div>
       )}
     </div>

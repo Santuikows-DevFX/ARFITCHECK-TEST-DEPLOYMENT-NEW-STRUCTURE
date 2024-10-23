@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { Grid, Avatar, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography,MenuItem, TextField, Box, IconButton, Divider, FormHelperText, Checkbox, FormControlLabel } from '@mui/material';
+import { Grid, Avatar, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography,MenuItem, TextField, Box, IconButton, Divider, FormHelperText, Checkbox, FormControlLabel, Backdrop, CircularProgress } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import {  OutlinedButton } from '../UI/Buttons';
 import StyledTextFields from '../UI/TextFields';
@@ -14,15 +14,18 @@ import { ToastContainer, toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Bounce } from 'react-toastify';
 import Close from '@mui/icons-material/Close';
+import { useSnackbar } from 'notistack';
 
-const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
+const EditProducts = ({ open, onClose, product, productID, fetchProducts, zIndex }) => {
 
   const [files, setFiles] = useState([]);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false)
   const [productVisible, setProductVisible] = useState(!product.isVisible)
 
   const [editableCategory, setEditableCategory] = useState(false)
+  const [editProductLoading, setEditProductLoading] = useState(false);
 
+  const { enqueueSnackbar  } = useSnackbar();
   //click handlers for fields WAG GAGALAWIN
 
   const handleProductCateogoryClick = () => {
@@ -46,6 +49,14 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
 
   }, [product])
 
+  useEffect(() => {
+    if (editProductLoading) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [editProductLoading]);
+
   const handleRemoveImage = (index) => {
     const updatedFiles = [...files];
     updatedFiles.splice(index, 1);
@@ -67,45 +78,60 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
 
   const ProductValidationSchema = Yup.object().shape({
     productName: Yup.string().required('Product Name is required'),
-    price: Yup.number().required('Price is required'),
+    price: Yup.number()
+    .required('Price is required')
+    .min(0, 'Cannot input a price below 0')
+    .max(100000, 'Please enter a much more realistic price.'),
     criticalLevelQuantity: Yup.number()
         .required('Critical Level Qnt is required')
-        .min(0, 'Critical Level Qnt cannot be less than 0'),
+        .min(0, 'Critical Level Qnt cannot be less than 0')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
     category: Yup.string().required('Category is required'),
     description: Yup.string().optional(),
     smallQuantity: Yup.number()
-        .min(0, 'Small Quantity cannot be less than 0')
-        .max(5000, 'Please input a much more realistic quantity.'),
+    .min(0, 'Small Quantity cannot be less than 0')
+    .max(5000, 'Please input a much more realistic quantity.')
+    .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
     mediumQuantity: Yup.number()
         .min(0, 'Medium Quantity cannot be less than 0')
-        .max(5000, 'Please input a much more realistic quantity.'),
+        .max(5000, 'Please input a much more realistic quantity.')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
     largeQuantity: Yup.number()
         .min(0, 'Large Quantity cannot be less than 0')
-        .max(5000, 'Please input a much more realistic quantity.'),
+        .max(5000, 'Please input a much more realistic quantity.')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
     extraLargeQuantity: Yup.number()
         .min(0, 'Extra Large Quantity cannot be less than 0')
-        .max(5000, 'Please input a much more realistic quantity.'),
+        .max(5000, 'Please input a much more realistic quantity.')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
     doubleXLQuantity: Yup.number()
         .min(0, 'Double XL Quantity cannot be less than 0')
-        .max(5000, 'Please input a much more realistic quantity.'),
+        .max(5000, 'Please input a much more realistic quantity.')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
     tripleXLQuantity: Yup.number()
         .min(0, 'Triple XL Quantity cannot be less than 0')
-        .max(5000, 'Please input a much more realistic quantity.'),
+        .max(5000, 'Please input a much more realistic quantity.')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
   });
 
+  const ProductValidationSchemaIfCaps = Yup.object().shape({
+    productName: Yup.string().required('Product Name is required'),
+    price: Yup.number()
+    .required('Price is required')
+    .min(0, 'Cannot input a price below 0')
+    .max(100000, 'Please enter a much more realistic price.'),
+    criticalLevelQuantity: Yup.number()
+        .required('Critical Level Qnt is required')
+        .min(0, 'Critical Level Qnt cannot be less than 0')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
+    category: Yup.string().required('Category is required'),
+    description: Yup.string().optional(),
+    totalQuantity: Yup.number()
+        .min(0, 'Total Quantity cannot be less than 0')
+        .max(5000, 'Please input a much more realistic quantity.')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
 
- const ProductValidationSchemaIfCaps = Yup.object().shape({
-  productName: Yup.string().required('Product Name is required'),
-  price: Yup.number().required('Price is required'),
-  criticalLevelQuantity: Yup.number()
-      .required('Critical Level Qnt is required')
-      .min(0, 'Critical Level Qnt cannot be less than 0'),
-  category: Yup.string().required('Category is required'),
-  description: Yup.string().optional(),
-  totalQuantity: Yup.number()
-      .min(0, 'Total Quantity cannot be less than 0')
-      .max(5000, 'Please input a much more realistic quantity.'),
- });
+  });
   
   const categoryOptions = [
       'Hoodies',
@@ -128,19 +154,24 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
 
     try {
 
+      setEditProductLoading(true);
+
       if (files.length !== 3) {
-        toast.error('Please upload 3 product images.', {
-          position: "top-right",
-          autoClose: 2500,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "colored",
-          transition: Bounce,
-          style: { fontFamily: 'Kanit', fontSize: '16px' }
+        enqueueSnackbar(`Please upload 3 product images.`, { 
+          variant: 'error',
+          anchorOrigin: {
+            vertical: 'top',
+            horizontal: 'right'
+          },
+          autoHideDuration: 1800,
+          style: {
+            fontFamily: 'Kanit',
+            fontSize: '16px'
+          },
         });
+
+        setEditProductLoading(false);
+
       }else {
         const editProductVal = new FormData();
       
@@ -168,49 +199,43 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
           
           if(data.message === 'Product Updated!') {
   
-            toast.success(`${data.message}`, {
-              position: "top-right",
-              autoClose: 1500,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              transition: Bounce,
-       
-              style: { fontFamily: 'Kanit', fontSize: '16px' }
+            enqueueSnackbar(`${data.message}`, { 
+              variant: 'success',
+              anchorOrigin: {
+                vertical: 'top',
+                horizontal: 'right'
+              },
+              autoHideDuration: 2000,
+              style: {
+                fontFamily: 'Kanit',
+                fontSize: '16px'
+              },
+            });
+
+            setEditProductLoading(false);
+            onClose()
+          }else {
+            enqueueSnackbar(`${data.message}`, { 
+              variant: 'error',
+              anchorOrigin: {
+                vertical: 'top',
+                horizontal: 'right'
+              },
+              autoHideDuration: 2000,
+              style: {
+                fontFamily: 'Kanit',
+                fontSize: '16px'
+              },
             });
             onClose()
-            fetchProducts()
-            
-          }else {
-  
-            toast.error(`${data.message}`, {
-              position: "top-right",
-              autoClose: 2500,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              transition: Bounce,
-              onClose: () => {
-                onClose()
-              },
-              style: { fontFamily: 'Kanit', fontSize: '16px' }
-            });
-  
+            setEditProductLoading(false);
           }
-          
         })
       }
-      
     } catch (error) {
       console.log(error);
+      setEditProductLoading(false);
     }
-
   }
 
   const onDrop = (acceptedFiles) => {
@@ -226,17 +251,17 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
     if (validFiles.length > 0 && totalFiles <= 3) {
       setFiles((prevFiles) => [...prevFiles, ...validFiles]); 
     } else if (totalFiles > 3) {
-      toast.error('Maximum of 3 images only!', {
-        position: 'top-right',
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: 'colored',
-        transition: Bounce,
-        style: { fontFamily: 'Kanit', fontSize: '16px' }
+      enqueueSnackbar(`Maximum of 3 images only!`, { 
+        variant: 'error',
+        anchorOrigin: {
+          vertical: 'top',
+          horizontal: 'right'
+        },
+        autoHideDuration: 2300,
+        style: {
+          fontFamily: 'Kanit',
+          fontSize: '16px'
+        },
       });
     }
   };
@@ -253,7 +278,14 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
 
   return (
     <div>
-      <Dialog open={open} onClose={onClose} >
+      {editProductLoading && (
+        <Backdrop open={true} style={{ zIndex: 1000 + 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100%', backdropFilter: 'blur(2px)' }}>
+            <CircularProgress size={60} sx={{ color: 'white' }} />
+          </div>
+        </Backdrop>
+      )}
+      <Dialog open={open} onClose={onClose} style={{ zIndex: zIndex }}>
         <DialogTitle sx={{ background: 'linear-gradient(to left, #414141  , #000000)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
             <Typography  sx={{ fontFamily: 'Kanit', fontWeight: 'bold', fontSize: 34 }}>
                 EDIT PRODUCT IN INVENTORY
@@ -285,6 +317,7 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
+                        cursor: 'pointer'
                       }}
                     >
                       <input {...getInputProps()} />
@@ -305,7 +338,7 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
                       )}
                     </Box>
                   </Grid>
-                  <Grid item sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: 400 }}>
+                  <Grid item sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: 400, cursor: 'pointer' }}>
                       {[1, 2].map((index) => (
                         <Box
                           key={index}
@@ -564,7 +597,7 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
                 </Field>
               </Grid>
               </Grid>
-              ) : (
+            ) : (
                 <Grid container spacing={2} alignItems="center">
                   <Grid item xs={4}>
                     <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
@@ -597,7 +630,7 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
                         </Field>
                       </Grid>
                 </Grid>
-           )}
+            )}
             </Grid>
             <Dialog open={isImageDialogOpen} onClose={handleImageDialogClose}>
               <DialogTitle>
@@ -682,8 +715,8 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts }) => {
               </DialogActions>
             </Dialog>
             <DialogActions style={{ bottom: 0, backgroundColor: 'white', zIndex: 1000 }}>
-              <Button color="primary" onClick={() => submitForm()} disabled = {!files || isSubmitting || !isValid || values.productName.length === 0 || values.price.length === 0 || values.category.length === 0  }>
-                <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color:!files || isSubmitting || !isValid || values.productName.length === 0 || values.price.length === 0 || values.category.length === 0 ? 'gray' : 'black' }}>
+              <Button color="primary" onClick={() => submitForm()} disabled = {!files || isSubmitting || !isValid || values.productName.length === 0 || values.price.length === 0 || values.category.length === 0 || editProductLoading  }>
+                <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color:!files || isSubmitting || !isValid || values.productName.length === 0 || values.price.length === 0 || values.category.length === 0 || editProductLoading? 'gray' : 'black' }}>
                   Edit
                 </Typography>
               </Button>

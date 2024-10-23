@@ -22,6 +22,9 @@ import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
 import 'react-toastify/dist/ReactToastify.css';
 import { Bounce } from 'react-toastify';
+import { useSnackbar } from 'notistack';
+import { onValue, ref } from 'firebase/database';
+import { db } from '../../firebase';
 
 const OrdersTable = () => {
 
@@ -29,7 +32,7 @@ const OrdersTable = () => {
   const [cookie] = useCookies(['?id']);
 
   const [cancelDialog, setCancelDialog] = useState(false);
-  const [enableReceiveButton, setEnableReceiveButton] = useState(false);
+  const [enableReceiveButton, setEnableReceiveButton] = useState({});
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,13 +43,27 @@ const OrdersTable = () => {
   const [sortStatus, setSortStatus] = useState('');
   const [orderIDSearchQuery, setOrderIDSearchQuery] = useState('');
 
+  const { enqueueSnackbar  } = useSnackbar();
+
   const itemsPerPage = 3;
 
   useEffect(() => {
-    fetchMyOrders();
-  }, []);
+    const dbRef = ref(db, 'orders');
+  
+    const listener = onValue(dbRef, (snapshot) => {
+      if (snapshot.exists()) {
+        fetchMyOrders();
+      } else {
+        console.log("No data available");
+      }
+    }, (error) => {
+      console.error("Error listening to Realtime Database: ", error);
+    });
+  
+    return () => listener();
+  }, [])
 
-  const checkIfOrderDelivered = (orderDateDelivery, orderID) => {
+  const checkIfOrderDelivered = (orderDateDelivery, orderID, isNotified) => {
     try {
 
       const deliveryDate = new Date(orderDateDelivery);
@@ -56,9 +73,11 @@ const OrdersTable = () => {
       const dayDiff = timeDiff / (1000 * 3600 * 24) // => 1 day = 1000 * 60 * 60 * 24
 
       //check natin if yung diff from curr date and updated date when delivered is est 1 day @ 8:30 something
-
-      if (dayDiff >= 1 && dayDiff <= 1.55) {
-        setEnableReceiveButton(true) 
+      if (isNotified) {
+        setEnableReceiveButton(prevState => ({
+          ...prevState,
+          [orderID]: true, 
+        }));
       }
 
     }catch(error){
@@ -74,8 +93,8 @@ const OrdersTable = () => {
       setOrders(mergedOrders);
 
       myOrderResponse.data.map((dateDelivery) => {
-        if(dateDelivery.orderInfo.orderStatus === 'Parcel out for delivery' && dateDelivery.orderID === dateDelivery.orderInfo.associatedOrderID) {
-          checkIfOrderDelivered(dateDelivery.orderInfo.orderDateDelivery, dateDelivery.orderInfo.associatedOrderID)
+        if(dateDelivery.orderInfo?.orderStatus === 'Parcel out for delivery' && dateDelivery?.orderID === dateDelivery.orderInfo?.associatedOrderID) {
+          checkIfOrderDelivered(dateDelivery.orderInfo?.orderDateDelivery, dateDelivery.orderInfo?.associatedOrderID, dateDelivery.orderInfo?.isNotified)
         }
       })
 
@@ -167,19 +186,18 @@ const OrdersTable = () => {
     try {
 
       const { data } = await axiosClient.post('/order/receiveMyOrder', receivedOrderData);
-      toast.success(data.message, {
-        position: "top-right",
-        autoClose: 1500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        transition: Bounce,
-        style: { fontFamily: 'Kanit', fontSize: '16px' }
+      enqueueSnackbar(`${data.message}`, { 
+        variant: 'success',
+        anchorOrigin: {
+          vertical: 'top',
+          horizontal: 'right'
+        },
+        autoHideDuration: 1800,
+        style: {
+          fontFamily: 'Kanit',
+          fontSize: '16px'
+        },
       });
-      fetchMyOrders();
 
     } catch (error) {
       console.log(error);
@@ -211,8 +229,8 @@ const OrdersTable = () => {
         : statuses.indexOf(b.orderInfo.orderStatus) - statuses.indexOf(a.orderInfo.orderStatus);
     }
   
-    const dateA = a.orderInfo.updateTimeStamp;
-    const dateB = b.orderInfo.updateTimeStamp;
+    const dateA = new Date(a.orderInfo.orderDate);
+    const dateB = new Date(b.orderInfo.orderDate);
 
     return dateB - dateA;
   });
@@ -600,7 +618,7 @@ const OrdersTable = () => {
                     {order.orderInfo?.orderStatus === 'Parcel out for delivery' ? (
                        <>
                         <Typography sx={{ fontFamily: 'Kanit', fontSize: '13px', color: 'black' }}>
-                        {order.orderInfo?.trackingNumber}
+                        Tracking #: {order.orderInfo?.trackingNumber}
                         </Typography>
                         <Typography sx={{ fontFamily: 'Kanit', fontSize: '13px', color: 'black' }}>
                           Updated:  <b> {order.orderInfo?.updateTimeStamp}</b>
@@ -608,12 +626,12 @@ const OrdersTable = () => {
                        </>
                     ) : (
                       <Typography sx={{ fontFamily: 'Kanit', fontSize: '13px', color: 'black' }}>
-                        Updated:  <b> {order.orderInfo?.updateTimeStamp}</b>
+                        Updated:  <b> {order.orderInfo?.updateTimeStamp || '-'}</b>
                       </Typography>
                     )}
                   </Grid>
                   {/* dialog */}
-                  <UserCancelOrder open={cancelDialog} onClose={handleCancelDialogClose} orderInfo={selectedOrder?.orderInfo} orderID={selectedOrder?.orderID} fetchMyOrders={fetchMyOrders} type={'default'}/>
+                  <UserCancelOrder open={cancelDialog} onClose={handleCancelDialogClose} orderInfo={selectedOrder?.orderInfo} orderID={selectedOrder?.orderID} fetchMyOrders={fetchMyOrders} type={'default'} zIndex={1000}/>
                   {/* buttons */}
                   <Grid item xs={12} sm={6} md={1.5}>
                   {order.orderInfo?.orderStatus === 'Waiting for Confirmation' ||
@@ -630,8 +648,7 @@ const OrdersTable = () => {
                             '&:not(:hover)': { backgroundColor: '#860000', color: 'white' },
                           }}
                         >
-                          <Typography sx={{ fontFamily: 'Kanit', fontSize: 19, padding: 0.5 }}>CANCEL</Typography>
-              
+                          <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, padding: 0.5 }}>CANCEL</Typography>
                         </Button>
                         
                       ) : (
@@ -641,17 +658,17 @@ const OrdersTable = () => {
                           <Button
                             type="submit"
                             fullWidth
-                            disabled={!enableReceiveButton}
+                            disabled={!enableReceiveButton[order?.orderID]}
                             onClick={() => handleReceiveOrder(order.orderID)}
                             variant="contained"
                             sx={{
                               backgroundColor: 'White',
                               '&:hover': { backgroundColor: '#196F3D', color: 'white' },
-                              '&:not(:hover)': { backgroundColor:  enableReceiveButton ? '#239B56' :'#3d4242', color: 'white' },
-                              opacity: !enableReceiveButton ? 0.6 : 1,
+                              '&:not(:hover)': { backgroundColor:  !enableReceiveButton[order?.orderID] ? '#3d4242' :'#239B56', color: 'white' },
+                              opacity: !enableReceiveButton[order?.orderID] ? 0.6 : 1,
                             }}
                           >
-                            <Typography sx={{ fontFamily: 'Kanit', fontSize:{ xs: 18, md: 19 }, padding: 0.5 }}>RECEIVED</Typography>
+                            <Typography sx={{ fontFamily: 'Kanit', fontSize:{ xs: 14, md: 14 }, padding: 0.5 }}>RECEIVED</Typography>
                           </Button>
                         ))}
                   </Grid>
@@ -670,8 +687,6 @@ const OrdersTable = () => {
           />
         </Box>
       </Box>
-    
-
     </>
   );
 };

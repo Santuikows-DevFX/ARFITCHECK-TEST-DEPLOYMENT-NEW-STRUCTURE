@@ -7,7 +7,7 @@ function SingleProductCart() {
     <div>
         
       <SingleProductCartTable/>
-      <ToastContainer/>
+      {/* <ToastContainer/> */}
          
     </div>
   )

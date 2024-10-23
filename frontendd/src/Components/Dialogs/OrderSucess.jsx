@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Grid, Box, IconButton, Typography, CircularProgress } from '@mui/material';
+import { Grid, Box, IconButton, Typography, CircularProgress, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
@@ -100,22 +100,47 @@ function OrderSuccess({ onClose, timeStamp }) {
                     />
                     <Typography
                       sx={{
-                        fontFamily: 'Inter',
+                        fontFamily: 'Kanit',
                         fontSize: { xs: 15, sm: 25 },
-                        fontWeight: '1000',
+                        fontWeight: 700,
                         color: '#1E7F1C',
                         paddingY: '1vh',
                       }}
                     >
-                      THANK YOU! <br /> Your order has been received!
+                      THANK YOU! <br /> Your order has been received! Remember to Always check your email for notifications.
                     </Typography>
 
-                    <FilledButton
-                      onClick={() => navigate('/shop')}
-                      sx={{ marginTop: '1vh' }}
+                    <Button
+                      type="submit"
+                      fullWidth
+                      onClick={() => {
+                        navigate('/shop')
+                      }}
+                      variant="contained"
+                      sx={{
+                        backgroundColor: "White",
+                        "&:hover": {
+                          backgroundColor: "#414a4c",
+                          color: "white",
+                        },
+                        "&:not(:hover)": {
+                          backgroundColor: "#3d4242",
+                          color: "white",
+                        },
+                        background:
+                          "linear-gradient(to right, #414141, #000000)",
+                      }}
                     >
-                      SHOP AGAIN
-                    </FilledButton>
+                      <Typography
+                        sx={{
+                          fontFamily: "Kanit",
+                          fontSize: { xs: 18, md: 25 },
+                          padding: 0.5,
+                        }}
+                      >
+                        SHOP AGAIN
+                      </Typography>
+                    </Button>
                     </Grid>
                 </Grid>
               </Grid>

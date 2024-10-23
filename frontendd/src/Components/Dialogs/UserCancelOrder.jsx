@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Grid, Avatar, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, TextField, Divider, FormControl, InputLabel, Select, MenuItem, Tooltip } from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
+import { Grid, Avatar, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, TextField, Divider, FormControl, InputLabel, Select, MenuItem, Tooltip, CircularProgress, Backdrop } from '@mui/material';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import Swal from 'sweetalert2';
@@ -8,58 +8,104 @@ import axiosClient from '../../axios-client';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Bounce } from 'react-toastify';
+import { useSnackbar } from 'notistack';
+
+const userCancelReasonOptions = [
+    'Change of Mind',
+    'Financial Constraints',
+    'Size Issues',
+    'Duplicate Order',
+    'Quality Concerns',
+    'Emergency Situations'
+];  
 
 const UserCancelOrder = ({ open, onClose, zIndex, orderInfo, orderID, fetchMyOrders, type }) => {
+
+    const [loading, setLoading] = useState(false);
 
     const reasonValidationSchema = Yup.object().shape({
         selectedReason: Yup.string().required('Reason is required')
     });
 
+    useEffect(() => {
+        if (loading) {
+          document.body.style.overflow = 'hidden';
+        } else {
+          document.body.style.overflow = '';
+        }
+    }, [loading]);
+
+    const { enqueueSnackbar  } = useSnackbar();
+
     const handleCancelOrderRequest = async (cancellationInfo) => {
       try {
-
-        const cancellationData = {
-          orderID: orderID,
-          reason: cancellationInfo.selectedReason,
-          additionalInformation: cancellationInfo.additionalInfo,
-          associatedOrderID: orderID,
-          type: type
-        };
-
-        const apiRoute = type === 'default' ? '/order/cancelOrderRequest' : '/custom/cancelCustomizationRequest';
-
-        await axiosClient.post(`${apiRoute}`, cancellationData)
-        .then(( {data} ) => {
-
-          toast.success(`${data.message}`, {
-            position: "top-right",
-            autoClose: 1500,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "colored",
-            transition: Bounce,
-            onClose: () => {
-              onClose(),
-              fetchMyOrders()
-            },
-            style: { fontFamily: 'Kanit', fontSize: '16px' }
-          });
-
-        })
-
+        Swal.fire({
+            title: `Are you sure you want to cancel this request?`,
+            text: "These changes cannot be revoked",
+            icon: "question",
+            showCancelButton: true,
+            cancelButtonText: 'No',
+            confirmButtonColor: '#414a4c',
+            confirmButtonText: "Yes",
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+              try {
+                setLoading(true); 
+                
+                const cancellationData = {
+                    orderID: orderID,
+                    reason: cancellationInfo.selectedReason,
+                    additionalInformation: cancellationInfo.additionalInfo,
+                    associatedOrderID: orderID,
+                    type: type
+                };
+          
+                const apiRoute = type === 'default' ? '/order/cancelOrderRequest' : '/custom/cancelCustomizationRequest';
+        
+                await axiosClient.post(`${apiRoute}`, cancellationData)
+                .then(({ data }) => {
+                    setLoading(false);
+                    enqueueSnackbar(`${data.message}`, { 
+                        variant: 'success',
+                        anchorOrigin: {
+                          vertical: 'top',
+                          horizontal: 'right'
+                        },
+                        autoHideDuration: 2300,
+                        style: {
+                          fontFamily: 'Kanit',
+                          fontSize: '16px'
+                        },
+                        
+                    });
+                    onClose();
+                });
+                
+              } catch (error) {
+                setLoading(false);
+                console.log(error);
+              }
+            }
+        });
       } catch (error) {
+        setLoading(false);
         console.log(error);
       }
     }
 
     return (
         <div>
+            {loading && (
+              <Backdrop open={true} style={{ zIndex: zIndex + 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100%', backdropFilter: 'blur(2px)' }}>
+                  <CircularProgress size={60} sx={{ color: 'white' }} />
+                </div>
+              </Backdrop>
+            )}
+            
             <Dialog open={open} onClose={onClose} style={{ zIndex: zIndex }} fullWidth maxWidth="md">
-               <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 34, fontWeight: 'bold', color: 'black', paddingY: '1vh' }}>
+            <DialogTitle sx={{ background: 'linear-gradient(to left, #414141, #000000)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 34, fontWeight: 'bold', color: 'white', paddingY: '1vh' }}>
                       {type === 'default' ? 'CANCELLING MY ORDER' : 'CANCELLING MY REQUEST'}
                   </Typography>
                   <Tooltip title="If the order status is still waiting for confirmation, the cancellation request is automatically approved." arrow sx={{ cursor: 'pointer' }}>
@@ -97,11 +143,10 @@ const UserCancelOrder = ({ open, onClose, zIndex, orderInfo, orderID, fetchMyOrd
                                         <Avatar
                                             alt={orderInfo?.productName || 'Product Image'}
                                             src={orderInfo?.productImage || '/path-to-default-image.jpg'}
-                                            sx={{ width: 160, height: 160}}
+                                            sx={{ width: 160, height: 160 }}
                                         />
                                     </Grid>
                                     <Grid item xs={12} sm={8}>
-                             
                                         {type === 'default' ? (
                                           <>
                                             <Typography sx={{ fontFamily: 'Kanit', fontSize: 34, fontWeight: 'bold' }}>
@@ -127,7 +172,6 @@ const UserCancelOrder = ({ open, onClose, zIndex, orderInfo, orderID, fetchMyOrd
                                                 </Typography>
                                             </>
                                         )}
-                                      
                                     </Grid>
                                 </Grid>
                                 <Divider sx={{ my: 3, backgroundColor: 'black' }} />
@@ -137,6 +181,7 @@ const UserCancelOrder = ({ open, onClose, zIndex, orderInfo, orderID, fetchMyOrd
                                             <InputLabel id="reason-label" sx={{ fontFamily: 'Kanit', fontSize: 20 }}>Reason for Cancellation</InputLabel>
                                             <Field
                                                 as={Select}
+                                                disabled = {loading || isSubmitting}
                                                 labelId="reason-label"
                                                 id="reason"
                                                 name="selectedReason"
@@ -144,12 +189,13 @@ const UserCancelOrder = ({ open, onClose, zIndex, orderInfo, orderID, fetchMyOrd
                                                 variant="outlined"
                                                 sx={{ fontFamily: 'Kanit', fontSize: 20 }}
                                             >
-                                                <MenuItem value="Change of Mind">Change of Mind</MenuItem>
-                                                <MenuItem value="Size or Fit Issues">Size or Fit Issues</MenuItem>
-                                                <MenuItem value="Financial Constraints">Financial Constraints</MenuItem>
-                                                <MenuItem value="Duplicate Order">Duplicate Order</MenuItem>
-                                                <MenuItem value="Quality Concerns">Quality Concerns</MenuItem>
-                                                <MenuItem value="Emergency Situation">Emergency Situation</MenuItem>
+
+                                                {userCancelReasonOptions.map((reasons, index) => (
+                                                    <MenuItem key={index} value={reasons} sx={{ fontFamily: 'Kanit', fontSize: {xs: 15, md: 20} }}> 
+                                                      {reasons}
+                                                    </MenuItem>
+                                                ))}
+                                              
                                             </Field>
                                         </FormControl>
                                     </Grid>
@@ -158,6 +204,7 @@ const UserCancelOrder = ({ open, onClose, zIndex, orderInfo, orderID, fetchMyOrd
                                             {({ field, meta }) => (
                                                 <TextField
                                                     {...field}
+                                                    disabled = {loading || isSubmitting}
                                                     id="additionalInfo"
                                                     label="Additional Information (optional)"
                                                     fullWidth
@@ -175,13 +222,13 @@ const UserCancelOrder = ({ open, onClose, zIndex, orderInfo, orderID, fetchMyOrd
                                     </Grid>
                                 </Grid>
                                 <DialogActions>
-                                    <Button onClick={onClose}>
+                                    <Button onClick={onClose} disabled = {isSubmitting || loading}>
                                         <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'red' }}>
                                             Close
                                         </Typography>
                                     </Button>
-                                    <Button type='submit' color="primary" disabled={isSubmitting || !isValid || Object.values(values).some(value => value === '')} onClick={() => handleCancelOrderRequest(values)}>
-                                        <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'black', opacity: !isValid || isSubmitting || Object.values(values).some(value => value === '') ? 0.5 : 1, cursor: !isValid || isSubmitting || Object.values(values).some(value => value === '') ? 'not-allowed' : 'default' }}>
+                                    <Button type='submit' color="primary" disabled={isSubmitting || !isValid || values.selectedReason.length === 0 || loading} onClick={() => handleCancelOrderRequest(values)}>
+                                        <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'black', opacity: !isValid || isSubmitting || values.selectedReason.length === 0 ? 0.5 : 1, cursor: !isValid || isSubmitting || values.selectedReason.length === 0 || loading ? 'not-allowed' : 'pointer' }}>
                                             PROCEED
                                         </Typography>
                                     </Button>
@@ -191,7 +238,6 @@ const UserCancelOrder = ({ open, onClose, zIndex, orderInfo, orderID, fetchMyOrd
                     </Formik>
                 </DialogContent>
             </Dialog>
-            <ToastContainer />
         </div>
     )
 }

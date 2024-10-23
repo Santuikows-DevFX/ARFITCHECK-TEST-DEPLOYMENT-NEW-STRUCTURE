@@ -11,6 +11,8 @@ import Swal from 'sweetalert2';
 import CancelOrder from '../Dialogs/CancelOrder';
 import dayjs from 'dayjs';
 import TrackingNumber from '../Dialogs/TrackingNumber';
+import { onValue, ref } from 'firebase/database';
+import { db } from '../../firebase';
 
 const OrderStatusTable = () => {
 
@@ -31,9 +33,20 @@ const OrderStatusTable = () => {
   const [orderIDSearchQuery, setOrderIDSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState('')
 
-
   useEffect(() => {
-    fetchOrders();
+    const dbRef = ref(db, 'orders');
+  
+    const listener = onValue(dbRef, (snapshot) => {
+      if (snapshot.exists()) {
+        fetchOrders();
+      } else {
+        console.log("No data available");
+      }
+    }, (error) => {
+      console.error("Error listening to Realtime Database: ", error);
+    });
+  
+    return () => listener();
   }, []);
 
   const checkIfOrderDelivered = (orderDateDelivery, orderID) => {
@@ -634,7 +647,7 @@ const OrderStatusTable = () => {
                           </Typography>
                         </Grid>
                         {/* status */}
-                      <Grid item xs={12} sm={6} md={1.5}>
+                      <Grid item xs={12} sm={6} md={1.9}>
                         <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', fontWeight: 'bold', color: 'black' }}>
                           Status
                         </Typography>
@@ -644,7 +657,7 @@ const OrderStatusTable = () => {
                             {order.orderInfo?.orderStatus === "Parcel out for delivery" ? (
                                 <>
                                 <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
-                                {order.orderInfo?.trackingNumber}
+                                Tracking #: {order.orderInfo?.trackingNumber}
                                 </Typography>
                                 <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
                                   Updated: <b>{order.orderInfo?.updateTimeStamp}</b>
@@ -654,7 +667,7 @@ const OrderStatusTable = () => {
                             ) : (
                               <>
                                 <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
-                                  Updated: <b>{order.orderInfo?.updateTimeStamp}</b>
+                                  Updated: <b>{order.orderInfo?.updateTimeStamp || '-'}</b>
                                 </Typography>
                               </>
                             )}
@@ -678,7 +691,7 @@ const OrderStatusTable = () => {
                                 <Typography
                                   sx={{
                                     fontFamily: 'Kanit',
-                                    fontSize: 18,
+                                    fontSize: 16,
                                     padding: 0.5,
                                     visibility: loading ? 'hidden' : 'visible',
                                   }}
@@ -715,7 +728,7 @@ const OrderStatusTable = () => {
                                 <Typography
                                   sx={{
                                     fontFamily: 'Kanit',
-                                    fontSize: 18,
+                                    fontSize: 16,
                                     padding: 0.5,
                                     visibility: loading ? 'hidden' : 'visible',
                                   }}
@@ -756,7 +769,7 @@ const OrderStatusTable = () => {
                                   <Typography
                                     sx={{
                                       fontFamily: 'Kanit',
-                                      fontSize: 18,
+                                      fontSize: 16,
                                       padding: 0.5,
                                       visibility: loading ? 'hidden' : 'visible',
                                     }}
@@ -797,7 +810,7 @@ const OrderStatusTable = () => {
                                     <Typography
                                       sx={{
                                         fontFamily: 'Kanit',
-                                        fontSize: 18,
+                                        fontSize: 16,
                                         padding: 0.5,
                                         visibility: loading ? 'hidden' : 'visible',
                                       }}
@@ -830,7 +843,7 @@ const OrderStatusTable = () => {
                     </Grid>
                   </Paper>
                   <CancelOrder open={isDialogOpen} onClose={handleDialogClose} orderID={selectedOrder} orderType={'Cancel'} zIndex={1000} fetchOrders={fetchOrders} />
-                  <TrackingNumber open={trackingNumberDialogOpen} onClose={handleCloseTrackingNumberDialog} orderID={selectedOrder} orderType={'Deliver'} fetchOrders={fetchOrders}  />
+                  <TrackingNumber open={trackingNumberDialogOpen} onClose={handleCloseTrackingNumberDialog} orderID={selectedOrder} orderType={'Deliver'} fetchOrders={fetchOrders} type={'default'}  />
                 </Grid>
             )))}
         </Grid>

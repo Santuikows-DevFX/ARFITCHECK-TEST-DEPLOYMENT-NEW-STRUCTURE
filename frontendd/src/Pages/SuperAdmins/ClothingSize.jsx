@@ -7,6 +7,7 @@ import axiosClient from '../../axios-client';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Bounce } from 'react-toastify';
+import { useSnackbar } from 'notistack';
 
 function ClothingSize() {
   const [isLoading, setIsLoading] = useState(true);
@@ -15,6 +16,8 @@ function ClothingSize() {
   const [selectedCategory, setSelectedCategory] = useState('T-Shirt');
   const [isSaveLoading, setIsSaveLoading] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
+
+  const { enqueueSnackbar  } = useSnackbar();
 
   const clothingCategories = ['T-Shirt', 'Shorts', 'Hoodies'];
 
@@ -54,17 +57,18 @@ function ClothingSize() {
       setIsSaveLoading(true);
       await axiosClient.post('/size/updateClothingSize', sizeData)
         .then(({ data }) => {
-          toast.success(`${data.message}`, {
-            position: "top-right",
-            autoClose: 1500,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "colored",
-            transition: Bounce,
-            style: { fontFamily: 'Kanit', fontSize: '16px' }
+          enqueueSnackbar(`${data.message}`, { 
+            variant: 'success',
+            anchorOrigin: {
+              vertical: 'top',
+              horizontal: 'right'
+            },
+            autoHideDuration: 2000,
+            style: {
+              fontFamily: 'Kanit',
+              fontSize: '16px'
+            },
+            
           });
           setEditing(false);
           setIsSaveLoading(false);
@@ -481,7 +485,6 @@ function ClothingSize() {
           </Box>
         </Box>
       )}
-      <ToastContainer />
     </div>
   );
 }

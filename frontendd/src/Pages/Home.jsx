@@ -2,23 +2,40 @@ import React, { useEffect, useState } from 'react';
 import { useStateContext } from '../ContextAPI/ContextAPI';
 import axiosClient from '../axios-client';
 import { useCookies } from 'react-cookie';
-import { Typography, Pagination, Card, CardActionArea, CardContent, Box, Grid, CardMedia, IconButton, InputAdornment, TextField, FormHelperText, Button, Dialog } from '@mui/material';
+import { Typography, Pagination, Card, CardActionArea, CardContent, Box, Grid, CardMedia, IconButton, InputAdornment, TextField, FormHelperText, Button, Dialog, ImageList, ImageListItem } from '@mui/material';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import Footer from '../Components/Footer';
 import PreLoader from '../Components/PreLoader';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Formik, Form, Field } from 'formik';
-import * as Yup from 'yup';
-import { Warning } from '@mui/icons-material';
-import { FilledButton } from '../Components/UI/Buttons.jsx';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../Widgets/Navbar.jsx';
 import ProductDescription from './Customers/ProductDescription.jsx';
-import newsLetterBG from '../../public/assets/newsletter.png'
+import shopGraffiti from '../../public/assets/shopGraffiti1.png'
 import homeSliderImageOne from '../../public/assets/Announcement/Eventsv2.png'
 import homeSliderVideo from '../../public/assets/nigg/Ads.mp4'
 import categoriesTempPics from '../../public/assets/log.png'
+import HandshakeIcon from '@mui/icons-material/Handshake';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import CheckroomIcon from '@mui/icons-material/Checkroom';
+import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
+import comingSoongIMG from '../../public/assets/comingSoonImage.png'
+import bmicHighLightImage from '../../public/assets/bmicHomePageImage.png';
+import bmicHighLightImageOne from '../../public/assets/bmicHomePageImageTwo.png';
+import bmicHighLightImageTwo from '../../public/assets/bmicHomePage.png';
+import bmicComingSoonPrdImageSample from '../../public/assets/productComingSoonSample.png';
+import bmicCoverImage from '../../public/assets/bmicHomePageLogoImage.png'
+
+import { onValue, ref } from 'firebase/database';
+import { db } from '../firebase.js';
+
+const comingSoonPrd = [
+  { name: "asasa", image: bmicHighLightImage },
+  { name: "asasa", image: bmicHighLightImageOne },
+  { name: "asasa", image: bmicHighLightImageTwo },
+  { name: "asasa", image: bmicComingSoonPrdImageSample },
+  { name: "asasa", image: comingSoongIMG },
+];
 
 const Home = () => {
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -33,20 +50,6 @@ const Home = () => {
   const navigator = useNavigate();
 
   document.documentElement.style.setProperty('--primary', 'white');
-  const styles = {
-    root: {
-      display: 'flex',
-      flexDirection: 'column',
-      backgroundImage: `url(${newsLetterBG})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-    },
-  };
-
-  const validationSchema = Yup.object().shape({
-    email: Yup.string().email('Invalid email').required('Email is required'),
-  });
-
   React.useEffect(() => {
     const timeout = setTimeout(() => {
       setIsLoading(false);
@@ -55,12 +58,21 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    fetchProducts();
-    fetchMyOrders();
-  }, []);
-
-  useEffect(() => {
-    fetchCustomizationRequest();
+    const dbRef = ref(db, 'orders');
+  
+    const listener = onValue(dbRef, (snapshot) => {
+      if (snapshot.exists()) {
+        fetchProducts();
+        fetchMyOrders();
+        fetchCustomizationRequest();
+      } else {
+        console.log("No data available");
+      }
+    }, (error) => {
+      console.error("Error listening to Realtime Database: ", error);
+    });
+  
+    return () => listener();
   }, [])
 
   const fetchProducts = async () => {
@@ -101,7 +113,6 @@ const Home = () => {
     }
   }
 
-  // TODO: CHECK IF NAGANA
   const checkIfCustomRequestPassedThePaymentDate = (approvedDate, requestID, isPaid) => {
     try {
 
@@ -111,8 +122,6 @@ const Home = () => {
 
       const timeDiff = currDate.getTime() - approveDate.getTime();
       const dayDiff = timeDiff / (1000 * 3600 * 24);
-
-      
 
       //check if the day diff is > 2 which means lagpas na siya sa 2 day policy natin
       if (dayDiff >= 2 && !isPaid) {
@@ -207,6 +216,18 @@ const Home = () => {
    
   };
 
+  const comingSoonSliderSettings = {
+    dots: false,
+    infinite: true,
+    speed: 500,
+    fade: true,   
+    autoplay: true,
+    autoplaySpeed: 3000,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    arrows: false 
+  };
+
   const handleOpenProductDetails = (product) => {
     try{
 
@@ -223,15 +244,19 @@ const Home = () => {
   }
 
   const renderProductSlides = () => {
-    return displayProducts.map(product => (
+    return displayProducts.slice(0, 5).map(product => (
       <Card
         key={product.productID}
         sx={{ 
-          width: { xs: '85%', sm: '80%', md: '90%' }, height: { xs: '15vmax', sm: '80%', md: '80%' }, cursor: 'pointer', margin: '0 10px',  
+          width: { xs: '85%', sm: '80%', md: '90%' }, 
+          height: { xs: '15vmax', sm: '80%', md: '80%' }, 
+          cursor: 'pointer', 
+          margin: '0 10px',  
           transition: 'transform 0.2s ease', 
           '&:hover': {
             transform: 'scale(1.09)',
           },
+          borderRadius: 3.5
         }} 
         onClick={() => handleOpenProductDetails(product.productInfo)}
       >
@@ -312,12 +337,156 @@ const Home = () => {
         <>
           <Navbar />
           {renderAnnouncementContent()}
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: "#dbdbdb" }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: "#dbdbdb", boxShadow: 5 }}>
             <Pagination count={2} page={currentPage} onChange={handlePageChange} />
           </Box>
+          <Box 
+            sx={{ 
+              backgroundImage: `url(${shopGraffiti})`, 
+              backgroundSize: 'cover', 
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat', 
+              py: { xs: 2, sm: 4, md: 6 }, 
+              textAlign: 'center',
+              overflow: 'hidden',
+            }}
+          >
+            <Grid 
+              container 
+              spacing={3} 
+              justifyContent="center" 
+              sx={{ 
+                mx: { xs: -2.5, md: 'auto'},
+                maxWidth: '1700px', 
+                padding: { xs: 1, sm: 2 },
+              }}
+            >
+              <Grid item xs={12} sm={6} md={3}>
+                <Card 
+                  sx={{ 
+                    p: 2, 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    textAlign: 'center', 
+                    boxShadow: 5,
+                    borderRadius: 4,
+                    background: "linear-gradient(to right, #E9E9E9 , #F6F6F6)",
+                    height: { xs: 'auto', md: '200px' }, 
+                    transition: 'transform 0.3s, box-shadow 0.3s',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: 6,
+                    },
+                  }}
+                >
+                  <TipsAndUpdatesIcon sx={{ color: 'black', fontSize: '2rem' }}/>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 16, sm: 18, md: 20 }, fontWeight: 'bold' }}>
+                    Unique Designs
+                  </Typography>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, sm: 14, md: 16 }, mt: 1 }}>
+                    Each clothes has its own style.
+                  </Typography>
+                </Card>
+              </Grid>
 
+              <Grid item xs={12} sm={6} md={3}>
+                <Card 
+                  sx={{ 
+                    p: 2, 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    textAlign: 'center', 
+                    boxShadow: 5,
+                    borderRadius: 4,
+                    background: "linear-gradient(to right, #E9E9E9 , #F6F6F6)",
+                    height: { xs: 'auto', md: '200px' }, 
+                    transition: 'transform 0.3s, box-shadow 0.3s',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: 6,
+                    },
+                  }}
+                >
+                  <AutoAwesomeIcon sx={{ color: 'black', fontSize: '2rem' }}/>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 16, sm: 18, md: 20 }, fontWeight: 'bold' }}>
+                    High Quality
+                  </Typography>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, sm: 14, md: 16 }, mt: 1 }}>
+                    We make sure you receive only the best.
+                  </Typography>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={3}>
+                <Card 
+                  sx={{ 
+                    p: 2, 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    textAlign: 'center', 
+                    boxShadow: 5,
+                    borderRadius: 4,
+                    background: "linear-gradient(to right, #E9E9E9 , #F6F6F6)",
+                    height: { xs: 'auto', md: '200px' },
+                    transition: 'transform 0.3s, box-shadow 0.3s',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: 6,
+                    },
+                  }}
+                >
+                  <CheckroomIcon sx={{ color: 'black', fontSize: '2rem' }}/>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 16, sm: 18, md: 20 }, fontWeight: 'bold' }}>
+                    Wide Selection
+                  </Typography>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, sm: 14, md: 16 }, mt: 1 }}>
+                    Select the best design that suits you.
+                  </Typography>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={3}>
+                <Card 
+                  sx={{ 
+                    p: 2, 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    textAlign: 'center', 
+                    boxShadow: 5,
+                    borderRadius: 4,
+                    height: { xs: 'auto', md: '200px' },
+                    background: "linear-gradient(to right, #E9E9E9 , #F6F6F6)",
+                    transition: 'transform 0.3s, box-shadow 0.3s',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: 6,
+                    },
+                  }}
+                >
+                  <HandshakeIcon sx={{ color: 'black', fontSize: '2rem' }}/>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 16, sm: 18, md: 20 }, fontWeight: 'bold' }}>
+                    Good Customer Service
+                  </Typography>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, sm: 14, md: 16 }, mt: 1 }}>
+                    Your satisfaction is our priority.
+                  </Typography>
+                </Card>
+              </Grid>
+            </Grid>
+
+          </Box>
+
+          {/* SLIDER OF THE PRODUCT */}
           <Box sx={{ background: 'linear-gradient(to right, #000000 , #434343)',pb: 3}}>
-            <Typography sx={{ fontFamily: "Kanit", fontSize: { xs: 20, sm: 25, md: 30 }, fontWeight: "bold", textAlign: "center", color: "white", py:{ xs: 1, sm: 2, md: 3 }}}>FEATURED PRODUCTS</Typography>
+            <Typography sx={{ fontFamily: "Kanit", fontSize: { xs: 20, sm: 25, md: 30 }, fontWeight: "bold", textAlign: "center", color: "white", py:{ xs: 1, sm: 2, md: 3 }}}>HAVE A GLIMPSE OF OUR PRODUCTS</Typography>
             <Slider {...settings}>
                 {renderProductSlides().map((slide) => (
                   <Grid item xs={12} sm={6} md={4} key={slide.key}>
@@ -327,6 +496,64 @@ const Home = () => {
             </Slider>
           </Box>
 
+          {/* COMING SOON */}
+          <Box
+            sx={{
+              backgroundImage: `url(${shopGraffiti})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              py: { xs: 2, sm: 4, md: 6 },
+              textAlign: 'center',
+              overflow: 'hidden',
+            }}
+          >
+            <Grid container justifyContent="center" sx={{maxWidth: '1700px', padding: { xs: 1, sm: 2 } }}>
+              <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: { xs: 3 } }}>
+                <Box
+                  component="img"
+                  src={bmicCoverImage}
+                  alt="Edited Image"
+                  sx={{
+                    width: { xs: '90%', md: '80%' }, 
+                    height: 'auto',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.8)', 
+                  }}
+                />
+              </Grid>
+              <Grid justifyContent="center" item xs={12} md={6} sx={{ mx: { xs: 2.5, md: 'auto' }, width: { xs: '80%', md: '100%'} }}>
+                <Slider {...comingSoonSliderSettings}>
+                  {comingSoonPrd.map((product, index) => (
+                    <div key={index}>
+                     <Card 
+                      sx={{ 
+                        borderRadius: '8px', 
+                        boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)', 
+                        height: { xs: '48vh', sm: '10vh', md: 'auto' },
+                        maxWidth: { xs: '600px', md: '660px'},
+                        ml: {xs: 'auto', md: 12}
+                      }}> 
+                      <CardMedia
+                        component="img"
+                        image={product.image}
+                        alt={product.name}
+                        sx={{
+                          borderRadius: '8px',
+                          objectFit: 'cover', 
+                          height: { xs: '48vh', sm: '10vh', md: '70.6vh' }, 
+                          width: '100%'
+                        }}
+                      />
+                    </Card>
+                    </div>
+                  ))}
+                </Slider>
+              </Grid>
+            </Grid>
+          </Box>
+
+          {/* CATEGORIES */}
           <Box 
             sx={{ 
               background: 'linear-gradient(to right, #414141 , #000000)', 
@@ -343,7 +570,7 @@ const Home = () => {
                 py:{ xs: 1, sm: 2, md: 3 },
               }}
             >
-              CATEGORIES
+              BROWSE BY CATEGORY
             </Typography>
           <Grid container spacing={3} justifyContent="center" sx = {{pb: { xs: 5, sm: 3, md: 10}}}>
           {categories.map((category, index) => (
@@ -354,7 +581,7 @@ const Home = () => {
                   flexDirection: 'column',
                   position: 'relative',
                   height: '100%', 
-                  boxShadow: 3, 
+                  boxShadow: 5, 
                   borderRadius: 2, 
                   mx: 4,
                   transition: 'transform 0.3s, box-shadow 0.3s', 
@@ -407,7 +634,7 @@ const Home = () => {
                     variant="h6" 
                     component="div" 
                     sx={{ 
-                      fontFamily: "Inter", 
+                      fontFamily: "Kanit", 
                       fontWeight: "bold", 
                       fontSize: { xs: 16, sm: 20, md: 24 },
                       lineHeight: 1.2,
@@ -429,11 +656,11 @@ const Home = () => {
                   >
                     <Typography
                       sx={{ 
-                        fontFamily: "Inter",  
+                        fontFamily: "Kanit",  
                         fontSize: { xs: 9, sm: 20, md: 20 },
                     
                       }}>
-                    View More
+                    SHOP NOW
                     </Typography>
                   </Button>
                 </Box>
@@ -442,6 +669,7 @@ const Home = () => {
           ))}
           </Grid>
           </Box>
+          {/* TO BE CHANGED
           <Box sx={{ padding: 2, textAlign: 'center' }} style={styles.root}>
             <Grid container spacing={2} justifyContent="center">
               <Grid item xs={12} md={4}>
@@ -507,7 +735,7 @@ const Home = () => {
                 </Formik>
               </Grid>
             </Grid>
-          </Box>
+          </Box> */}
           <Dialog open={modalOpen} onClose={handleCloseModal} fullWidth maxWidth="xl">
               {selectedProduct && (
                   <ProductDescription product={selectedProduct} onClose={handleCloseModal} />

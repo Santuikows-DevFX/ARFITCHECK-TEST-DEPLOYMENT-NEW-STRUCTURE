@@ -20,10 +20,12 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import UserCancelOrder from '../Dialogs/UserCancelOrder';
 import ViewCustomProductDetails from './ViewCustomProductDetails';
 import ProcessPayment from './ProcessPayment';
+import { ToastContainer } from 'react-toastify';
+import UserCancelCustomRequests from './UserCancelCustomRequests';
+import { onValue, ref } from 'firebase/database';
+import { db } from '../../firebase';
 
 const MyCustomizationRequestsTable = () => {
-
-  //TODO: MAKE THE AUTOMATION FOR CANCELLING IF USER FAILED TO PAY AFTER 2 DAYS
 
   const [orders, setOrders] = useState([]);
   const [cookie] = useCookies(['?id']);
@@ -45,15 +47,26 @@ const MyCustomizationRequestsTable = () => {
   const [orderIDSearchQuery, setOrderIDSearchQuery] = useState('');
 
   useEffect(() => {
-    fetchMyOrders();
-  }, []);
+    const dbRef = ref(db, 'customizedRequest');
+  
+    const listener = onValue(dbRef, (snapshot) => {
+      if (snapshot.exists()) {
+        fetchMyOrders();
+      } else {
+        console.log("No data available");
+      }
+    }, (error) => {
+      console.error("Error listening to Realtime Database: ", error);
+    });
+  
+    return () => listener();
+  }, [])
 
   const fetchMyOrders = async () => {
     try {
       const myCustomizationResponse = await axiosClient.get(`custom/fetchMyCustomizationRequests/${cookie['?id']}`);
       const mergedOrders = mergeOrders(myCustomizationResponse.data);
       setOrders(mergedOrders);
-
 
     } catch (error) {
     //   console.log(error);
@@ -167,7 +180,10 @@ const MyCustomizationRequestsTable = () => {
         : statuses.indexOf(b.orderInfo.orderStatus) - statuses.indexOf(a.orderInfo.orderStatus);
     }
   
-    return 0;
+    const dateA = new Date(a.orderInfo.orderDate);
+    const dateB = new Date(b.orderInfo.orderDate);
+
+    return dateB - dateA;
   });
 
   const filteredOrders = sortedOrders.filter((order) => {
@@ -588,13 +604,13 @@ const MyCustomizationRequestsTable = () => {
                           Payment Status:  <b>{order.orderInfo?.orderStatus === 'Request Approved' ? 'Pending' : '-'}</b>
                         </Typography>
                         <Typography sx={{ fontFamily: 'Kanit', fontSize: '13px', color: 'black' }}>
-                          Updated:  <b> {order.orderInfo?.updateTimeStamp}</b>
+                          Updated:  <b> {order.orderInfo?.updateTimeStamp || '-'}</b>
                         </Typography>
                      </>
                     )}
                   </Grid>
                   {/* dialog */}
-                  <UserCancelOrder open={cancelDialog} onClose={handleCancelDialogClose} orderInfo={selectedOrder?.orderInfo} orderID={selectedOrder?.orderID} fetchMyOrders={fetchMyOrders} type={'custom'}/>
+                  <UserCancelCustomRequests open={cancelDialog} onClose={handleCancelDialogClose} orderInfo={selectedOrder?.orderInfo} orderID={selectedOrder?.orderID} fetchMyOrders={fetchMyOrders} type={'custom'} zIndex={1000}/>
 
                   <ProcessPayment open={paymentDialogOpen} onClose={handlePaymentDialogClose} requestData={selectedOrder} fetchMyOrders={fetchMyOrders} zIndex={1000} />
 
@@ -656,35 +672,49 @@ const MyCustomizationRequestsTable = () => {
                             ) : (
                              <>
                               <Button
-                              type="submit"
-                              fullWidth
-                              onClick={() => handleViewCustomPrdOpen(order.orderInfo)}
-                              variant="contained"
-                              sx={{
-                                backgroundColor: 'green', 
-                                color: 'white', 
-                                '&:hover': { backgroundColor: 'black', color: 'white' },
-                                '&:not(:hover)': { backgroundColor: '#232323', color: 'white' },
-                                mb: 1.5
-                              }}
-                            >
-                              <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, padding: 0.5 }}>VIEW</Typography>
-                            </Button>
-                            <Button
-                              type="submit"
-                              onClick={() => handlePaymentDialogOpen(order.orderID, order.orderInfo?.selectedEWallet, order.orderInfo?.amountToPay)}
-                              fullWidth
-                              variant="contained"
-                              sx={{
-                                backgroundColor: 'green', 
-                                color: 'white', 
-                                '&:hover': { backgroundColor: '#388E3C', color: 'white' },
-                                '&:not(:hover)': { backgroundColor: '#4CAF50', color: 'white' },
-                                mb: 1.5
-                              }}
-                            >
-                              <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, padding: 0.5 }}>PAY</Typography>
-                            </Button></>
+                                type="submit"
+                                onClick={() => handlePaymentDialogOpen(order.orderID, order.orderInfo?.selectedEWallet, order.orderInfo?.amountToPay)}
+                                fullWidth
+                                variant="contained"
+                                sx={{
+                                  backgroundColor: 'green', 
+                                  color: 'white', 
+                                  '&:hover': { backgroundColor: '#388E3C', color: 'white' },
+                                  '&:not(:hover)': { backgroundColor: '#4CAF50', color: 'white' },
+                                  mb: 0.8
+                                }}
+                              >
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, padding: 0.5 }}>PAY</Typography>
+                              </Button>
+                              <Button
+                                type="submit"
+                                fullWidth
+                                onClick={() => handleViewCustomPrdOpen(order.orderInfo)}
+                                variant="contained"
+                                sx={{
+                                  backgroundColor: 'green', 
+                                  color: 'white', 
+                                  '&:hover': { backgroundColor: 'black', color: 'white' },
+                                  '&:not(:hover)': { backgroundColor: '#232323', color: 'white' },
+                                  mb: 0.8
+                                }}
+                              >
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, padding: 0.5 }}>VIEW</Typography>
+                              </Button>
+                              <Button
+                                type="submit"
+                                fullWidth
+                                onClick={() => handleCancelDialogOpen(order.orderInfo, order.orderID)}
+                                variant="contained"
+                                sx={{
+                                  backgroundColor: 'White',
+                                  '&:hover': { backgroundColor: '#943126', color: 'white' },
+                                  '&:not(:hover)': { backgroundColor: '#860000', color: 'white' },
+                                }}
+                              >
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, padding: 0.5 }}>CANCEL</Typography>
+                              </Button>
+                              </>
                             )} 
                           </>
                         ) : (
@@ -708,7 +738,7 @@ const MyCustomizationRequestsTable = () => {
                             <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, padding: 0.5 }}>VIEW</Typography>
                           </Button>
                           </>
-                         )
+                    )
                   ))}
                   </Grid>
                 </Grid>
@@ -726,8 +756,6 @@ const MyCustomizationRequestsTable = () => {
           />
         </Box>
       </Box>
-    
-
     </>
   );
 };

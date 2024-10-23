@@ -38,16 +38,16 @@ function OrderSuccess() {
                 height="auto"
                 alt="Success"
               />
-              <Typography
+             <Typography
                 sx={{
-                  fontFamily: 'Inter',
-                  fontSize: { xs: 20, sm: 25 },
-                  fontWeight: '1000',
+                  fontFamily: 'Kanit',
+                  fontSize: { xs: 15, sm: 25 },
+                  fontWeight: 700,
                   color: '#1E7F1C',
                   paddingY: '1vh',
                 }}
               >
-                THANK YOU! <br /> Your order has been received!
+                THANK YOU! <br /> Your order has been received! Always check your email for notifications.
               </Typography>
               <FilledButton
                 onClick={() => navigate('/shop')}

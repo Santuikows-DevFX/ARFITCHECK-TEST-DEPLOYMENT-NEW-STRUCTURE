@@ -67,20 +67,26 @@ function Navbar() {
       <List>
         <ListItem button component={Link} to="/">
         <ListItemText 
-    primary="Home" 
-    primaryTypographyProps={{ 
-      sx: { fontFamily: 'YourCustomFont, sans-serif', fontSize: '1rem' }
-    }} 
+          primary="Home" 
+          primaryTypographyProps={{ 
+            sx: { fontFamily: 'Kanit', fontSize: '1rem' }
+          }} 
   />
         </ListItem>
         <ListItem button component={Link} to="/shop">
-          <ListItemText primary="Shop" />
+          <ListItemText primary="Shop" primaryTypographyProps={{ 
+            sx: { fontFamily: 'Kanit', fontSize: '1rem' }
+          }} />
         </ListItem>
         <ListItem button component={Link} to="/tool">
-          <ListItemText primary="ARFIT App" />
+          <ListItemText primary="ARFIT App" primaryTypographyProps={{ 
+            sx: { fontFamily: 'Kanit', fontSize: '1rem' }
+          }} />
         </ListItem>
         <ListItem button component={Link} to="/about">
-          <ListItemText primary="About" />
+          <ListItemText primary="About" primaryTypographyProps={{ 
+            sx: { fontFamily: 'Kanit', fontSize: '1rem' }
+          }} />
         </ListItem>
       </List>
     </Box>
@@ -159,7 +165,7 @@ function Navbar() {
                         color="inherit"
                         onClick={() => {
                           Swal.fire({
-                            title: "Are you sure you want to logout?",
+                            title: "Logout?",
                             text: "",
                             icon: "question",
                             showCancelButton: true,
@@ -273,9 +279,7 @@ function Navbar() {
         <Box sx={{ flexGrow: 1 }}>
           <AppBar position="fixed" sx={{ pl: { xs: 0, md: 5 }, pr: { xs: 2, md: 5 }, backgroundColor: "#F4F4F4", color: "black" }}>
             <Toolbar>
-              
-              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                
+              <Typography component="div" sx={{ flexGrow: 1, fontFamily: 'Kanit' }}>
                 <Box
                   component="img"
                   src={logo}

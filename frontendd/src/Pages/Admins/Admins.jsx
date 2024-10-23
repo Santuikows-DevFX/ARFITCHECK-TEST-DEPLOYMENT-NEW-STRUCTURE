@@ -61,6 +61,8 @@ import TransactionHistory from '../SuperAdmins/TransactionHistory';
 import ClothingSize from '../SuperAdmins/ClothingSize';
 
 import adminBG from '../../../public/assets/shopGraffiti1.png'
+import { onValue, ref } from 'firebase/database';
+import { db } from '../../firebase';
 
 const SuperAdmin = (props) => {
   const { window } = props;
@@ -104,9 +106,22 @@ const SuperAdmin = (props) => {
   };
   //notification hook
   React.useEffect(() => {
-    fetchNotificationData();
-    fetchAndHandleNotifyOutForDeliveryOrders();
+    const dbRef = ref(db, 'notificationForAdmins');
+  
+    const listener = onValue(dbRef, (snapshot) => {
+      if (snapshot.exists()) {
+        fetchNotificationData();
+        fetchAndHandleNotifyOutForDeliveryOrders();
+      } else {
+        console.log("No data available");
+      }
+    }, (error) => {
+      console.error("Error listening to Realtime Database: ", error);
+    });
+  
+    return () => listener();
   }, [])
+
 
   const handleDrawerClose = () => {
     setIsClosing(true);
@@ -379,6 +394,8 @@ const SuperAdmin = (props) => {
   const handleDeleteAllNotifications = async () => {
     try{
 
+      console.log(cookie['?id']);
+      
       await axiosClient.delete(`/auth/deleteAllAdminNotification/${cookie['?id']}`)
       fetchNotificationData();
       
@@ -428,8 +445,8 @@ const SuperAdmin = (props) => {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-
-          backgroundColor: '#F4F4F4'
+          backgroundColor: '#F4F4F4',
+          zIndex: 1
         }}
       >
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

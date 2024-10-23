@@ -1,13 +1,7 @@
 import React from 'react'
 import { Box, Typography, Divider, Grid, Avatar, IconButton } from '@mui/material';
-import { ExcelButton} from '../../Components/UI/Buttons';
 import PreLoader from '../../Components/PreLoader';
-import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import OrderStatusTable from '../../Components/Tables/OrderStatusTable';
-import { ToastContainer } from 'react-toastify';
 
 function Orders() {
   const [isLoading, setIsLoading] = React.useState(true);
@@ -39,7 +33,6 @@ function Orders() {
         </Grid>
         <OrderStatusTable/>
       </Box>
-        <ToastContainer />
      </div>
       )}
     </div>

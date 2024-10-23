@@ -506,6 +506,7 @@ const ProductInventoryTable = ({ products, fetchProducts }) => {
           product={selectedProduct}
           productID={selectedProductID}
           fetchProducts={fetchProducts}
+          zIndex={1000}
         />
       )}
     </Box>

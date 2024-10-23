@@ -20,6 +20,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import 'react-toastify/dist/ReactToastify.css';
 import ProductRating from '../Dialogs/ProductRating';
+import { onValue, ref } from 'firebase/database';
+import { db } from '../../firebase';
 
 const OrderHistoryTable = () => {
 
@@ -38,8 +40,20 @@ const OrderHistoryTable = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
-    fetchMyOrders();
-  }, []);
+    const dbRef = ref(db, 'orders');
+  
+    const listener = onValue(dbRef, (snapshot) => {
+      if (snapshot.exists()) {
+        fetchMyOrders();
+      } else {
+        console.log("No data available");
+      }
+    }, (error) => {
+      console.error("Error listening to Realtime Database: ", error);
+    });
+  
+    return () => listener();
+  }, [])
 
   const fetchMyOrders = async () => {
     try {
@@ -147,29 +161,23 @@ const OrderHistoryTable = () => {
 
   const sortedOrders = [...orders].sort((a, b) => {
 
-    if (a.orderInfo.isRated !== b.orderInfo.isRated) {
-      return a.orderInfo.isRated ? 1 : -1; 
-    }
-   
     if (sortAmount) {
       return sortAmount === 'asc'
         ? a.orderInfo.amountToPay - b.orderInfo.amountToPay
         : b.orderInfo.amountToPay - a.orderInfo.amountToPay;
     }
-  
     if (sortStatus) {
-      const statuses = ['Order Confirmed', 'Order Cancelled', 'Request Rejected', 'Request Cancelled'];
+      const statuses = ['Order Completed', 'Order Cancelled', 'Request Rejected', 'Request Cancelled'];
       return sortStatus === 'asc'
         ? statuses.indexOf(a.orderInfo.orderStatus) - statuses.indexOf(b.orderInfo.orderStatus)
         : statuses.indexOf(b.orderInfo.orderStatus) - statuses.indexOf(a.orderInfo.orderStatus);
     }
-
-    //sort into the most recent order based on the order <date></date>
+ 
     const dateA = new Date(a.orderInfo.orderDate);
     const dateB = new Date(b.orderInfo.orderDate);
 
-
     return dateB - dateA;
+    
   });
   
   const filteredOrders = sortedOrders.filter((order) => {
@@ -569,15 +577,22 @@ const OrderHistoryTable = () => {
                                  <b>Qnt:</b> {order.orderInfo?.productQuantity.split(', ')[index]} <b>Size:</b> {order.orderInfo?.productSize.split(', ')[index] || '-'}
                                </Typography>
                               ) : (
-                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
-                                  <b>Qnt:</b> {order.orderInfo?.productQuantity.split(', ')[index]} <b>Size(s): </b>
-                                  {order.orderInfo?.smallQuantity !== "0" ? `S x${order.orderInfo?.smallQuantity}${order.orderInfo?.mediumQuantity !== "0" || order.orderInfo?.largeQuantity !== "0" || order.orderInfo?.extraLargeQuantity !== "0" || order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
-                                  {order.orderInfo?.mediumQuantity !== "0" ? `M x${order.orderInfo?.mediumQuantity}${order.orderInfo?.largeQuantity !== "0" || order.orderInfo?.extraLargeQuantity !== "0" || order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
-                                  {order.orderInfo?.largeQuantity !== "0" ? `L x${order.orderInfo?.largeQuantity}${order.orderInfo?.extraLargeQuantity !== "0" || order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
-                                  {order.orderInfo?.extraLargeQuantity !== "0" ? `XL x${order.orderInfo?.extraLargeQuantity}${order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
-                                  {order.orderInfo?.doubleXLQuantity !== "0" ? `2XL x${order.orderInfo?.doubleXLQuantity}${order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
-                                  {order.orderInfo?.tripleXLQuantity !== "0" ? `3XL x${order.orderInfo?.tripleXLQuantity}` : ''}
-                                </Typography>
+                                <>
+                                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                                    <b>Qnt:</b> {order.orderInfo?.productQuantity.split(', ')[index]} <b>Size(s): </b>
+                                    {order.orderInfo?.smallQuantity !== "0" ? `S x${order.orderInfo?.smallQuantity}${order.orderInfo?.mediumQuantity !== "0" || order.orderInfo?.largeQuantity !== "0" || order.orderInfo?.extraLargeQuantity !== "0" || order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
+                                    {order.orderInfo?.mediumQuantity !== "0" ? `M x${order.orderInfo?.mediumQuantity}${order.orderInfo?.largeQuantity !== "0" || order.orderInfo?.extraLargeQuantity !== "0" || order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
+                                    {order.orderInfo?.largeQuantity !== "0" ? `L x${order.orderInfo?.largeQuantity}${order.orderInfo?.extraLargeQuantity !== "0" || order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
+                                    {order.orderInfo?.extraLargeQuantity !== "0" ? `XL x${order.orderInfo?.extraLargeQuantity}${order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
+                                    {order.orderInfo?.doubleXLQuantity !== "0" ? `2XL x${order.orderInfo?.doubleXLQuantity}${order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
+                                    {order.orderInfo?.tripleXLQuantity !== "0" ? `3XL x${order.orderInfo?.tripleXLQuantity}` : ''}
+                                  </Typography>
+                                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                                    Custom Img: <span style={{ textDecoration: 'underline', fontFamily: 'Kanit', fontWeight: 'bold',color: '#1F618D', cursor: 'pointer' }} onClick = {() => {
+                                      window.open(order.orderInfo?.customImage, '_blank')
+                                    }}>Click Here</span>
+                                  </Typography>
+                                </>
                               
                               )}
 
@@ -698,7 +713,7 @@ const OrderHistoryTable = () => {
                             '&:not(:hover)': { backgroundColor: '#239B56', color: 'white' },
                           }}
                       >
-                        <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, padding: 0.5 }}>RATE</Typography>
+                        <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, padding: 0.5 }}>QUICK RATE</Typography>
                       </Button>
                       )}
                     </Grid>

@@ -7,6 +7,7 @@ use DateTime;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Kreait\Firebase\Contract\Database;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Illuminate\Support\Str;
@@ -591,6 +592,7 @@ class DataController extends Controller
 
                 'firstName' => $request->firstName,
                 'lastName' => $request->lastName,
+                'addedDate' => Carbon::now()->toDateString(),
                 'email' => $request->email,
                 'password' => bcrypt($request->password),
                 'mobileNumber' => $request->mobileNumber,
@@ -600,6 +602,10 @@ class DataController extends Controller
             ];
 
             $this->database->getReference('users')->push($adminData);
+
+            //send email notification to the admin that you have added
+            $this->sendEmailForTheAdminBeingAdded($request->email, $request->firstName, $request->password);
+
             $message = 'Admin Added Successfully!';
 
             return response(compact('message'));
@@ -608,6 +614,7 @@ class DataController extends Controller
             return response(compact('message'));
         }
     }
+
 
     public function getAllAdmins()
     {
@@ -706,6 +713,107 @@ class DataController extends Controller
                         ->set('read');
                 }
             }
+        } catch (\Exception $e) {
+            return response($e->getMessage());
+        }
+    }
+
+    //email shits
+    public function sendEmailForTheAdminBeingAdded($email, $recipient, $defaultPass)
+    {
+        try {
+
+            $emailNotificationData = [
+                'subject' => 'ARFITCHECK Web Admin Notification',
+                'dateAdded' => Carbon::now()->toDateString(),
+                'email' =>  $email,
+                'recipient' => $recipient,
+                'defaultPass' => $defaultPass,
+                'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
+            ];
+
+            Mail::send([], [], function ($message) use ($emailNotificationData) {
+                $htmlBody = '
+                <html>
+                    <head>
+                    <style>
+                        body {
+                        font-family: Arial, sans-serif;
+                        background-color: #f4f4f4;
+                        padding: 20px;
+                        }
+                        .container {
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #ffffff;
+                        padding: 20px;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                        }
+                        h1, h2, h3 {
+                        color: #333333;
+                        }
+                        p {
+                        color: #555555;
+                        line-height: 1.6;
+                        }
+                        .divider {
+                        border-top: 1px solid #dddddd;
+                        margin: 20px 0;
+                        }
+                        .order-id {
+                        font-weight: bold;
+                        }
+                        .footer {
+                        margin-top: 20px;
+                        text-align: center;
+                        color: #888888;
+                        font-size: 12px;
+                        }
+                        .logo {
+                        text-align: center;
+                        margin-bottom: 20px;
+                        }
+                        .logo img {
+                        max-width: 100px; /* Adjust the size of the image */
+                        }
+                    </style>
+                    </head>
+                    <body>
+                    <div class="container">
+                        <div class="logo">
+                        <img src="' . $emailNotificationData['url'] . '" alt="Logo" style="width: 200px; height: auto;">
+                        </div>
+                        
+                        <p>Hi ' . $emailNotificationData['recipient'] . ',</p>
+                        <p>You have been added as an Admin in ARFITCHECK Web-Based Ordering System.</p>
+                        
+                        <div class="divider"></div>
+
+                        <h3>HOW CAN I LOGIN MY ACCOUNT?</h3>
+                        <p><strong>Step 1: </strong> You must first verify your account by clicking the verification link being sent to you.</p>
+                        <p><strong>Step 2:</strong> You may now login your account at <a href="https://bmicclothes.online/login" target="_blank">https://bmicclothes.online/login</a> </p>
+                        
+                        <div class="divider"></div>
+                         <p>
+                            <a href="https://www.facebook.com/bmic.clothing" target="_blank">Visit BMIC on Facebook</a>
+                        </p>
+                    <div class="footer">
+                        <p>&copy; ' . date('Y') . ' ARFITCHECK. All rights reserved.</p>
+                    </div>
+                    </body>
+                </html>
+                ';
+
+                $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+                $message->to($emailNotificationData['email'])
+                    ->subject($emailNotificationData['subject'])
+                    ->html($htmlBody);
+            });
+
+            return response()->json([
+                'message' => 'Email sent successfully!'
+            ]);
         } catch (\Exception $e) {
             return response($e->getMessage());
         }

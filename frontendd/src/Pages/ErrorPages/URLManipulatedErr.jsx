@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, Typography, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-import shopGraffitiBG from '../Customers/SingleProdCheckout/shopGraffiti.png'
+import shopGraffitiBG from '../../../public/assets/shopGraffiti1.png'
 
 const URLManipulated = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const URLManipulated = () => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'white',
+        backgroundImage: `url(${shopGraffitiBG})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
@@ -22,15 +22,31 @@ const URLManipulated = () => {
         color: 'black',
       }}
     >
-      <Box>
-        <Typography variant="h1" sx={{ fontFamily: 'Kanit', fontSize: { xs: 100, md: 250 }, fontWeight: 'bold' }}>
-          Oops!
+      <Box
+        sx={{
+          margin: { xs: 2, md: 4 }, 
+          padding: { xs: 2, md: 4 }, 
+          textAlign: 'center', 
+        }}
+      >
+        <Typography
+          variant="h1"
+          sx={{ fontFamily: 'Kanit', fontSize: { xs: 30, md: 80 }, fontWeight: 'bold' }}
+        >
+          SOMETHING WENT WRONG
         </Typography>
-        <Typography variant="h6" sx={{ fontFamily: 'Kanit', mb: 4 }}>
-          It looks like you're trying to change the URL for customization
+        <Typography
+          variant="h6"
+          sx={{ fontFamily: 'Kanit', mb: 4, fontSize: { xs: 16, md: 25 } }}
+        >
+          Something went wrong while generating the image URL. This may occur if multiple requests are sent in quick succession or if you're trying to change the URL <b>manually</b>. To resolve this, please follow these steps:
+          <br /><br />
+          1. <strong>Return to the Home Page:</strong> Press the <strong>GO HOME</strong> button below to exit the current session and navigate back to the website homepage.
           <br />
-          If you're trying to change the paramaters, you just wasted your time as well as your customized image URL :)
+          2. <strong>Retry the Request:</strong> Once back on the homepage, please attempt to send your request from mobile again.
+          <br /><br />
         </Typography>
+
         <Button
           fullWidth
           onClick={() => navigate('/home')}
@@ -46,7 +62,7 @@ const URLManipulated = () => {
           <Typography
             sx={{
               fontFamily: 'Kanit',
-              fontSize: { xs: 18, md: 25 },
+              fontSize: { xs: 14, md: 20 },
               padding: 0.5,
               color: 'white',
             }}
@@ -55,6 +71,7 @@ const URLManipulated = () => {
           </Typography>
         </Button>
       </Box>
+
     </Box>
   );
 };

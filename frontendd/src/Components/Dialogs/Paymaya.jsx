@@ -14,7 +14,7 @@ const Paymaya = ({ open, onClose }) => {
                 sx: { borderRadius: 4 }, 
             }}
             >
-            <DialogTitle sx={{ fontFamily: 'Kanit', fontWeight: 'bold', fontSize: { xs: 20, md: 30 } }}>
+            <DialogTitle sx={{ background: 'linear-gradient(to left, #414141  , #000000)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4, fontFamily: 'Kanit', fontWeight: 'bold', fontSize: { xs: 20, md: 30} }}>
                 Scan this QR Code:
             </DialogTitle>
             <DialogContent>

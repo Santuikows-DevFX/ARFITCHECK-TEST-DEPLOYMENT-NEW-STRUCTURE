@@ -18,3 +18,19 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+.swal2-popup .swal2-title,
+.swal2-popup .swal2-text {
+    font-family: 'Kanit', sans-serif !important;
+}
+
+
+/* 
+.swal2-popup {
+  max-width: 100% !important; 
+  width: auto !important;
+  margin: 0 !important; 
+  padding: 1rem; 
+  box-sizing: border-box;   
+} */
+

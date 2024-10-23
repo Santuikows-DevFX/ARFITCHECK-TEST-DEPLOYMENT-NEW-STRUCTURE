@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Divider, Grid, Avatar, IconButton, Button } from '@mui/material';
+import { Box, Typography, Divider, Grid, Avatar, IconButton, Button, CircularProgress, Backdrop  } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone'; 
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount'; 
@@ -9,14 +9,21 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import axiosClient from '../../axios-client';
 import Swal from 'sweetalert2';
-import { ToastContainer, toast } from 'react-toastify';
+import {toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Bounce } from 'react-toastify';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import dayjs from 'dayjs';
+import { useSnackbar } from "notistack";
+
 
 function Staffs() {
   const [isLoading, setIsLoading] = useState(true);
   const [adminInfo, setAdminInfo] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [functionLoading, setFunctionLoading] = useState(false);
+
+  const { enqueueSnackbar  } = useSnackbar();
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -28,6 +35,15 @@ function Staffs() {
   useEffect(() => {
     fetchAdminInfo();
   }, []);
+
+  useEffect(() => {
+    if (functionLoading) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+}, [functionLoading]);
+
 
   const fetchAdminInfo = async () => {
     try {
@@ -47,42 +63,73 @@ function Staffs() {
   };
 
   const handleDeleteAdmin = (adminID, adminFirstName) => {
-    Swal.fire({
-      title: `Are you sure you want to remove ${adminFirstName}?`,
-      text: "You won't be able to revert this once deleted.",
-      icon: "question",
-      showCancelButton: true,
-      cancelButtonText: 'Cancel',
-      confirmButtonColor: '#414a4c',
-      confirmButtonText: "I know",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        axiosClient.post(`auth/deleteAdmin/${adminID}`).then(({ data }) => {
-          if (data.message === 'Admin Removed!') {
-            toast.success(`${data.message}`, {
-              position: "top-right",
-              autoClose: 2300,
-              theme: "colored",
-              style: { fontFamily: 'Kanit', fontSize: '16px' },
-              transition: Bounce,
-            });
-            fetchAdminInfo();
-          } else {
-            toast.error(`${data.message}`, {
-              position: "top-right",
-              autoClose: 2300,
-              theme: "colored",
-              style: { fontFamily: 'Kanit', fontSize: '16px' },
-              transition: Bounce,
-            });
-          }
-        });
-      }
-    });
+    
+    try {
+
+      Swal.fire({
+        title: `Are you sure you want to remove ${adminFirstName}?`,
+        text: "You won't be able to revert this once deleted.",
+        icon: "question",
+        showCancelButton: true,
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#414a4c',
+        confirmButtonText: "I know",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          setFunctionLoading(true)
+          axiosClient.post(`auth/deleteAdmin/${adminID}`).then(({ data }) => {
+            if (data.message === 'Admin Removed!') {
+              enqueueSnackbar(`${data.message}`, { 
+                variant: 'success',
+                anchorOrigin: {
+                  vertical: 'top',
+                  horizontal: 'right'
+                },
+                autoHideDuration: 2000,
+                style: {
+                  fontFamily: 'Kanit',
+                  fontSize: '16px'
+                },
+                
+              });
+              setFunctionLoading(false)
+              fetchAdminInfo();
+            } else {
+              enqueueSnackbar(`${data.message}`, { 
+                variant: 'error',
+                anchorOrigin: {
+                  vertical: 'top',
+                  horizontal: 'right'
+                },
+                autoHideDuration: 2000,
+                style: {
+                  fontFamily: 'Kanit',
+                  fontSize: '16px'
+                },
+                
+              });
+              setFunctionLoading(false)
+            }
+          });
+        }
+      });
+      
+    } catch (error) {
+      console.log(error);
+      setFunctionLoading(false)
+      
+    }
   };
 
   return (
     <div>
+      {functionLoading && (
+        <Backdrop open={true} style={{ zIndex: 1000 + 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100%', backdropFilter: 'blur(2px)' }}>
+            <CircularProgress size={60} sx={{ color: 'white' }} />
+          </div>
+        </Backdrop>
+      )}
       {isLoading ? (
         <PreLoader />
       ) : (
@@ -187,8 +234,14 @@ function Staffs() {
                           <Typography sx={{ fontSize: { xs: 14, sm: 15, md: 18 }, color: 'gray', wordBreak: 'break-word', fontFamily: 'Kanit' }}>
                             <EmailIcon sx={{ fontSize: { xs: 16, sm: 18, md: 20 }, mr: 1, color: 'black', }} /> {admin.adminInfo.email}
                           </Typography>
-                          <Typography sx={{ fontSize: { xs: 14, sm: 15, md: 18 }, color: 'gray', wordBreak: 'break-word',fontFamily: 'Kanit' }}>
-                            <PhoneIcon sx={{ fontSize: { xs: 16, sm: 18, md: 20 }, mr: 1, color: 'black' }} /> {admin.adminInfo.mobileNumber}
+                          <Typography sx={{ fontSize: { xs: 14, sm: 15, md: 18 }, color: 'gray', wordBreak: 'break-word', fontFamily: 'Kanit' }}>
+                            <PhoneIcon sx={{ fontSize: { xs: 16, sm: 18, md: 20 }, mr: 1, color: 'black' }} /> 
+                            {admin.adminInfo.mobileNumber}
+                          </Typography>
+
+                          <Typography sx={{ fontSize: { xs: 14, sm: 15, md: 18 }, color: 'gray', wordBreak: 'break-word', fontFamily: 'Kanit' }}>
+                            <CalendarMonthIcon sx={{ fontSize: { xs: 16, sm: 18, md: 20 }, mr: 1, color: 'black' }} /> 
+                            Added {dayjs(admin.adminInfo.addedDate).format('MMMM D, YYYY')}
                           </Typography>
                         </Grid>
                       </Grid>

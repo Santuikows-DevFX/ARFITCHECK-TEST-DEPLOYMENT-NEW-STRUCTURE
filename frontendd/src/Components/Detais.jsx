@@ -85,16 +85,17 @@ const Details = ({ avatarUrl, name, email }) => {
                 <Grid item>
                   <Typography 
                     sx={{ 
-                      fontFamily: 'Inter', 
+                      fontFamily: 'Kanit', 
                       fontSize: { xs: 14, sm: 16, md: 20 }, 
                       fontWeight: 'medium', 
                       color: 'black', 
                       display: 'inline-block', 
+                      
                     }}
                   >
-                    {userInfo.email}
+                    {userInfo?.email}
                   </Typography>
-                  {userInfo.email && <CheckCircleIcon sx={{ fontSize: { xs: 12, sm: 16, md: 18 }, color: 'green', marginLeft: 1 }} />}
+                  {/* {userInfo.email && <CheckCircleIcon sx={{ fontSize: { xs: 12, sm: 16, md: 18 }, color: 'green', marginLeft: 1 }} />} */}
                 </Grid>
               </Grid>
               <Grid container alignItems="center" spacing={1} sx={{ marginTop: 1 }}>
@@ -104,16 +105,16 @@ const Details = ({ avatarUrl, name, email }) => {
                 <Grid item>
                   <Typography 
                     sx={{ 
-                      fontFamily: 'Inter', 
+                      fontFamily: 'Kanit', 
                       fontSize: { xs: 12, sm: 16, md: 18 }, 
                       fontWeight: 'medium', 
                       color: 'black', 
                       display: 'inline-block', 
                     }}
                   >
-                    {userInfo.mobileNumber}
+                    (63+) {userInfo?.mobileNumber.slice(1)}
                   </Typography>
-                  {userInfo.mobileNumber && <CheckCircleIcon sx={{ fontSize: { xs: 12, sm: 16, md: 18 }, color: 'green', marginLeft: 1 }} />}
+                  {/* {userInfo.mobileNumber && <CheckCircleIcon sx={{ fontSize: { xs: 12, sm: 16, md: 18 }, color: 'green', marginLeft: 1 }} />} */}
                 </Grid>
               </Grid>
             </>

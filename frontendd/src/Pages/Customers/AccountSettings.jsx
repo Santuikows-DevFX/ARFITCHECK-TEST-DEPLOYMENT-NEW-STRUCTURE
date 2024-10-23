@@ -38,7 +38,7 @@ function AccountSettings() {
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 20, md: 25 }, fontWeight: 'bold', color: 'black'}}>
                 Change Password <br/>
-                <Typography sx={{ fontFamily: 'Inter', fontSize:  { xs: 10, md: 15 }, fontWeight: '300', color: 'black' }}>
+                <Typography sx={{ fontFamily: 'Kanit', fontSize:  { xs: 10, md: 15 }, fontWeight: '300', color: 'black' }}>
                   Update your password to keep your account secure.
                 </Typography>
               </Typography>
@@ -51,7 +51,7 @@ function AccountSettings() {
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 20, md: 25 }, fontWeight: 'bold', color: 'black' }}>
                 Profile Information <br/>
-                <Typography sx={{ fontFamily: 'Inter', fontSize: { xs: 10, md: 15 }, fontWeight: '300', color: 'black' }}>
+                <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 15 }, fontWeight: '300', color: 'black' }}>
                   Configure your profile.
                 </Typography>
               </Typography>
@@ -61,7 +61,7 @@ function AccountSettings() {
             </AccordionDetails>
           </Accordion>
         </Box>
-      <ToastContainer/>
+      {/* <ToastContainer/> */}
        </div>
       )}
     </div>

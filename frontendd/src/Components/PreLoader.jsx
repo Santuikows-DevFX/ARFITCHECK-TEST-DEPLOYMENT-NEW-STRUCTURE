@@ -3,11 +3,10 @@ import '../Loader.css'
 
 import Box from '@mui/material/Box';
 
-
 function PreLoader() {
   return (
     <div>
-      <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>         <div class="preloader">
+      <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}> <div class="preloader">
 	<svg class="cart" role="img" aria-label="Shopping cart line animation" viewBox="0 0 128 128" width="128px" height="128px" xmlns="http://www.w3.org/2000/svg">
 		<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="8">
 			<g class="cart__track" stroke="black">

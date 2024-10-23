@@ -24,7 +24,7 @@ const ViewCustomProductDetails = ({
   tripleXLQnt
 }) => { 
 
-  const customImageSRC = orderInfo?.customImage ? orderInfo?.customImage : `data:image/jpeg;base64,${customImage}`;
+  const customImageSRC = orderInfo?.customImage ? orderInfo?.customImage : `https://storage.googleapis.com/${customImage}`;
 
   const openImageInNewTab = (imageUrl) => {
     

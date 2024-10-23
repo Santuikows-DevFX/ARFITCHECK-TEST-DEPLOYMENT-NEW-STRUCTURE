@@ -1,6 +1,7 @@
 import React from 'react'
 import { useCookies } from 'react-cookie'
 import { Navigate, Outlet } from 'react-router-dom'
+import { ToastContainer } from 'react-toastify'
 
 const SuperAdminLayout = () => {
 
@@ -17,6 +18,7 @@ const SuperAdminLayout = () => {
   return (
     <div>
         <Outlet/>
+        <ToastContainer/>
     </div>
   )
 }

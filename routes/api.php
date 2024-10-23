@@ -158,13 +158,18 @@ Route::prefix('custom')->controller(CustomRequestController::class)->group(funct
     Route::get('/fetchCustomizationRequestForReceipt/{uid}/{orderTimeStamp}', 'fetchCustomizationRequestForReceipt');
 
     Route::post('/updateRequestWhenPaid', 'updateRequestWhenPaid');
+
     //admin
     Route::get('/fetchCustomizationRequest', 'fetchCustomizationRequest');
     Route::get('/fetchCustomizationRequestByDate/{dataSortRequest}', 'fetchCustomizationRequestByDate');
+    Route::get('/fetchCustomizationCancelRequests', 'fetchCustomizationCancelRequests');
+
     Route::post('/updateRequest', 'updateRequestStatus');
 
     Route::post('/insertCustomizePrdRequest', 'insertCustomizePrdRequest');
     Route::post('/cancelCustomizationRequest', 'cancelCustomizationRequest');
+
+    Route::post('/rejectCancelCustomizationRequest', 'rejectCancelCustomizationRequest');
 
     //test email notif
     Route::post('sendEmailNotificationForReceipt', 'sendEmailNotificationForReceipt');

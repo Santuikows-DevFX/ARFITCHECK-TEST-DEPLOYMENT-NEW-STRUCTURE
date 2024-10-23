@@ -23,6 +23,7 @@ import Swal from 'sweetalert2';
 import Navbar from '../../Widgets/Navbar';
 import Footer from '../Footer';
 import cartGraffitiBG from '../../../public/assets/cartGraffiti.png'
+import { useSnackbar } from 'notistack';
 
 const CartTable = () => {
   const [cart, setCart] = useState([]);
@@ -32,6 +33,8 @@ const CartTable = () => {
 
   const { removeFromCart } = useCart();
   const navigator = useNavigate();
+
+  const { enqueueSnackbar  } = useSnackbar();
 
   useEffect(() => {
     fetchCartItems();
@@ -88,18 +91,18 @@ const CartTable = () => {
               cartItem.productName !== productName || cartItem.productSize !== productSize
           );
           setCart(newCartItemData);
-    
-          toast.success('Item Removed', {
-            position: 'top-right',
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: 'colored',
-            transition: Bounce,
-            style: { fontFamily: 'Kanit', fontSize: '16px' },
+          enqueueSnackbar(`Item Removed`, { 
+            variant: 'success',
+            anchorOrigin: {
+              vertical: 'top',
+              horizontal: 'right'
+            },
+            autoHideDuration: 1800,
+            style: {
+              fontFamily: 'Kanit',
+              fontSize: '16px'
+            },
+            
           });
     
           removeFromCart(productName, productSize);

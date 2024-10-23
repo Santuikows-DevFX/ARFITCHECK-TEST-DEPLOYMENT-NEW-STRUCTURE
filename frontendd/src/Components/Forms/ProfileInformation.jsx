@@ -15,6 +15,7 @@ import { Bounce } from 'react-toastify';
 import { useStateContext } from '../../ContextAPI/ContextAPI';
 import { useNavigate } from 'react-router-dom';
 import VerifyPhone from '../Dialogs/VerifyPhone';
+import { useSnackbar } from 'notistack';
 
 function ProfileInformation() {
 
@@ -26,6 +27,8 @@ function ProfileInformation() {
   const [openVerifyPhoneModal, setOpenVerifyPhoneModal] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState('');
   const [selectedPhone, setSelectedPhone] = useState('')
+
+  const { enqueueSnackbar  } = useSnackbar();
 
   const navigator = useNavigate();
 
@@ -55,7 +58,7 @@ function ProfileInformation() {
   const handleUpdateInformation = (values) => {
     try {
 
-      if(values.eMail != userInfo.email && values.mobileNum != userInfo.mobileNumber) {
+      if(values.eMail != userInfo?.email && values.mobileNum != userInfo?.mobileNumber?.slice(1)) {
 
         Swal.fire({
           title: "One at a time please.",
@@ -67,10 +70,10 @@ function ProfileInformation() {
           confirmButtonText: "Okay",
         })
 
-      }else if(values.eMail != userInfo.email) {
+      }else if(values.eMail != userInfo?.email) {
         Swal.fire({
           title: "Are you sure?",
-          text: "Updating your email means you need to verify it again.",
+          text: "Updating your email means you need to verify it again. Also, if you any orders placed before your email got updated, all the notifications will still be sent to your previous email.",
           icon: "warning",
           showCancelButton: true,
           cancelButtonText: 'Cancel',
@@ -82,7 +85,7 @@ function ProfileInformation() {
           }
         });
 
-      }else if(values.mobileNum != userInfo.mobileNumber) {
+      }else if(values.mobileNum != userInfo?.mobileNumber?.slice(1)) {
           Swal.fire({
             title: "Are you sure?",
             text: "Updating your phone means you need to verify it again.",
@@ -122,17 +125,18 @@ function ProfileInformation() {
 
           if(data.message === 'Updated Successfully!') {
 
-            toast.success(`${data.message}`, {
-              position: "top-right",
-              autoClose: 2300,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              transition: Bounce,
-              style: { fontFamily: 'Kanit', fontSize: '16px' }
+            enqueueSnackbar(`${data.message}`, { 
+              variant: 'success',
+              anchorOrigin: {
+                vertical: 'top',
+                horizontal: 'right'
+              },
+              autoHideDuration: 2300,
+              style: {
+                fontFamily: 'Kanit',
+                fontSize: '16px'
+              },
+              
             });
   
             setLoading(false); 
@@ -144,17 +148,17 @@ function ProfileInformation() {
           }
           else if (data.message === 'Updated Successfully! Login with your new email') {
 
-            toast.success(`${data.message}`, {
-
-              position: "top-right",
-              autoClose: 2300,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              transition: Bounce,
+            enqueueSnackbar(`${data.message}`, { 
+              variant: 'success',
+              anchorOrigin: {
+                vertical: 'top',
+                horizontal: 'right'
+              },
+              autoHideDuration: 2300,
+              style: {
+                fontFamily: 'Kanit',
+                fontSize: '16px'
+              },
               onClose: () => {
 
                 remove('?id')
@@ -168,23 +172,25 @@ function ProfileInformation() {
                 navigator('/login')
 
               },
-              style: { fontFamily: 'Kanit', fontSize: '16px' }
+              
             });
+  
             setLoading(false);
 
           }else {
 
-            toast.error(`${data.message}`, {
-              position: "top-right",
-              autoClose: 2300,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              transition: Bounce,
-              style: { fontFamily: 'Kanit', fontSize: '16px' }
+            enqueueSnackbar(`${data.message}`, { 
+              variant: 'error',
+              anchorOrigin: {
+                vertical: 'top',
+                horizontal: 'right'
+              },
+              autoHideDuration: 2300,
+              style: {
+                fontFamily: 'Kanit',
+                fontSize: '16px'
+              },
+              
             });
 
             setLoading(false)
@@ -198,25 +204,28 @@ function ProfileInformation() {
   }
 
   const ProfileValidationSchema = Yup.object().shape({
-    eMail: Yup.string().email('Invalid email').required('Email is required'),
-    mobileNum: Yup.string()
-      .matches(/^[0-9]{10,11}$/, {  
-        message: 'Mobile Number must be numeric and consist of 10 or 11 digits',
-        excludeEmptyString: true,
-      })
-      .required('Mobile Number is required'),
-});
-
+      eMail: Yup.string()
+      .email('Invalid email')
+      .matches(
+        /^[a-zA-Z0-9._%+-]+@(gmail\.com|outlook\.com|caloocan\.sti\.edu\.ph)$/,
+        'Email must be a valid email from Gmail or Outlook'
+      )
+      .required('Email is required'),
+      mobileNum: Yup.string()
+      .required('Mobile phone is required')
+      .test('is-numeric', 'Mobile phone must be a number', (value) => /^\d+$/.test(value))
+      .matches(/^\d{10}$/, 'Mobile phone must be exactly 10 digits and follow Philippine format')
+  });
 
   return (
     <div>
         <Formik
         enableReinitialize
         initialValues={{ 
-          firstName: userInfo.firstName ? userInfo.firstName : '', 
-          lastName: userInfo.lastName ? userInfo.lastName : '', 
-          eMail: userInfo.email || '', 
-          mobileNum: userInfo.mobileNumber || ''
+          firstName: userInfo?.firstName ? userInfo?.firstName : '', 
+          lastName: userInfo?.lastName ? userInfo?.lastName : '', 
+          eMail: userInfo?.email || '', 
+          mobileNum: parseInt(userInfo?.mobileNumber?.slice(1)) || ''
         }}
         validationSchema={ProfileValidationSchema}
         onSubmit={(values, { setSubmitting }) => {
@@ -328,13 +337,11 @@ function ProfileInformation() {
                     '&:hover': { backgroundColor: '#414a4c', color: 'white' },
                     '&:not(:hover)': { backgroundColor: '#3d4242', color: 'white' },
                     background: 'linear-gradient(to right, #414141  , #000000)',
-                    opacity: !isValid || isSubmitting || loading || (values.eMail === userInfo?.email && values.mobileNum === userInfo?.mobileNumber) ? 0.7 : 1,
+                    opacity: !isValid || isSubmitting || loading || (values.eMail === userInfo.email && values.mobileNum === parseInt(userInfo.mobileNumber?.slice(1))) ? 0.7 : 1,
                   }}
-                  disabled = {!isValid || isSubmitting || loading || (values.eMail === userInfo?.email && values.mobileNum === userInfo?.mobileNumber)}
-
+                  disabled = {!isValid || isSubmitting || loading || (values.eMail === userInfo.email && values.mobileNum === parseInt(userInfo.mobileNumber?.slice(1)))}
                 >
                   <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 18, md: 25 }, padding: 0.5, visibility: loading ? 'hidden' : 'visible' }}>UPDATE PROFILE INFORMATION</Typography>
-
                   {loading && (
                     <CircularProgress
                       size={24}

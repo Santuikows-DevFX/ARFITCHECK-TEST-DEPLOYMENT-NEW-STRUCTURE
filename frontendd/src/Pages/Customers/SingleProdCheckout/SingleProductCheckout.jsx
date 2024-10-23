@@ -25,10 +25,13 @@ import Footer from '../../../Components/Footer';
 import { useCart } from '../../../ContextAPI/CartProvider';
 
 import shopGraffitiBG from '../../../../public/assets/shopGraffiti1.png'
+import { useSnackbar } from 'notistack';
 
 const provinceOptions = ['Metro Manila'];
 
 function SingleProductCheckout() {
+
+  document.documentElement.style.setProperty('--primary', 'white');
 
   const [cookie] = useCookies(['?id'])
 
@@ -55,6 +58,8 @@ function SingleProductCheckout() {
   //terms and condition stuff
   const [isEulaChecked, setEulaChecked] = useState(false)
   const [termsAndConditionDialogOpen, setTermsnAndConditionDialog] = useState(false)
+
+  const { enqueueSnackbar  } = useSnackbar();
 
   const navigate = useNavigate()
 
@@ -192,17 +197,18 @@ function SingleProductCheckout() {
       setUploadedImage(receiptFile);
       // setEnablePlaceOrder(true);
     } else {
-      toast.error('Invalid Image or EULA not checked', {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        transition: Bounce,
-        style: { fontFamily: 'Kanit', fontSize: '16px' }
+      enqueueSnackbar(`Invalid Image!`, { 
+        variant: 'error',
+        anchorOrigin: {
+          vertical: 'top',
+          horizontal: 'right'
+        },
+        autoHideDuration: 1800,
+        style: {
+          fontFamily: 'Kanit',
+          fontSize: '16px'
+        },
+        
       });
       setUploadedImage(null);
       setEnablePlaceOrder(false);
@@ -449,7 +455,7 @@ function SingleProductCheckout() {
                           sx={{ transform: 'scale(0.9)' }}
                         />
                       }
-                      label={<Typography variant="body2">Ship to different address?</Typography>}
+                      label={<Typography sx = {{ fontFamily: 'Kanit', fontSize: {xs: 16 , md: 18} }}>Ship to different address?</Typography>}
                     />
                   </Grid>
                 </Grid>
@@ -645,22 +651,22 @@ function SingleProductCheckout() {
                 )}
               </Accordion>
               <FormControlLabel
-                          control={<Checkbox checked={isEulaChecked} onChange={handleEulaChecked} sx={{ 
-                            transform: 'scale(0.8)' 
-                          }} />}
-                          label={
-                            <Typography sx={{ fontFamily: 'Inter', display: 'flex', alignItems: 'center', fontSize: 16 }}>
-                              <span>I Agree with the </span>
-                              <span style={{ color: "#1A5276" }}>
-                                <b onClick={(event) => {
-                                  event.preventDefault(); 
-                                  handleTermsAndCondiDialogOpen();
-                                }}> Terms and Conditions</b>
-                              </span>
-                            </Typography>
-                          }
-                         sx={{ fontFamily: 'Kanit', fontSize: 16 }}
-                        />
+                control={<Checkbox checked={isEulaChecked} onChange={handleEulaChecked} sx={{ 
+                  transform: 'scale(0.8)' 
+                }} />}
+                label={
+                  <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: 16 }}>
+                    I Agree with the&nbsp;
+                    <span style={{ color: "#1A5276" }}>
+                      <b onClick={(event) => {
+                        event.preventDefault(); 
+                        handleTermsAndCondiDialogOpen();
+                      }}> Terms and Conditions</b>
+                    </span>
+                  </Typography>
+                }
+                sx={{ fontFamily: 'Kanit', fontSize: 16 }}
+              />
                         {/* Place order button */}
                         <Button
                           fullWidth
@@ -712,7 +718,7 @@ function SingleProductCheckout() {
                 </div>
             </Dialog>
         <Footer/>
-        <ToastContainer/>
+        {/* <ToastContainer/> */}
         </>
       )}
     </div>

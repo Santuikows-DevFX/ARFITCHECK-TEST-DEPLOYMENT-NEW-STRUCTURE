@@ -36,20 +36,6 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
 
   const itemsPerPage = 3;
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const fetchOrders = async () => {
-    try {
-
-      setCompletedOrders(mergedProductOrders)
-   
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const styles = {
     modalContent: {
       width: '100%',
@@ -131,7 +117,7 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
     setCurrentPage(pageNumber);
   };
 
-  const sortedOrders = [...completedOrders].sort((a, b) => {
+  const sortedOrders = [...mergedProductOrders].sort((a, b) => {
     if (sortAmount) {
       return sortAmount === 'asc'
         ? a.orderInfo.amountToPay - b.orderInfo.amountToPay
@@ -179,51 +165,6 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentOrders = filteredOrders.slice(indexOfFirstItem, indexOfLastItem);
-
-  const handleSaveAsExcel = () => {
-    try {
-
-      const fields = ['Order Date', 'Product', 'Quantity', 'Size', 'Amount', 'Payment Method', 'Shipping Address', 'Status'];
-
-      const csvRows = completedOrders.map(order => {
-
-        const orderDate = order.orderInfo.orderDate;
-        const orderedProducts = order.orderInfo.productName.split(', ').join(' | ');
-        const orderedQuantity = order.orderInfo.productQuantity.split(', ').join(' | ');
-        const orderedSize = order.orderInfo.productSize.split(', ').join(' | ');
-        const orderedAmount = order.orderInfo.amountToPay.toFixed(2);
-        const paymentMethod = order.orderInfo.paymentMethod === 'cash' ? 'Cash' : 'E-Wallet';
-        const fullShippingAddress = `"${order.orderInfo.fullShippingAddress}"`;
-        const orderStatus = order.orderInfo.orderStatus;
-        
-        return [orderDate, orderedProducts, orderedQuantity, orderedSize, orderedAmount, paymentMethod, fullShippingAddress, orderStatus].join(',');
-      });
-
-      
-
-      //what this does is it joins the headers and the rows data together
-      const csvContent = [fields.join(','), ...csvRows].join('\n'); 
-      const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); //blob is the file explorer being opened when saving a file
-
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(csvBlob);
-
-      //getting the date today
-      const dateToday = dayjs().format('YYYY-MM-DD');
-
-      link.setAttribute('href', url);
-      link.setAttribute('download', `${dateToday}_my_order_history.csv`);
-
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-
-      link.click();
-      document.body.removeChild(link);
-
-    }catch(error) {
-      console.log(error);
-    }
-  }
 
   const openImageInNewTab = (imageUrl) => {
     window.open(imageUrl, '_blank');
@@ -489,7 +430,7 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
                         ORDER DATE
                       </Typography>
                       <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', color: 'black' }}>
-                        {dayjs(order.orderInfo.orderDate).format('DD/MM/YYYY')}
+                        {dayjs(order.orderInfo?.orderDate).format('DD/MM/YYYY')}
                       </Typography>
                     </Grid>
                     {/* product name */}
@@ -501,30 +442,37 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
                         <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
                           <b>ID: {order.orderID}</b>
                         </Typography>
-                        {order.orderInfo.productName.split(', ').map((product, index) => (
+                        {order.orderInfo?.productName.split(', ').map((product, index) => (
                           <div key={index}>
                             <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}>
                               {product}
                             </Typography>
                             
-                            {order.orderInfo.orderType === 'default' ? (
+                            {order.orderInfo?.orderType === 'default' ? (
                               <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
-                               <b>Qnt:</b> {order.orderInfo.productQuantity.split(', ')[index]} <b>Size:</b> {order.orderInfo.productSize.split(', ')[index] || '-'}
+                               <b>Qnt:</b> {order.orderInfo?.productQuantity.split(', ')[index]} <b>Size:</b> {order.orderInfo?.productSize.split(', ')[index] || '-'}
                              </Typography>
                             ) : (
-                              <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
-                                <b>Qnt:</b> {order.orderInfo.productQuantity.split(', ')[index]} <b>Size(s): </b>
-                                {order.orderInfo.smallQuantity !== "0" ? `S x${order.orderInfo.smallQuantity}${order.orderInfo.mediumQuantity !== "0" || order.orderInfo.largeQuantity !== "0" || order.orderInfo.extraLargeQuantity !== "0" || order.orderInfo.doubleXLQuantity !== "0" || order.orderInfo.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
-                                {order.orderInfo.mediumQuantity !== "0" ? `M x${order.orderInfo.mediumQuantity}${order.orderInfo.largeQuantity !== "0" || order.orderInfo.extraLargeQuantity !== "0" || order.orderInfo.doubleXLQuantity !== "0" || order.orderInfo.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
-                                {order.orderInfo.largeQuantity !== "0" ? `L x${order.orderInfo.largeQuantity}${order.orderInfo.extraLargeQuantity !== "0" || order.orderInfo.doubleXLQuantity !== "0" || order.orderInfo.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
-                                {order.orderInfo.extraLargeQuantity !== "0" ? `XL x${order.orderInfo.extraLargeQuantity}${order.orderInfo.doubleXLQuantity !== "0" || order.orderInfo.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
-                                {order.orderInfo.doubleXLQuantity !== "0" ? `2XL x${order.orderInfo.doubleXLQuantity}${order.orderInfo.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
-                                {order.orderInfo.tripleXLQuantity !== "0" ? `3XL x${order.orderInfo.tripleXLQuantity}` : ''}
-                              </Typography>
-                            
+                              <>
+
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                                  <b>Qnt:</b> {order.orderInfo?.productQuantity.split(', ')[index]} <b>Size(s): </b>
+                                  {order.orderInfo?.smallQuantity !== "0" ? `S x${order.orderInfo?.smallQuantity}${order.orderInfo?.mediumQuantity !== "0" || order.orderInfo?.largeQuantity !== "0" || order.orderInfo?.extraLargeQuantity !== "0" || order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
+                                  {order.orderInfo?.mediumQuantity !== "0" ? `M x${order.orderInfo?.mediumQuantity}${order.orderInfo?.largeQuantity !== "0" || order.orderInfo?.extraLargeQuantity !== "0" || order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
+                                  {order.orderInfo?.largeQuantity !== "0" ? `L x${order.orderInfo?.largeQuantity}${order.orderInfo?.extraLargeQuantity !== "0" || order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
+                                  {order.orderInfo?.extraLargeQuantity !== "0" ? `XL x${order.orderInfo?.extraLargeQuantity}${order.orderInfo?.doubleXLQuantity !== "0" || order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
+                                  {order.orderInfo?.doubleXLQuantity !== "0" ? `2XL x${order.orderInfo?.doubleXLQuantity}${order.orderInfo?.tripleXLQuantity !== "0" ? ', ' : ''}` : ''}
+                                  {order.orderInfo?.tripleXLQuantity !== "0" ? `3XL x${order.orderInfo?.tripleXLQuantity}` : ''}
+                                </Typography>
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 13, fontWeight: 500, color: 'black' }}>
+                                  Custom Img: <span style={{ textDecoration: 'underline', fontFamily: 'Kanit', fontWeight: 'bold',color: '#1F618D', cursor: 'pointer' }} onClick = {() => {
+                                    window.open(order.orderInfo?.customImage, '_blank')
+                                  }}>Click Here</span>
+                                </Typography>
+                              </>
                             )}
 
-                            {index !== order.orderInfo.productName.split(', ').length - 1 && <br />}
+                            {index !== order.orderInfo?.productName.split(', ').length - 1 && <br />}
                           </div>
                         ))}
                       </Typography>
@@ -535,7 +483,7 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
                         TYPE
                       </Typography>
                       <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', color: 'black' }}>
-                        {order.orderInfo.orderType.toUpperCase()}
+                        {order.orderInfo?.orderType.toUpperCase()}
                       </Typography>
                     </Grid>
                     {/* amount to pay */}
@@ -544,7 +492,7 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
                         AMOUNT
                       </Typography>
                       <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', color: 'black' }}>
-                        ₱{order.orderInfo.amountToPay.toFixed(2)}
+                        ₱{order.orderInfo?.amountToPay.toFixed(2)}
                       </Typography>
                     </Grid>
                     {/* payment method */}
@@ -552,14 +500,14 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
                       <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', fontWeight: 'bold', color: 'black' }}>
                         PAYMENT METHOD
                       </Typography>
-                      {order.orderInfo.paymentMethod === 'cash' ? (
+                      {order.orderInfo?.paymentMethod === 'cash' ? (
                               <Typography
                               sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}
                               >
                               <b>Cash</b>
                             </Typography>
                       ) : (
-                            order.orderInfo.orderType === 'custom' && order.orderInfo.isPaid === false ? (
+                            order.orderInfo?.orderType === 'custom' && order.orderInfo.isPaid === false ? (
                               <Typography
                                 sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}
                               >
@@ -604,7 +552,7 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
                       {order.orderInfo.cancelReason === "None" && order.orderInfo.userCancelReason === "None" ? (
                           <>
                             <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
-                              {order.orderInfo.trackingNumber}
+                              Tracking #: {order.orderInfo.trackingNumber}
                             </Typography>
                             <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
                               Updated: <b>{order.orderInfo.updateTimeStamp}</b>
@@ -614,7 +562,7 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
                           order.orderInfo.userCancelReason === "None" ? (
                             <>
                               <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
-                                Reason: You Cancelled (<b>{order.orderInfo.cancelReason}</b>)
+                                Reason: {order.orderInfo?.cancelReason  === 'User didn\'t pay in time' ? 'Auto Cancelled' : 'You Cancelled'} (<b>{order.orderInfo.cancelReason}</b>)
                               </Typography>
                               <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
                                 Updated: <b>{order.orderInfo.updateTimeStamp}</b>

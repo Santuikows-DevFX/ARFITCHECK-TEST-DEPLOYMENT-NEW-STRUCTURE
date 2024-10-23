@@ -14,18 +14,17 @@ const GCash = ({ open, onClose }) => {
           sx: { borderRadius: 4 }, 
         }}
       >
-        <DialogTitle sx={{ fontFamily: 'Kanit', fontWeight: 'bold', fontSize: { xs: 20, md: 30 } }}>
+        <DialogTitle sx={{ background: 'linear-gradient(to left, #414141  , #000000)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4, fontFamily: 'Kanit', fontWeight: 'bold', fontSize: { xs: 20, md: 30} }}>
           Scan this QR Code:
         </DialogTitle>
         <DialogContent>
           <img src={gcashImage} style={{ width: "100%", height: "70%", objectFit: "cover" }} />
         </DialogContent>
         <IconButton sx={{ position: 'absolute', top: 5, right: 5 }} onClick={onClose}>
-          <CloseIcon />
+          <CloseIcon sx={{ color: 'white' }}/>
         </IconButton>
       </Dialog>
     </div>
   );
 }
-
 export default GCash;

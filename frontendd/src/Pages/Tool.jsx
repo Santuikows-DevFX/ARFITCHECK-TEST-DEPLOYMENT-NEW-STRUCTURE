@@ -6,6 +6,7 @@ import 'aos/dist/aos.css';
 import Navbar from '../Widgets/Navbar.jsx';
 import cpImage from '../../public/assets/cp.png'
 import downloadGraffitiBG from '../../public/assets/dlGraffiti.png'
+import { useSnackbar } from 'notistack';
 
 const APP_URL = 'http://localhost:3000/lax.png';
 
@@ -26,6 +27,9 @@ const styles = {
 };
 
 function Tool() {
+
+  const { enqueueSnackbar  } = useSnackbar();
+
   const handleDownload = (APP_URL) => {
     const fileName = APP_URL.split('/').pop();
     const aTag = document.createElement('a');
@@ -35,6 +39,22 @@ function Tool() {
     aTag.click();
     document.body.removeChild(aTag);
   };
+
+  const handleTemporaryDownload = () => {
+    enqueueSnackbar(`Wala pa, wag makulit.`, { 
+      variant: 'error',
+      anchorOrigin: {
+        vertical: 'top',
+        horizontal: 'right'
+      },
+      autoHideDuration: 1800,
+      style: {
+        fontFamily: 'Kanit',
+        fontSize: '16px'
+      },
+      
+    });
+  }
 
   return (
     <div style={styles.root}>
@@ -87,7 +107,7 @@ function Tool() {
             <Typography sx={{ color: 'black', fontSize: { xs: 15, md: 40 }, fontFamily: "Kanit", fontWeight: "bold" }}>
               Try our
             </Typography>
-            <Typography sx={{ color: 'black', fontSize: { xs: 50, md: 80 }, fontFamily: "Kanit", fontWeight: "bold" }}>
+            <Typography sx={{ color: 'black', fontSize: { xs: 50, md: 75 }, fontFamily: "Kanit", fontWeight: "bold" }}>
               ARFITCHECK
             </Typography>
             <Typography sx={{ color: 'black', fontSize: { xs: 12, md: 20 }, fontFamily: "Kanit", fontWeight: "Regular" }}>
@@ -113,13 +133,14 @@ function Tool() {
                     "linear-gradient(to right, #414141, #000000)",
                   // opacity: !isValid? 0.7 : 1,
                 }}
-                onClick={() => handleDownload(APP_URL)}
+                // onClick={() => handleDownload(APP_URL)}
+                onClick={() => handleTemporaryDownload()}
             
               >
                 <Typography
                   sx={{
                     fontFamily: "Kanit",
-                    fontSize: { xs: 18, md: 25 },
+                    fontSize: { xs: 18, md: 20 },
                     padding: 0.5,
                     // visibility: isLogginIn ? "hidden" : "visible",
                   }}

@@ -1,20 +1,52 @@
 import React, { useEffect, useState } from 'react';
 import { Formik, Form, Field } from 'formik';
-import { Grid, MenuItem, Typography, Accordion, AccordionSummary, AccordionDetails, Box, FormControl, InputLabel, Select, CircularProgress, Button } from '@mui/material';
+import { Grid, MenuItem, Typography, Accordion, AccordionSummary, AccordionDetails, Box, FormControl, InputLabel, Select, CircularProgress, Button, Autocomplete, TextField, FormHelperText } from '@mui/material';
 import StyledTextFields from '../UI/TextFields';
 import axiosClient from '../../axios-client';
 import { useCookies } from 'react-cookie';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { FilledButton } from '../UI/Buttons';
+import * as Yup from 'yup';
 
 import { ToastContainer, toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Bounce } from 'react-toastify';
+import { useSnackbar } from 'notistack';
 
-const provinceOptions = ['Metro Manila'];
-const cityoOptions = ['Valenzuela'];
-const barangayOptions = ['Marulas', 'Maam khae'];
 const countryOptions = ['Philippines'];
+
+const provinceOptions = [ 
+  'Metro Manila'
+]
+
+const cityOptions = [
+  'Caloocan',
+  'Malabon',
+  'Navotas',
+  'Valenzuela',
+  'Quezon City',
+  'Marikina',
+  'Pasig',
+  'Taguig',
+  'Makati',
+  'Manila',
+  'Mandaluyong',
+  'San Juan',
+  'Pasay',
+  'Parañaque',
+  'Las Piñas',
+  'Muntinlupa',
+];
+
+const barangayOptions = [
+  'Barangay Baritan', 'Barangay Bayan-bayanan', 'Barangay Catmon', 
+  'Barangay Concepcion', 'Barangay Dampalit', 'Barangay Flores', 
+  'Barangay Hulong Duhat', 'Barangay Ibaba', 'Barangay Longos', 
+  'Barangay Maysilo', 'Barangay Bagumbayan North', 'Barangay Bagumbayan South', 
+  'Barangay Bangculasi', 'Barangay Daanghari', 'Barangay Navotas East', 
+  'Barangay Navotas West', 'Barangay North Bay Boulevard North', 
+  'Barangay North Bay Boulevard South', 'Barangay San Jose', 
+  'Barangay San Roque', 'Marulas'
+];
 
 function Shipping() {
   const [shippingDetails, setShippingDetails] = useState([]);
@@ -28,6 +60,7 @@ function Shipping() {
   const [disableWhenUpdating, setDisbaleWhenUpdating] = useState(false) 
 
   const [cookie] = useCookies(['?id']);
+  const { enqueueSnackbar  } = useSnackbar();
 
   useEffect(() => {
     fetchShippingDetails();
@@ -48,18 +81,6 @@ function Shipping() {
     }
   };
 
-  const handleRecipientNameClick = () => {
-    setEditableRecipientName(true);
-  };
-
-  const handleAddressClick = () => {
-    setEditableAddress(true);
-  };
-
-  const handlePostalCodeClick = () => {
-    setEditablePostalCode(true);
-  };
-
   const handleUpdateShippingDetails = async (values) => {
     try{
 
@@ -70,17 +91,18 @@ function Shipping() {
       .then(({data}) => {
 
         setTimeout(() => {
-          toast.success(`${data.message}`, {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "colored",
-            transition: Bounce,
-            style: { fontFamily: 'Kanit', fontSize: '16px' }
+          enqueueSnackbar(`${data.message}`, { 
+            variant: 'success',
+            anchorOrigin: {
+              vertical: 'top',
+              horizontal: 'right'
+            },
+            autoHideDuration: 2300,
+            style: {
+              fontFamily: 'Kanit',
+              fontSize: '16px'
+            },
+            
           });
 
         fetchShippingDetails()
@@ -94,6 +116,18 @@ function Shipping() {
       console.log(error);
     }
   } 
+
+  const validationSchema = Yup.object().shape({
+    recipientName: Yup.string()
+    .matches(/^[A-Za-z\s-]+$/, 'First Name must contain only letters, spaces, or hyphens')
+    .required('First Name is required'),
+    city: Yup.string().required('City is required'),
+    barangay: Yup.string().required('Barangay is required'),
+    address: Yup.string().required('Address Line is required'),
+    postalCode: Yup.string().required('Zip Code is required')
+    .test('is-numeric', 'Zip code musbe a number must be a number', (value) => /^\d+$/.test(value)),
+    province:  Yup.string().required('Province is required'),
+  });
 
   return (
    <div>
@@ -115,20 +149,20 @@ function Shipping() {
           enableReinitialize
           initialValues={{
             recipientName: shippingDetails.recipientName|| '',
-            email: userDetails.email || '',
             address: shippingDetails.addressLine || '',
             city: shippingDetails.city || '',
             barangay: shippingDetails.barangay || '',
             province: shippingDetails.province || '',
             postalCode: shippingDetails.postalCode || '',
-            }}
+          }}
+          validationSchema={validationSchema}
           onSubmit={(values, { setSubmitting }) => {
 
             handleUpdateShippingDetails(values)
             setSubmitting(false);
           }}
         >
-          {({ isSubmitting, values }) => (
+          {({ isSubmitting, values, isValid }) => (
             <Form>
                   <Grid container spacing={2}>
                     <Grid item xs={12}>
@@ -137,10 +171,7 @@ function Shipping() {
                           <StyledTextFields
                             field={{
                               ...field,
-                              value: editableRecipientName ? field.value : `${shippingDetails.recipientName}`,
-                              onChange: (e) => field.onChange(e),
-                              onClick: handleRecipientNameClick,
-                              onBlur: () => setEditableRecipientName(false)
+                              value: field.value
                             }}
                             meta={meta}
                             id="recipientName"
@@ -176,7 +207,9 @@ function Shipping() {
                               ))}
                             </Select>
                             {meta.touched && meta.error && (
-                              <FormHelperText error>{meta.error}</FormHelperText>
+                              <FormHelperText sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 15 }, color: 'red' }}>
+                                {meta.error}
+                              </FormHelperText>
                             )}
                           </FormControl>
                         )}
@@ -188,10 +221,7 @@ function Shipping() {
                           <StyledTextFields
                             field={{
                               ...field,
-                              value: editableAddress ? field.value : `${shippingDetails.addressLine}`,
-                              onChange: (e) => field.onChange(e),
-                              onClick: handleAddressClick,
-                              onBlur: () => setEditableAddress(false)
+                              value: field.value
                             }}
                             meta={meta}
                             id="address"
@@ -204,86 +234,127 @@ function Shipping() {
                     </Grid>
                     <Grid item xs={6}>
                       <Field name="city">
-                        {({ field, meta }) => (
+                        {({ field, form, meta }) => (
                           <FormControl fullWidth variant="filled">
-                            <InputLabel htmlFor="city" sx={{ fontFamily: 'Kanit' }}>City / Municipality</InputLabel>
-                            <Select
+                            <Autocomplete
                               {...field}
-                              inputProps={{
-                                id: 'city',
-                              }}
+                              id="city"
+                              options={cityOptions}
+                              getOptionLabel={(option) => option}
                               fullWidth
-                              error={meta.touched && meta.error}
                               disabled={disableWhenUpdating}
-                            >
-                              {cityoOptions.map((option) => (
-                                <MenuItem key={option} value={option}>
+                              onChange={(event, value) => form.setFieldValue(field.name, value)}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  label="City / Municipality"
+                                  variant="filled"
+                                  sx={{
+                                    '& input': { pt: { xs: 2, sm: 2, md: 3 }, fontFamily: 'Kanit', fontSize: { xs: 12, md: 16 } },
+                                  }}
+                                  error={meta.touched && meta.error}
+                                  InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } } }}
+                                  
+                                />
+                              )}
+                              renderOption={(props, option) => (
+                                <MenuItem {...props} key={option} value={option}>
                                   <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, color: 'black' }}>
                                     {option}
                                   </Typography>
                                 </MenuItem>
-                              ))}
-                            </Select>
+                              )}
+                            />
                             {meta.touched && meta.error && (
-                              <FormHelperText error>{meta.error}</FormHelperText>
+                              <FormHelperText sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 15 }, color: 'red' }}>
+                                {meta.error}
+                              </FormHelperText>
                             )}
                           </FormControl>
                         )}
                       </Field>
                     </Grid>
+
                     <Grid item xs={6}>
                       <Field name="barangay">
-                        {({ field, meta }) => (
-                          <FormControl fullWidth variant="filled">
-                            <InputLabel htmlFor="city" sx={{ fontFamily: 'Kanit' }}>Barangay</InputLabel>
-                            <Select
+                        {({ field, meta, form }) => (
+                          <FormControl fullWidth variant='filled'>
+                            <Autocomplete
                               {...field}
-                              inputProps={{
-                                id: 'barangay',
-                              }}
+                              id="barangay"
+                              options={barangayOptions}
+                              getOptionLabel={(option) => option}
                               fullWidth
-                              error={meta.touched && meta.error}
                               disabled={disableWhenUpdating}
-                            >
-                              {barangayOptions.map((option) => (
-                                <MenuItem key={option} value={option}>
+                              onChange={(event, value) => form.setFieldValue(field.name, value)}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  label="Barangay"
+                                  variant="filled"
+                                  sx={{
+                                    '& input': { pt: { xs: 2, sm: 2, md: 3 }, fontFamily: 'Kanit', fontSize: { xs: 12, md: 16 } },
+                                  }}
+                                  error={meta.touched && meta.error}
+                                  InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } } }}
+                                  
+                                />
+                              )}
+                              renderOption={(props, option) => (
+                                <MenuItem {...props} key={option} value={option}>
                                   <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, color: 'black' }}>
                                     {option}
                                   </Typography>
                                 </MenuItem>
-                              ))}
-                            </Select>
+                              )}
+                           />
                             {meta.touched && meta.error && (
-                              <FormHelperText error>{meta.error}</FormHelperText>
+                              <FormHelperText sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 15 }, color: 'red' }}>
+                                {meta.error}
+                              </FormHelperText>
                             )}
                           </FormControl>
+                          
                         )}
                       </Field>
                     </Grid>
                     <Grid item xs={12}>
                       <Field name="province">
-                        {({ field, meta }) => (
+                        {({ field, meta, form }) => (
                           <FormControl fullWidth variant="filled">
-                            <InputLabel htmlFor="province" sx={{ fontFamily: 'Kanit' }}>Province</InputLabel>
-                            <Select
+                            <Autocomplete
                               {...field}
-                              inputProps={{
-                                id: 'province',
-                              }}
+                              id="province"
+                              options={provinceOptions}
+                              getOptionLabel={(option) => option}
                               fullWidth
-                              error={meta.touched && meta.error}
                               disabled={disableWhenUpdating}
-                            >
-                              {provinceOptions.map((option) => (
-                                <MenuItem key={option} value={option}>
+                              onChange={(event, value) => form.setFieldValue(field.name, value)}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  label="Province"
+                                  variant="filled"
+                                  sx={{
+                                    '& input': { pt: { xs: 2, sm: 2, md: 3 }, fontFamily: 'Kanit', fontSize: { xs: 12, md: 16 } },
+                                  }}
+                                  error={meta.touched && meta.error}
+                                  InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } } }}
+                                  
+                                />
+                              )}
+                              renderOption={(props, option) => (
+                                <MenuItem {...props} key={option} value={option}>
                                   <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, color: 'black' }}>
                                     {option}
                                   </Typography>
                                 </MenuItem>
-                              ))}
-                            </Select>
+                              )}
+                            />
                             {meta.touched && meta.error && (
-                              <FormHelperText error>{meta.error}</FormHelperText>
+                              <FormHelperText sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 15 }, color: 'red' }}>
+                                {meta.error}
+                              </FormHelperText>
                             )}
                           </FormControl>
                         )}
@@ -295,10 +366,7 @@ function Shipping() {
                           <StyledTextFields
                             field={{
                               ...field,
-                              value: editablePostalCode ? field.value : `${shippingDetails.postalCode}`,
-                              onChange: (e) => field.onChange(e),
-                              onClick: handlePostalCodeClick,
-                              onBlur: () => setEditablePostalCode(false)
+                              value: field.value
                             }}
                             meta={meta}
                             id="postalCode"
@@ -321,9 +389,10 @@ function Shipping() {
                         backgroundColor: 'White',
                         '&:hover': { backgroundColor: '#414a4c', color: 'white' },
                         '&:not(:hover)': { backgroundColor: '#3d4242', color: 'white' },
-                        background: 'linear-gradient(to right, #414141  , #000000)'
+                        background: 'linear-gradient(to right, #414141  , #000000)',
+                        opacity: !isValid || loading || isSubmitting ? 0.7 : 1
                       }}
-                      disabled = {isSubmitting || loading}
+                      disabled = {isSubmitting || loading || !isValid}
                     >
                     <Typography
                       sx={{

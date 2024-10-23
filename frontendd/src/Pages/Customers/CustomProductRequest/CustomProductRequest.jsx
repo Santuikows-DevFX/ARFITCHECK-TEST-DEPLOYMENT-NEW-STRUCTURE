@@ -21,6 +21,8 @@ import ViewCustomProductDetails from '../../../Components/Dialogs/ViewCustomProd
 import CustomizationRequestSuccess from '../../../Components/Dialogs/CustomizationRequestSuccess';
 import { useCart } from '../../../ContextAPI/CartProvider';
 
+import shopGraffitiBG from '../../../../public/assets/shopGraffiti.png'
+
 const provinceOptions = ['Metro Manila'];
 
 // TODO: REVISE THE EULA AND TRY TO MAKE THE USER NOT COMEBACK IN THIS PAGE ONCE ORDERED
@@ -32,6 +34,8 @@ const generateFileName = (customImageName) => {
 }
 
 function CustomProductRequest() {
+
+  document.documentElement.style.setProperty('--primary', 'white');
 
   const { productID, customizedProductImageURL, smallQnt, mediumQnt, largeQnt, extraLargeQnt, doubleXLQnt, tripleXLQnt, customPrice } = useParams();
   const [customImageFile, setCustomImageFile] = useState(null);
@@ -113,11 +117,9 @@ function CustomProductRequest() {
     }).then( async (result) => {
         if (result.isConfirmed) {
             try {
+
               setSubmitLoading(true)
-              if(isValidBase64(customizedProductImageURL)){
-
-                setOrderTimeStamp(new Date().toLocaleTimeString("en-PH", { timeZone: "Asia/Manila", hour: '2-digit', minute: '2-digit', hour12: true}))
-
+              setOrderTimeStamp(new Date().toLocaleTimeString("en-PH", { timeZone: "Asia/Manila", hour: '2-digit', minute: '2-digit', hour12: true}))
                 if(enableAllFields == true) {
 
                   const newShippingValues = new FormData();
@@ -203,27 +205,9 @@ function CustomProductRequest() {
 
                     setCookie("?doneCustomCheckOut", true, { path: "/", expires: expirationDate });
                 }
-              }else {
-                setSubmitLoading(false)
-
-                toast.error("Invalid Custom Image URL", {
-                  position: "top-right",
-                  autoClose: 1500,
-                  hideProgressBar: false,
-                  closeOnClick: true,
-                  pauseOnHover: true,
-                  draggable: true,
-                  progress: undefined,
-                  theme: "colored",
-                  transition: Bounce,
-                  style: { fontFamily: 'Kanit', fontSize: '16px' }
-                });
-              }
-              
             } catch (error) {
               console.log(error);
             }
-
         }
       });
     },
@@ -247,9 +231,7 @@ function CustomProductRequest() {
     const expirationDate = new Date();
     expirationDate.setTime(expirationDate.getTime() + 3 * 60 * 1000); //3 mins
 
-    if(cookie['?doneCustomCheckOut']){
-      navigate(`/shop`)
-    }else if (
+    if (
       !cookie['?priceFromMobile'] && 
       !cookie['?smallQnt'] && 
       !cookie['?mediumQnt'] && 
@@ -266,8 +248,6 @@ function CustomProductRequest() {
       setCookie("?doubleXLQnt", doubleXLQnt, { path: "/", expires: expirationDate });
       setCookie("?tripleXLQnt", tripleXLQnt, { path: "/", expires: expirationDate });
       
-    }else {
-      // do nothing
     }
 
     if (
@@ -289,36 +269,64 @@ function CustomProductRequest() {
     //check if there is a customized image url passed in as params
     if(customizedProductImageURL){
       const customImageFileName = generateFileName("customImage");
-      const convertUrlIntoFile = convertBase64ToFile(decodeURIComponent(customizedProductImageURL), customImageFileName);
-
-      setCustomImageFile(convertUrlIntoFile);
+      convertUrlToFile(customizedProductImageURL, customImageFileName)
+      .then(file => {
+        setCustomImageFile(file)
+      });
     }
 
     fetchOrderDetails();
   }, [productID, customizedProductImageURL, smallQnt, mediumQnt, largeQnt, extraLargeQnt, doubleXLQnt, tripleXLQnt, quantity, customPrice]);
 
-  //converter function from base64 string url into file path so I can pass it in as request in the backend
-  const convertBase64ToFile = (base64String, fileName) => {
-
+  const convertUrlToFile = async (imageUrl, fileName) => {
     try {
-
-      const byteString = atob(base64String);
-
-      const arrayBuffer = new ArrayBuffer(byteString.length);
-      const uintArray = new Uint8Array(arrayBuffer);
-
-      for (let i = 0; i < byteString.length; i++) {
-        uintArray[i] = byteString.charCodeAt(i);
+      let fullUrl = `https://storage.googleapis.com/${imageUrl}`;
+      let response = await fetch(fullUrl);
+  
+      if (!response.ok) {
+        console.warn(`Initial fetch failed: ${response.status} ${response.statusText}`);
+        
+        fullUrl = `https://storage.googleapis.com/${encodeURIComponent(imageUrl)}`;
+        
+        response = await fetch(fullUrl);
+  
+        if (!response.ok) {
+          throw new Error(`Re-encoded URL fetch also failed: ${response.status} ${response.statusText}`);
+        }
       }
-
-      const blob = new Blob([uintArray], { type: 'image/jpeg' }); 
-      return new File([blob], fileName, { type: 'image/jpeg' });
-
-    }catch(error) {
-      navigate('/urlErr')
+  
+      const blob = await response.blob();
+      return new File([blob], fileName, { type: blob.type });
+  
+    } catch (error) {
+      navigate(`/urlErr`);
+      console.error('Error converting URL to file:', error);
+  
     }
-    
   };
+  //converter function from base64 string url into file path so I can pass it in as request in the backend
+  // const convertBase64ToFile = (base64String, fileName) => {
+
+  //   try {
+
+  //     const byteString = atob(base64String);
+
+  //     const arrayBuffer = new ArrayBuffer(byteString.length);
+  //     const uintArray = new Uint8Array(arrayBuffer);
+
+  //     for (let i = 0; i < byteString.length; i++) {
+  //       uintArray[i] = byteString.charCodeAt(i);
+  //     }
+
+  //     const blob = new Blob([uintArray], { type: 'image/jpeg' }); 
+  //     return new File([blob], fileName, { type: 'image/jpeg' });
+
+  //   }catch(error) {
+  //     navigate('/urlErr')
+  //   }
+    
+  // };
+
 
   const fetchOrderDetails = async () => {
     try {
@@ -387,7 +395,7 @@ function CustomProductRequest() {
         <Navbar />
           <Grid container  sx={{ pt: '5vh', minHeight: 0, flex: '1', overflowX: 'hidden' }}>
             <Grid item xs={12} md={7} sx={{
-                backgroundImage: 'url(/public/assets/shopGraffiti.png)',
+                backgroundImage: `url(${shopGraffitiBG})`,
                 backgroundSize: 'cover',
                 backgroundRepeat: 'no-repeat',
                 display: 'flex',
@@ -551,7 +559,7 @@ function CustomProductRequest() {
                                 sx={{ transform: 'scale(0.9)' }}
                               />
                             }
-                            label={<Typography variant="body2">Ship to different address?</Typography>}
+                            label={<Typography sx = {{ fontFamily: 'Kanit', fontSize: {xs: 16 , md: 18} }}>Ship to different address?</Typography>}
                           />
                         </Grid>
                       </Grid>
@@ -585,15 +593,20 @@ function CustomProductRequest() {
                       color: "WHITE",
                       }}
                   >
-                      CUSTOMIZED PRODUCT DETAILS
+                      CUSTOMIZED PRD. DETAILS
                   </Typography>
                       <Box
-                          sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              cursor: "pointer",
-                              color: "white",
-                          }}
+                         sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          cursor: "pointer",
+                          background: "linear-gradient(to right, #414141, #000000)", 
+                          border: "1px solid #FFF", 
+                          borderRadius: "4px", 
+                          padding: "8px 16px", 
+                          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", 
+                          color: "white",
+                      }}
                           onClick={handleOpenCustomProductDetails} 
                       >
                           <Visibility sx={{ fontSize: 20, marginRight: "4px" }} />
@@ -629,7 +642,7 @@ function CustomProductRequest() {
                           <Grid item xs={6}>
                               <Typography
                               sx={{
-                                  fontFamily: "Inter",
+                                  fontFamily: "Kanit",
                                   fontSize: 20,
                                   fontWeight: "regular",
                                   color: "WHITE",
@@ -684,12 +697,12 @@ function CustomProductRequest() {
                   <Grid container justifyContent="space-between" alignItems="center">
                       <Grid item sx={{ width: "50%" }}>
                           <Typography
-                              sx={{ fontFamily: "Inter", fontSize: 20, fontWeight: "regular", color: "WHITE" }}
+                              sx={{ fontFamily: "Kanit", fontSize: 20, fontWeight: "regular", color: "WHITE" }}
                           >
                           Subtotal
                           </Typography>
                           <Typography
-                          sx={{ fontFamily: "Inter", fontSize: 20, fontWeight: "regular", color: "WHITE" }}
+                          sx={{ fontFamily: "Kanit", fontSize: 20, fontWeight: "regular", color: "WHITE" }}
                           >
                           Shipping Fee
                           </Typography>
@@ -745,7 +758,7 @@ function CustomProductRequest() {
                       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                         <Typography sx={{ fontFamily: 'Kanit', fontSize:  { xs: 25, md: 30 }, fontWeight: 'bold', color: 'black' }}>
                           PAYMENT METHOD <br />
-                          <Typography sx={{ fontFamily: 'Inter', fontSize: { xs: 12, md: 20 }, fontWeight: '300', color: 'black' }}>
+                          <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 }, fontWeight: '300', color: 'black' }}>
                           This payment method will be used once your customized product is <span style={{ textDecoration: 'underline' }}><b>approved</b></span>.
                           </Typography>
                         </Typography>
@@ -778,7 +791,7 @@ function CustomProductRequest() {
                                   transform: 'scale(0.8)' 
                                 }} />}
                                 label={
-                                  <Typography sx={{ fontFamily: 'Inter', display: 'flex', alignItems: 'center', fontSize: 16 }}>
+                                  <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: 16 }}>
                                     I Agree with the&nbsp; 
                                     <span style={{ color: "#1A5276" }}>
                                       <b onClick={(event) => {

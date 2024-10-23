@@ -19,6 +19,7 @@ import Sizes from '../../Components/Dialogs/Sizes';
 
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
+import { useSnackbar } from 'notistack';
 
 function ProductDescription({ product, onClose }) {
 
@@ -29,6 +30,8 @@ function ProductDescription({ product, onClose }) {
     const [sizeStock, setSizeStock] = useState('')
     const [modalOpen, setModalOpen] = useState(false);
     const [addToCartLoading, setAddToCartLoading] = useState(false);
+
+    const { enqueueSnackbar  } = useSnackbar();
 
     const {addToCart} = useCart();
 
@@ -116,32 +119,34 @@ function ProductDescription({ product, onClose }) {
 
           if(values.quantity <= 0) {
 
-            toast.error('Quantity cannot be less than 1', {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "colored",
-                transition: Bounce,
-                style: { fontFamily: 'Kanit', fontSize: '16px' }
+            enqueueSnackbar(`Quantity cannot be less than 1`, { 
+            variant: 'error',
+                anchorOrigin: {
+                    vertical: 'top',
+                    horizontal: 'right'
+                },
+                autoHideDuration: 1800,
+                style: {
+                    fontFamily: 'Kanit',
+                    fontSize: '16px'
+                },
+            
             });
 
           }else if(values.quantity >= productQuantity) {
 
-            toast.error('Quantity is too large compared to stock', {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "colored",
-                transition: Bounce,
-                style: { fontFamily: 'Kanit', fontSize: '16px' }
+            enqueueSnackbar(`Quantity is too large compared to stock`, { 
+                variant: 'error',
+                anchorOrigin: {
+                    vertical: 'top',
+                    horizontal: 'right'
+                },
+                autoHideDuration: 1800,
+                style: {
+                    fontFamily: 'Kanit',
+                    fontSize: '16px'
+                },
+            
             });
 
           }else {
@@ -153,34 +158,34 @@ function ProductDescription({ product, onClose }) {
                 
                 if(data.message === "Added to Cart!") {
 
-                    toast.success(`${data.message}`, {
-                        position: "top-right",
-                        autoClose: 5000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                        theme: "colored",
-                        transition: Bounce,
-                        style: { fontFamily: 'Kanit', fontSize: '16px' }
+                    enqueueSnackbar(`${data.message}`, { 
+                        variant: 'success',
+                        anchorOrigin: {
+                            vertical: 'top',
+                            horizontal: 'right'
+                        },
+                        autoHideDuration: 1000,
+                        style: {
+                            fontFamily: 'Kanit',
+                            fontSize: '16px'
+                        },
                     });
 
                     addToCart(cartValue)
                     setAddToCartLoading(false)
 
                 }else {
-                    toast.error(`${data.message}`, {
-                        position: "top-right",
-                        autoClose: 5000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                        theme: "colored",
-                        transition: Bounce,
-                        style: { fontFamily: 'Kanit', fontSize: '16px' }
+                    enqueueSnackbar(`${data.message}`, { 
+                        variant: 'error',
+                        anchorOrigin: {
+                            vertical: 'top',
+                            horizontal: 'right'
+                        },
+                        autoHideDuration: 1800,
+                        style: {
+                            fontFamily: 'Kanit',
+                            fontSize: '16px'
+                        },
                     });
                 }
             })
@@ -498,7 +503,7 @@ function ProductDescription({ product, onClose }) {
             )}
         </Formik>
         <Sizes onClose={handleCloseModal} open={modalOpen} category={productCategory}/>
-        <ToastContainer />
+        {/* <ToastContainer /> */}
     </div>
     );
 }

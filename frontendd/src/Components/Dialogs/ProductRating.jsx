@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogActions, Grid, Box, IconButton, Typography, Rating, CircularProgress } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { Dialog, DialogContent, DialogActions, Grid, Box, IconButton, Typography, Rating, CircularProgress, DialogTitle, Button } from '@mui/material';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { FilledButton } from '../UI/Buttons';
@@ -8,10 +7,14 @@ import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarIcon from '@mui/icons-material/Star';
 import axiosClient from '../../axios-client';
 import { toast, ToastContainer, Bounce } from 'react-toastify';
+import { Close } from '@mui/icons-material';
+import { useSnackbar } from 'notistack';
+
 
 function ProductRating({ product, onClose, open, orderID, fetchMyOrders }) {
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
+  const { enqueueSnackbar  } = useSnackbar();
   
   const RatingValidationSchema = Yup.object().shape({
     rating: Yup.number().required('Rating is required'),
@@ -29,17 +32,17 @@ function ProductRating({ product, onClose, open, orderID, fetchMyOrders }) {
         productRating: values.rating
       }).then(( {data} ) => {
 
-        toast.success(data.message, {
-          position: "top-right",
-          autoClose: 1500,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "colored",
-          transition: Bounce,
-          style: { fontFamily: 'Kanit', fontSize: '16px' }
+        enqueueSnackbar(`${data.message}`, { 
+          variant: 'success',
+          anchorOrigin: {
+            vertical: 'top',
+            horizontal: 'right'
+          },
+          autoHideDuration: 1800,
+          style: {
+            fontFamily: 'Kanit',
+            fontSize: '16px'
+          },
         });
 
         fetchMyOrders();
@@ -56,15 +59,12 @@ function ProductRating({ product, onClose, open, orderID, fetchMyOrders }) {
   return (
     <div>
        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ px: 3, py: 2 }}>
-        <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 22, sm: 28 }, fontWeight: 'bold', textAlign: 'center' }}>
-          Quick Rating / Review 
-        </Typography>
-        <IconButton edge="end" color="inherit" onClick={onClose} aria-label="close">
-          <CloseIcon />
-        </IconButton>
-      </Box>
-
+       <DialogTitle sx={{ background: 'linear-gradient(to left, #414141, #000000)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <Typography sx={{ fontFamily: 'Kanit', fontWeight: 'bold', fontSize: 34 }}>
+                QUICK RATING / REVIEW
+            </Typography>
+            <Close onClick={onClose} sx={{ cursor: 'pointer' }} />
+        </DialogTitle> 
       <Formik
         initialValues={{ rating: 0 }}
         validationSchema={RatingValidationSchema}
@@ -95,13 +95,32 @@ function ProductRating({ product, onClose, open, orderID, fetchMyOrders }) {
             </DialogContent>
 
             <DialogActions sx={{ justifyContent: 'center' }}>
-              <FilledButton type="submit" sx={{ width: '80%' }} disabled={isSubmitting}>
+              <Button
+                type="submit"
+                fullWidth
+                disabled = {loading || isSubmitting}
+                variant="contained"
+                sx={{
+                  backgroundColor: "White",
+                  "&:hover": {
+                    backgroundColor: "#414a4c",
+                    color: "white",
+                  },
+                  "&:not(:hover)": {
+                    backgroundColor: "#3d4242",
+                    color: "white",
+                  },
+                  background:
+                    "linear-gradient(to right, #414141, #000000)",
+                  opacity: loading  ? 0.7 : 1,
+                }}
+              >
                 <Typography
                   sx={{
-                    fontFamily: 'Kanit',
+                    fontFamily: "Kanit",
                     fontSize: { xs: 18, md: 25 },
                     padding: 0.5,
-                    visibility: loading ? 'hidden' : 'visible',
+                    visibility: loading ? "hidden" : "visible",
                   }}
                 >
                   RATE
@@ -111,15 +130,15 @@ function ProductRating({ product, onClose, open, orderID, fetchMyOrders }) {
                     size={24}
                     color="inherit"
                     sx={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      marginTop: '-12px',
-                      marginLeft: '-12px',
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      marginTop: "-12px",
+                      marginLeft: "-12px",
                     }}
                   />
                 )}
-              </FilledButton>
+              </Button>
             </DialogActions>
           </Form>
         )}

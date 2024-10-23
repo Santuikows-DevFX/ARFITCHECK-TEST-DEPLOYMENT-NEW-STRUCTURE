@@ -11,6 +11,8 @@ import { ToastContainer, toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Bounce } from 'react-toastify';
 import { useCookies } from 'react-cookie';
+import CheckoutTermsAndConditions from './CheckoutTermsAndConditions';
+import { useSnackbar } from 'notistack';
 
 const ProcessPayment = ({ open, onClose, requestData, fetchMyOrders, zIndex }) => {
 
@@ -21,8 +23,11 @@ const ProcessPayment = ({ open, onClose, requestData, fetchMyOrders, zIndex }) =
   const [paymayaDialogOpen, setPaymayaDialogOpen] = useState(false);
   const [enablePlaceOrder, setEnablePlaceOrder] = useState(false)
   const [submitLoading, setSubmitLoading] = useState(false)
+
+  const [termsAndConditionDialogOpen, setTermsnAndConditionDialog] = useState(false)
   
   const [cookie] = useCookies(['?id']);
+  const { enqueueSnackbar  } = useSnackbar();
 
   // Effect to set the initial payment method based on requestData.ewallet
   useEffect(() => {
@@ -61,6 +66,14 @@ const ProcessPayment = ({ open, onClose, requestData, fetchMyOrders, zIndex }) =
     setPaymayaDialogOpen(false);
   };
 
+  const handleTermsAndCondiDialogOpen = () => {
+    setTermsnAndConditionDialog(true)
+  }
+
+  const handleTermsAndCondiDialogClose = () => {
+    setTermsnAndConditionDialog(false)
+  }
+
   const onDrop = (acceptedFiles) => {
     const receiptFile = acceptedFiles[0];
     const isValidImage = receiptFile && (receiptFile.type === 'image/jpeg' || receiptFile.type === 'image/png' || receiptFile.type === 'image/jpg');
@@ -69,17 +82,18 @@ const ProcessPayment = ({ open, onClose, requestData, fetchMyOrders, zIndex }) =
       setUploadedImage(receiptFile);
       isEulaChecked ? setEnablePlaceOrder(true) : setEnablePlaceOrder(false)
     } else {
-      toast.error('Invalid Image or EULA not checked', {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        transition: Bounce,
-        style: { fontFamily: 'Kanit', fontSize: '16px' }
+      enqueueSnackbar(`Invalid Image!`, { 
+        variant: 'error',
+        anchorOrigin: {
+          vertical: 'top',
+          horizontal: 'right'
+        },
+        autoHideDuration: 1800,
+        style: {
+          fontFamily: 'Kanit',
+          fontSize: '16px'
+        },
+        
       });
       setUploadedImage(null);
       setEnablePlaceOrder(false);
@@ -89,7 +103,7 @@ const ProcessPayment = ({ open, onClose, requestData, fetchMyOrders, zIndex }) =
   const handleProcessPayment = () => {
 
     Swal.fire({
-      title: 'You are about to send the payment, kindly double check the info especially the receipt. ',
+      title: 'You are about to send the payment, kindly double check the info especially the receipt. Always check your email for notifications.',
       text: "",
       icon: "warning",
       showCancelButton: true,
@@ -111,6 +125,19 @@ const ProcessPayment = ({ open, onClose, requestData, fetchMyOrders, zIndex }) =
         await axiosClient.post('/custom/updateRequestWhenPaid', paymentValues)
         .then(( {data} ) => {
             setSubmitLoading(false);
+            enqueueSnackbar(`Request Paid Successfully!`, { 
+              variant: 'success',
+              anchorOrigin: {
+                vertical: 'top',
+                horizontal: 'right'
+              },
+              autoHideDuration: 2300,
+              style: {
+                fontFamily: 'Kanit',
+                fontSize: '16px'
+              },
+              
+            });
             fetchMyOrders();
             onClose();
         });
@@ -118,6 +145,11 @@ const ProcessPayment = ({ open, onClose, requestData, fetchMyOrders, zIndex }) =
     });
 
   }
+
+  const handleAgree = () => {
+    setEulaChecked(true);
+    setTermsnAndConditionDialog(false);
+  };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" sx={{ borderRadius: '5px', '& .MuiDialog-paper': { borderRadius: '16px' } }} style={{ zIndex: zIndex }}>
@@ -227,8 +259,13 @@ const ProcessPayment = ({ open, onClose, requestData, fetchMyOrders, zIndex }) =
             <FormControlLabel
               control={<Checkbox checked={isEulaChecked} onChange={handleEulaChecked} sx={{ transform: 'scale(0.8)' }} />}
               label={
-                <Typography sx={{ fontFamily: 'Inter', display: 'flex', alignItems: 'center', fontSize: 16 }}>
-                  I Agree with the&nbsp;<span style={{ color: "#1A5276" }}> <b onClick={(event) => { event.preventDefault(); }}> Terms and Conditions</b></span>
+                <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: 16 }}>
+                  I Agree with the&nbsp;     <span style={{ color: "#1A5276" }}>
+                  <b onClick={(event) => {
+                    event.preventDefault(); 
+                    handleTermsAndCondiDialogOpen();
+                  }}> Terms and Conditions</b>
+                </span>
                 </Typography>
               }
               sx={{ fontFamily: 'Kanit', fontSize: 16 }}
@@ -273,6 +310,8 @@ const ProcessPayment = ({ open, onClose, requestData, fetchMyOrders, zIndex }) =
           </Box>
           <GCash open={gCashDialogOpen} onClose={handleGcashQRCodeClose} />
           <Paymaya open={paymayaDialogOpen} onClose={handlePaymayaQRCodeClose} />
+          <CheckoutTermsAndConditions open={termsAndConditionDialogOpen} onClose={handleTermsAndCondiDialogClose} onAgree={handleAgree}/>
+
         </Grid>
       </DialogContent>
     </Dialog>

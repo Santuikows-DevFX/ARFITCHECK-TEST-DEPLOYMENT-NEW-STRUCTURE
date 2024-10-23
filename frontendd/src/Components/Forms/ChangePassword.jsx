@@ -15,9 +15,14 @@ import axiosClient from '../../axios-client';
 import { useCookies } from 'react-cookie';
 import { useNavigate } from 'react-router-dom';
 import { useStateContext } from '../../ContextAPI/ContextAPI';
+import { useSnackbar } from 'notistack';
 
 const PasswordValidationSchema = Yup.object().shape({
-  password: Yup.string().required('Password is required'),
+  password: Yup.string()
+    .required('Password is required')
+    .min(8, 'Password must be at least 8 characters')
+    .matches(/^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+$/, 'Password can only contain alphanumeric characters and safe special characters')
+    .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must contain at least one special character'),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('password'), null], 'Passwords must match')
     .required('Confirm Password is required'),
@@ -27,9 +32,13 @@ const PasswordValidationSchema = Yup.object().shape({
 function ChangePassword() {
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false)
   const [cookie, removeCookie, remove, setCookie] = useCookies(['?sessiontoken', '?id', '?role']);
   const [loading, setLoading] = useState(false);
   const { setToken, setUserID, setRole } = useStateContext();
+
+  const { enqueueSnackbar  } = useSnackbar();
 
   const handleChangePassword = (values) => {
     try {
@@ -68,16 +77,17 @@ function ChangePassword() {
 
           if(data.message === 'Password Updated Successfully!') {
 
-            toast.success(`${data.message}`, {
-              position: "top-right",
-              autoClose: 1800,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              transition: Bounce,
+            enqueueSnackbar(`${data.message}`, { 
+              variant: 'success',
+              anchorOrigin: {
+                vertical: 'top',
+                horizontal: 'right'
+              },
+              autoHideDuration: 1800,
+              style: {
+                fontFamily: 'Kanit',
+                fontSize: '16px'
+              },
               onClose: () => {
 
                 remove('?id')
@@ -90,24 +100,21 @@ function ChangePassword() {
 
                 navigator('/login')
               },
-              style: { fontFamily: 'Kanit', fontSize: '16px' }
             });
 
           }else {
-
-            toast.error(`${data.message}`, {
-              position: "top-right",
-              autoClose: 1800,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              transition: Bounce,
-              onClose: () => {
+            enqueueSnackbar(`${data.message}`, { 
+              variant: 'error',
+              anchorOrigin: {
+                vertical: 'top',
+                horizontal: 'right'
               },
-              style: { fontFamily: 'Kanit', fontSize: '16px' }
+              autoHideDuration: 1800,
+              style: {
+                fontFamily: 'Kanit',
+                fontSize: '16px'
+              },
+              
             });
           }
           setLoading(false)
@@ -186,13 +193,13 @@ function ChangePassword() {
                           backgroundColor: '#E0DFDF'
                         }}
                         inputProps={{ style: { fontSize: 16, fontFamily: 'Kanit' } }}
-                        type={showPassword ? "text" : "password"}
+                        type={showNewPassword ? "text" : "password"}
                         error={meta.touched && Boolean(meta.error)}
                         InputProps={{
                           endAdornment: (
                             <InputAdornment position="end">
-                              <IconButton onClick={() => setShowPassword((prev) => !prev)}>
-                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                              <IconButton onClick={() => setShowNewPassword((prev) => !prev)}>
+                                {showNewPassword ? <VisibilityOff /> : <Visibility />}
                               </IconButton>
                             </InputAdornment>
                           )
@@ -223,13 +230,13 @@ function ChangePassword() {
                           backgroundColor: '#E0DFDF'
                         }}
                         inputProps={{ style: { fontSize: 16, fontFamily: 'Kanit' } }}
-                        type={showPassword ? "text" : "password"}
+                        type={showConfirmPassword ? "text" : "password"}
                         error={meta.touched && Boolean(meta.error)}
                         InputProps={{
                           endAdornment: (
                             <InputAdornment position="end">
-                              <IconButton onClick={() => setShowPassword((prev) => !prev)}>
-                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                              <IconButton onClick={() => setShowConfirmPassword((prev) => !prev)}>
+                                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                               </IconButton>
                             </InputAdornment>
                           )

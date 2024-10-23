@@ -127,7 +127,7 @@ function About() {
                     Jeon Drew Jaime - UI/UX & Graphics Designer<br />
                     Josh Kiel Santuico - Programmer<br />
                     Gian Dale Lim - Programmer<br />
-                    Charles Nolasco - Programmer<br />
+                    Charles Nolasco - Document & Programmer<br />
                   </Typography>
                 </CardContent>
               </Card>

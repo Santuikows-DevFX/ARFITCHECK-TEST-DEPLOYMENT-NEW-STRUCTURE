@@ -1,9 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Grid, Card, CardContent, Typography, Dialog, Box, TextField, InputAdornment, IconButton, CardActionArea, CardMedia, Button, Rating, CircularProgress, Tabs, Tab, Pagination } from '@mui/material';
+import { Grid, Card, CardContent, Typography, Dialog, Box, TextField, InputAdornment, IconButton, CardActionArea, CardMedia, Button, Rating, CircularProgress, Tabs, Tab, Pagination, FormHelperText } from '@mui/material';
 
 import SearchIcon from '@mui/icons-material/Search';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarIcon from '@mui/icons-material/Star';
+
+import * as Yup from 'yup';
+import { Formik, Form, Field } from 'formik';
 
 import Footer from '../Components/Footer';
 import axiosClient from '../axios-client';
@@ -26,6 +29,7 @@ import shortIcon from '../../public/assets/short.png'
 import capIcon from '../../public/assets/cap.png'
 import hoodieIcon from '../../public/assets/hoodie.png'
 import shopGraffitiBG from '../../public/assets/shopGraffiti1.png'
+import { useSnackbar } from 'notistack';
 
 AOS.init({
     duration: 600, 
@@ -79,12 +83,15 @@ function Shop() {
     const [isCooldown, setIsCooldown] = useState(false);
     const [isPriceFilter, setIsPriceFilter] = useState(false);
     const [applyFilterLoading, setApplyFilterLoading] = useState(false);
+    const [categoryChoosingLoading, setCategoryChoosingLoading] = useState(false);
     const [selectedTab, setSelectedTab] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
     const lastClickTimeRef = useRef(0);
     const { category } = useParams();
+
+    const { enqueueSnackbar  } = useSnackbar();
 
     const COOLDOWN_TIME = 200;
 
@@ -178,17 +185,17 @@ function Shop() {
         setIsCooldown(true);
 
         if (currentTime - lastClickTimeRef.current < COOLDOWN_TIME) {
-            toast.warning("You might want to calm down a bit...", {
-                position: "top-right",
-                autoClose: 2300,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "colored",
-                transition: Bounce,
-                style: { fontFamily: 'Kanit', fontSize: '16px' }
+            enqueueSnackbar(`You might want to calm down a bit...`, { 
+                variant: 'warning',
+                anchorOrigin: {
+                  vertical: 'top',
+                  horizontal: 'right'
+                },
+                autoHideDuration: 1800,
+                style: {
+                  fontFamily: 'Kanit',
+                  fontSize: '16px'
+                },
             });
         }
 
@@ -206,8 +213,10 @@ function Shop() {
                 setNoProductMessage(0);
                 setProducts(filteredProductByCategory.data);
                 setFilteredSearchProducts(filteredProductByCategory.data);
+                setCategoryChoosingLoading(false)
             } else {
                 setNoProductMessage(1);
+                setCategoryChoosingLoading(false)
             }
 
             setTimeout(() => {
@@ -215,25 +224,30 @@ function Shop() {
             }, COOLDOWN_TIME);
         } catch (error) {
             console.log(error);
+            setCategoryChoosingLoading(false)
         }
     };
 
     const handleTabChange = (event, newValue) => {
+
+        setCategoryChoosingLoading(true);
         setSelectedTab(newValue);
         const category = categories[newValue];
         handleCategoryFilter(category.name, category.count);
     };
 
-    const handleApplyPriceRange = async (type) => {
+    const handleApplyPriceRange = async (type, values) => {
 
         setApplyFilterLoading(true)
+
+        console.log(values);
 
         try {
           if (type === 'find') {
             const numericRegex = /^[0-9]*$/;
 
-            if (parseInt(minPrice) <= parseInt(maxPrice) && minPrice !== '' && maxPrice !== '' && numericRegex.test(minPrice) && numericRegex.test(maxPrice)) {
-                const priceRange = { minimumPrice: parseInt(minPrice), maximumPrice: parseInt(maxPrice) };
+            if (parseInt(values?.minPrice) <= parseInt(values?.maxPrice) && values?.minPrice !== '' && values?.maxPrice !== '') {
+                const priceRange = { minimumPrice: parseInt(values?.minPrice), maximumPrice: parseInt(values?.maxPrice) };
                 const response = await axiosClient.post('prd/getProductByPriceRange', priceRange);
                 setIsPriceFilter(true)
                 if (response.data.message) {
@@ -248,17 +262,17 @@ function Shop() {
             } else {
 
                 setApplyFilterLoading(false)
-                toast.error("Invalid Price Range Input", {
-                    position: "top-right",
-                    autoClose: 2300,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "colored",
-                    transition: Bounce,
-                    style: { fontFamily: 'Kanit', fontSize: '16px' }
+                enqueueSnackbar(`Invalid Price Range Input`, { 
+                    variant: 'error',
+                    anchorOrigin: {
+                      vertical: 'top',
+                      horizontal: 'right'
+                    },
+                    autoHideDuration: 1800,
+                    style: {
+                      fontFamily: 'Kanit',
+                      fontSize: '16px'
+                    },
                 });
             }
           }else {
@@ -269,6 +283,17 @@ function Shop() {
         } catch (error) {
             console.log(error);
         }
+    };
+
+    const priceFilterValidationSchema = Yup.object().shape({
+        minPrice: Yup.number().min(0, 'Min Price cannot be less than 0').required('Min Price is required'),
+        maxPrice: Yup.number().min(0, 'Max Price cannot be less than 0').required('Max Price is required')
+          .moreThan(Yup.ref('minPrice'), 'Max Price must be greater than Min Price'),
+    });
+    
+    const priceFilterInitialValues = {
+        minPrice: '',
+        maxPrice: '',
     };
 
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -285,10 +310,10 @@ function Shop() {
                     <Grid container spacing={3} sx={{ mt: { xs: 7, md: 7} , px: "5%", mb: "25vh" }}>
                         <Grid item xs={12}>
                             <Tabs
-                               data-aos="fade-right"
-                               ata-aos-offset="300"
-                               data-aos-easing="ease-in-sine"
-                               data-aos-duration="500"
+                                data-aos="fade-right"
+                                ata-aos-offset="300"
+                                data-aos-easing="ease-in-sine"
+                                data-aos-duration="500"
                                 value={selectedTab}
                                 onChange={handleTabChange}
                                 variant="scrollable"
@@ -299,19 +324,20 @@ function Shop() {
                                 {categories.map((category, index) => (
                                     <Tab
                                         key={index}
+                                        disabled = {categoryChoosingLoading}
                                         label={
-                                    <Box display="flex" alignItems="center">
-                                        {category.icon}
-                                        <Typography
-                                    gutterBottom
-                                    variant="h6"
-                                    component="div"
-                                    sx={{ fontFamily: "Inter", fontWeight: "bold", textAlign: "left", color: "black", fontSize: { xs: 12, md: 20}}}
-                                >
-                                                    {category.name} ({category.count})
-                                                </Typography>
-                                            </Box>
-                                        }
+                                        <Box display="flex" alignItems="center">
+                                            {category.icon}
+                                            <Typography
+                                                gutterBottom
+                                                variant="h6"
+                                                component="div"
+                                                sx={{ fontFamily: "Inter", fontWeight: "bold", textAlign: "left", color: "black", fontSize: { xs: 12, md: 20, opacity: categoryChoosingLoading ? 0.6 : 1}}}
+                                            >
+                                                {category.name} ({category.count})
+                                            </Typography>
+                                        </Box>
+                                    }
                                     />
                                 ))}
                             </Tabs>
@@ -359,129 +385,139 @@ function Shop() {
                                 }}
                                 style={styles.searchBox}
                             />
-                            <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
-                                <TextField
-                                    type='number'
-                                    data-aos="fade-up" 
-                                    data-aos-delay="500"
-                                    label="Min Price"
-                                    sx={{
-                                        "& input": {
-                                            fontFamily: 'Kanit'
-                                        },
-                                    }}
-                                    InputLabelProps={{ 
-                                        sx: {
-                                            fontFamily: 'Kanit'
-                                        }, 
-                                    }}
-                                    variant="outlined"
-                                    value={minPrice}
-                                    fullWidth
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        if (value === '' || parseFloat(value) >= 0) {
-                                            setMinPrice(value);
-                                        }
-                                    }}
-                                />
-                                <TextField
-                                    type='number'
-                                    data-aos="fade-up" 
-                                    data-aos-delay="500"
-                                    label="Max Price"
-                                    variant="outlined"
-                                    sx={{
-                                        "& input": {
-                                            fontFamily: 'Kanit'
-                                        },
-                                    }}
-                                    InputLabelProps={{ 
-                                        sx: {
-                                            fontFamily: 'Kanit'
-                                        }, 
-                                    }}
-                                    value={maxPrice}
-                                    fullWidth
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        if (value === '' || parseFloat(value) >= 0) {
-                                            setMaxPrice(value);
-                                        }
-                                    }}
-                                />
-                              
-                            </Box>
-                            {/* APPLY FILTER FOR PRICE */}
-                            <Button 
-                                data-aos="fade-up" 
-                                data-aos-delay="500" variant="contained" fullWidth style={{ background: 'linear-gradient(to right, #414141  , #000000)' }} onClick={() => {
-                                  handleApplyPriceRange('find')
+                             <Formik
+                                initialValues={priceFilterInitialValues}
+                                validationSchema={priceFilterValidationSchema}
+                                onSubmit={(values, { setSubmitting }) => {
+                                    handleApplyPriceRange('find', values);
+                                    setSubmitting(false);
                                 }}
-                            >
-                                <Typography 
-                                    sx={{ 
-                                        fontFamily: 'Kanit', 
-                                        color: 'white', 
-                                        fontSize: { xs: 15, md: 20 }, 
-                                        p: 0.5,
-                                        visibility: applyFilterLoading ? 'hidden' : 'visible',
-                                    }}
-                                > APPLY
-                                </Typography>
+                                >
+                                {({ values, handleChange, handleSubmit, isSubmitting, errors, touched, isValid }) => (
+                                    <Form onSubmit={handleSubmit}>
+                                    <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
+                                        <Field
+                                            data-aos="fade-up" 
+                                            data-aos-delay="500" 
+                                            as={TextField}
+                                            name="minPrice"
+                                            label="Min Price"
+                                            type="number"
+                                            variant="outlined"
+                                            fullWidth
+                                            value={values.minPrice}
+                                            onChange={handleChange}
+                                            error={touched.minPrice && !!errors.minPrice}
+                                            helperText={touched.minPrice && errors.minPrice && (
+                                                <FormHelperText sx={{ fontFamily: 'Kanit', color: 'red', fontSize: 11 }}>
+                                                  {errors.minPrice}
+                                                </FormHelperText>
+                                            )}
+                                            sx={{
+                                                "& input": { fontFamily: 'Kanit' },
+                                                "& label": { fontFamily: 'Kanit' }
+                                            }}
+                                        />
+                                        <Field
+                                            data-aos="fade-up" 
+                                            data-aos-delay="500" 
+                                            as={TextField}
+                                            name="maxPrice"
+                                            label="Max Price"
+                                            type="number"
+                                            variant="outlined"
+                                            fullWidth
+                                            value={values.maxPrice}
+                                            onChange={handleChange}
+                                            error={touched.maxPrice && !!errors.maxPrice}
+                                            helperText={touched.maxPrice && errors.maxPrice && (
+                                                <FormHelperText sx={{ fontFamily: 'Kanit', color: 'red', fontSize: 11 }}>
+                                                  {errors.maxPrice}
+                                                </FormHelperText>
+                                            )}
+                                            sx={{
+                                                "& input": { fontFamily: 'Kanit' },
+                                                "& label": { fontFamily: 'Kanit' }
+                                            }}
+                                            
+                                        />
+                                    </Box>
 
-                                {applyFilterLoading && (
-                                    <CircularProgress
-                                        size={24}
-                                        color="inherit"
-                                        sx={{
-                                            position: "absolute",
-                                            top: "50%",
-                                            left: "50%",
-                                            marginTop: "-12px",
-                                            marginLeft: "-12px",
+                                    <Button 
+                                        // data-aos="fade-up" 
+                                        // data-aos-delay="500" 
+                                        variant="contained" fullWidth style={{ background: 'linear-gradient(to right, #414141  , #000000)' }} onClick={() => {
+                                         handleApplyPriceRange('find', values)
                                         }}
-                                    />
-                                )}  
-                            </Button>
-                            {/* UNDO APPLY FILTER */}
-                            <Button
-                                data-aos="fade-up" 
-                                data-aos-delay="500" 
-                                fullWidth
-                                type="button"  
-                                variant="outlined"
-                                sx={{
-                                    '&:hover': { borderColor: '#414a4c', backgroundColor: '#414a4c', color: 'white' },
-                                    '&:not(:hover)': { borderColor: '#3d4242', color: 'black' },
-                                    mt: 2,
-                                    visibility: isPriceFilter ? 'visible' : 'hidden'
-                                }}
-                                onClick={() => handleApplyPriceRange('fetch')} 
-                            >
-                                <Typography sx={{ 
-                                    fontFamily: 'Kanit', 
-                                    fontSize: { xs: 15, md: 20 }, 
-                                    p: 0.5, 
-                                    visibility: applyFilterLoading ? 'hidden' : isPriceFilter ? 'visible' : 'hidden'
-                                }}>
-                                    GET ALL PRODUCTS
-                                </Typography>
+                                        disabled = {!isValid || applyFilterLoading || Object.values(values).some(value => value === '')}
+                                        sx={{ opacity: !isValid || Object.values(values).some(value => value === '') ? 0.7 : 1 }}
+                                    >
+                                        <Typography 
+                                            sx={{ 
+                                                fontFamily: 'Kanit', 
+                                                color: 'white', 
+                                                fontSize: { xs: 15, md: 20 }, 
+                                                p: 0.5,
+                                                visibility: applyFilterLoading ? 'hidden' : 'visible',
+                                           
+                                            }}
+                                        > APPLY
+                                        </Typography>
 
-                                {applyFilterLoading && (
-                                    <CircularProgress
-                                        size={24}
-                                        color="inherit"
+                                        {applyFilterLoading && (
+                                            <CircularProgress
+                                                size={24}
+                                                color="inherit"
+                                                sx={{
+                                                    position: "absolute",
+                                                    top: "50%",
+                                                    left: "50%",
+                                                    marginTop: "-12px",
+                                                    marginLeft: "-12px",
+                                                }}
+                                            />
+                                        )}  
+                                    </Button>
+                                    <Button
+                                        // data-aos="fade-up" 
+                                        // data-aos-delay="500" 
+                                        fullWidth
+                                        type="button"  
+                                        variant="outlined"
                                         sx={{
-                                            position: "absolute",
-                                            top: "50%",
-                                            left: "50%",
-                                            marginTop: "-12px",
-                                            marginLeft: "-12px",
+                                            '&:hover': { borderColor: '#414a4c', backgroundColor: '#414a4c', color: 'white' },
+                                            '&:not(:hover)': { borderColor: '#3d4242', color: 'black' },
+                                            mt: 2,
+                                            visibility: isPriceFilter ? 'visible' : 'hidden'
                                         }}
-                                    />
+                                        onClick={() => handleApplyPriceRange('fetch', values)} 
+                                    >
+                                        <Typography sx={{ 
+                                            fontFamily: 'Kanit', 
+                                            fontSize: { xs: 15, md: 20 }, 
+                                            p: 0.5, 
+                                            visibility: applyFilterLoading ? 'hidden' : isPriceFilter ? 'visible' : 'hidden'
+                                        }}>
+                                            GET ALL PRODUCTS
+                                        </Typography>
+
+                                        {applyFilterLoading && (
+                                            <CircularProgress
+                                                size={24}
+                                                color="inherit"
+                                                sx={{
+                                                    position: "absolute",
+                                                    top: "50%",
+                                                    left: "50%",
+                                                    marginTop: "-12px",
+                                                    marginLeft: "-12px",
+                                                }}
+                                            />
+                                        )}
+                                    </Button>
+                                    </Form>
                                 )}
-                            </Button>
+                                </Formik>
                         </Grid>
                         <Grid item xs={12} sm={8} md={9}>
                             {noProductMessage ? (
@@ -563,7 +599,6 @@ function Shop() {
                             <ProductDescription product={selectedProduct} onClose={handleCloseModal} />
                         )}    
                     </Dialog>
-                    <ToastContainer />
                 </div>
             )}
         </div>

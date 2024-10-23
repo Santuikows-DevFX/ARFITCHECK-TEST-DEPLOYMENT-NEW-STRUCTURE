@@ -38,7 +38,7 @@ class ProductController extends Controller
             } else {
 
                 foreach ($this->database->getReference('products')->getSnapshot()->getValue() as $productID => $productInfo) {
-                    if ($productInfo['isVisible'] === true && $productInfo['productQuantity'] > 0) {
+                    if ($productInfo['isVisible'] === true && $productInfo['productQuantity'] > 0 && $role == 'user') {
                         $productData[] = [
                             'productID' => $productID,
                             'productInfo' => $productInfo
@@ -58,7 +58,7 @@ class ProductController extends Controller
     {
         $product = [];
         foreach ($this->database->getReference('products')->getSnapshot()->getValue() as $productID => $productInfo) {
-            if ($productInfo['productName'] == $request->productName) {
+            if ($productInfo['productName'] == $request->productName && $productInfo['isVisible'] === true && $productInfo['productQuantity'] > 0) {
 
                 $product['uid'] = $productID;
                 foreach ($productInfo as $productKey => $productValue) {
@@ -86,7 +86,7 @@ class ProductController extends Controller
             } else {
 
                 foreach ($this->database->getReference('products')->getSnapshot()->getValue() as $productID => $productInfo) {
-                    if ($productInfo['isVisible'] === true && $productInfo['productCategory'] === $category) {
+                    if ($productInfo['isVisible'] === true && $productInfo['productCategory'] === $category && $productInfo['productQuantity'] > 0 && $role == 'user') {
                         $productData[] = [
                             'productID' => $productID,
                             'productInfo' => $productInfo
@@ -130,7 +130,10 @@ class ProductController extends Controller
         return response()->json($unlistedPrd);
     }
 
-    public function getCriticalLevel() {}
+    public function getCriticalLevel() 
+    {
+
+    }
 
     public function getCategoryCount()
     {
@@ -141,16 +144,16 @@ class ProductController extends Controller
         $totalHoodies = 0;
 
         foreach ($this->database->getReference('products')->getSnapshot()->getValue() as $productInfo) {
-            if ($productInfo['productCategory'] === 'T-Shirt') {
+            if ($productInfo['productCategory'] === 'T-Shirt' && $productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true) {
 
                 $totalTShirts += 1;
-            } else if ($productInfo['productCategory'] === 'Shorts') {
+            } else if ($productInfo['productCategory'] === 'Shorts' && $productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true) {
 
                 $totalShorts += 1;
-            } else if ($productInfo['productCategory'] === 'Hoodies') {
+            } else if ($productInfo['productCategory'] === 'Hoodies' && $productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true) {
 
                 $totalHoodies += 1;
-            } else {
+            } else if($productInfo['productCategory'] === 'Caps' && $productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true) {
 
                 $totalCaps += 1;
             }
@@ -183,12 +186,13 @@ class ProductController extends Controller
         //fetch product by its category and return it -josh
         foreach ($this->database->getReference('products')->getSnapshot()->getValue() as $productID => $productInfo) {
 
-            if ($productInfo['productCategory'] == $category) {
+            if ($productInfo['productCategory'] == $category && $productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true ) {
                 $productByCateg[] = [
                     'productID' => $productID,
                     'productInfo' => $productInfo
                 ];
-            } else {
+
+            } else if ($productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true) {
                 $allProduct[] = [
                     'productID' => $productID,
                     'productInfo' => $productInfo
@@ -208,7 +212,7 @@ class ProductController extends Controller
     {
         $productByPriceRange = [];
         foreach ($this->database->getReference('products')->getSnapshot()->getValue() as $productID => $productInfo) {
-            if ($productInfo['productPrice'] >= $request->minimumPrice && $productInfo['productPrice'] <= $request->maximumPrice) {
+            if ($productInfo['productPrice'] >= $request->minimumPrice && $productInfo['productPrice'] <= $request->maximumPrice && $productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true) {
                 $productByPriceRange[] = [
                     'productID' => $productID,
                     'productInfo' => $productInfo
@@ -279,7 +283,7 @@ class ProductController extends Controller
             'tripleXLQuantity' => $request->tripleXLQuantity ? $request->tripleXLQuantity : 0,
             'productDescription' => $description,
             'isVisible' => true,
-            'isCriticalLevel' => false,
+            'isCriticalLevel' => $totalQuantity <= $request->productCriticalLevelQuantity,
             'productImage' => $productImageURLs[0] ?? '', 
             'productImage1' => $productImageURLs[1] ?? '', 
             'productImage2' => $productImageURLs[2] ?? '', 

@@ -30,8 +30,12 @@ import Navbar from "../Widgets/Navbar.jsx";
 import loginPic from '../../public/assets/log.png'
 import loginGraffitiBG from '../../public/assets/loginGraffiti.png'
 import icon from '../../public/assets/Icon.png'
+import Swal from "sweetalert2";
+import { useSnackbar } from "notistack";
+import Zoom from "../WIdgets/Zoom.jsx";
 
 function Login() {
+
   const [isLoading, setIsLoading] = useState(true);
   const [isLogginIn, setLogginIn] = useState(false);
   const [sessionLogin, setSessionLogin] = useState(false)
@@ -40,6 +44,8 @@ function Login() {
   const [hasSession, setHasSession] = useState(false)
   const { setUser, setToken, setUserID, setRole } = useStateContext();
   const [cookie, setCookie] = useCookies(["?sessiontoken", "?fn", "?id", "?role"]);
+
+  const { enqueueSnackbar  } = useSnackbar();
 
   const navigator = useNavigate();
 
@@ -75,6 +81,7 @@ function Login() {
 
   const handleSubmit = (values) => {
     setLogginIn(true);
+    
     try {
 
       axiosClient.post("/auth/loginUser", values).then(({ data }) => {
@@ -100,17 +107,18 @@ function Login() {
         } else {
 
           setLogginIn(false);
-          toast.error(`${data.message}`, {
-            position: "top-right",
-            autoClose: 2300,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "colored",
-            transition: Bounce,
-            style: { fontFamily: "Kanit", fontSize: "16px" },
+          enqueueSnackbar(`${data.message}`, { 
+            variant: 'error',
+            anchorOrigin: {
+              vertical: 'top',
+              horizontal: 'right'
+            },
+            autoHideDuration: 1800,
+            style: {
+              fontFamily: 'Kanit',
+              fontSize: '16px'
+            },
+            
           });
         }
       });
@@ -134,24 +142,22 @@ function Login() {
         }, 1500)
 
       }else {
-          toast.error('Something went wrong.', {
-            position: "top-right",
-            autoClose: 2300,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "colored",
-            transition: Bounce,
-            onClose: () => {
-              setSessionLogin(false)
-              navigator('/login')
-            },
-            style: { fontFamily: "Kanit", fontSize: "16px" },
-          });
+        enqueueSnackbar(`${data.message}`, { 
+          variant: 'error',
+          anchorOrigin: {
+            vertical: 'top',
+            horizontal: 'right'
+          },
+          autoHideDuration: 1800,
+          style: {
+            fontFamily: 'Kanit'
+          },
+          onClose: () => {
+            setSessionLogin(false)
+            navigator('/login')
+          }
+        });
       }
-
     }catch(error) {
       console.log(error);
       
@@ -279,8 +285,8 @@ function Login() {
                                 },
                                 background:
                                   "linear-gradient(to right, #414141, #000000)",
+                                opacity: sessionLogin  ? 0.7 : 1,
                               }}
-                          
                             >
                               <Typography
                                 sx={{
@@ -516,7 +522,6 @@ function Login() {
             open={isDialogOpen}
             onClose={handleCloseForgotPassword}
           />
-          <ToastContainer />
         </div>
       )}
     </div>

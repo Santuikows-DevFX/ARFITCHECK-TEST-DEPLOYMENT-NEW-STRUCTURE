@@ -23,7 +23,7 @@ import SignupImage from '../../public/assets/Signup.png'
 import phIcon from '../../public/assets/phIcon.png'
 import signUpGraffitiBG from '../../public/assets/signupGraffiti.png'
 import icon from '../../public/assets/Icon.png'
-
+import { useSnackbar } from 'notistack';
 
 const provinceOptions = [ 
   'Metro Manila'
@@ -73,6 +73,8 @@ function SignUp() {
   const { setUser, setToken, setUserID } = useStateContext();
   const [cookie, setCookie] = useCookies(['?sessiontoken']);
 
+  const { enqueueSnackbar  } = useSnackbar();
+
   const navigator = useNavigate();
 
   const validationSchemaStep1 = Yup.object().shape({
@@ -83,8 +85,12 @@ function SignUp() {
         'Email must be a valid email from Gmail or Outlook'
       )
       .required('Email is required'),
-    firstName: Yup.string().required('First name is required'),
-    lastName: Yup.string().required('Last name is required'),
+    firstName: Yup.string()
+    .matches(/^[A-Za-z\s-]+$/, 'First Name must contain only letters, spaces, or hyphens')
+    .required('First Name is required'),
+    lastName: Yup.string()
+    .matches(/^[A-Za-z\s-]+$/, 'Last Name must contain only letters, spaces, or hyphens')
+    .required('Last Name is required'),
     password: Yup.string()
     .required('Password is required')
     .min(8, 'Password must be at least 8 characters')
@@ -187,17 +193,17 @@ function SignUp() {
       .then(({data}) => {
 
         if(data.message) {
-          toast.error(`${data.message}`, {
-              position: "top-right",
-              autoClose: 2300,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-              transition: Bounce,
-              style: { fontFamily: 'Kanit', fontSize: '16px' }
+          enqueueSnackbar(`${data.message}`, { 
+            variant: 'error',
+            anchorOrigin: {
+              vertical: 'top',
+              horizontal: 'right'
+            },
+            autoHideDuration: 1800,
+            style: {
+              fontFamily: 'Kanit',
+              fontSize: '16px'
+            },
           });
 
           setSignUp(false)
@@ -249,27 +255,27 @@ function SignUp() {
               setCookie('?role', data.role, { path: '/', expires: expirationDate });
               
            }else {
+              setSignUp(false)
 
-              toast.error(`${data.message}`, {
-                  position: "top-right",
-                  autoClose: 2300,
-                  hideProgressBar: false,
-                  closeOnClick: true,
-                  pauseOnHover: true,
-                  draggable: true,
-                  progress: undefined,
-                  theme: "colored",
-                  transition: Bounce,
-                  onClose: () => {
-                    setSignUp(false)
-                  },
-                  style: { fontFamily: 'Kanit', fontSize: '16px' }
+              enqueueSnackbar(`${data.message}`, { 
+                variant: 'error',
+                anchorOrigin: {
+                  vertical: 'top',
+                  horizontal: 'right'
+                },
+                autoHideDuration: 1800,
+                style: {
+                  fontFamily: 'Kanit',
+                  fontSize: '16px'
+                },
               });
+    
            }
         })
 
     }catch(error) {
         console.log(error);
+        setSignUp(false)
     }
   }
 
@@ -924,7 +930,6 @@ function SignUp() {
       <Footer />
     </div>
       <TermsAndConditions  open={isDialogOpen} onClose={handleDialogClose} onAgree={handleAgree} />
-      <ToastContainer/>
     </div>
   );
 }

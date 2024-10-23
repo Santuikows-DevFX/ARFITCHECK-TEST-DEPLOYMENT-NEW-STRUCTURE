@@ -22,6 +22,7 @@ const UserLayout = () => {
   return (
     <div>
         <Outlet/>
+        <ToastContainer/>
     </div>
   )
 }

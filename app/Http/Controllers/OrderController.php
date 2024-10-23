@@ -571,7 +571,7 @@ class OrderController extends Controller
 
           'associatedOrderID' => 'None',
           'cancelReason' => 'None',
-          'cancelReasonNone' => 'None',
+          'cancelReasonAdditional' => 'None',
           'userCancelReason' => 'None',
           'userCancelReasonAdditional' => 'None',
           'orderStatus' => 'Waiting for Confirmation',
@@ -699,7 +699,7 @@ class OrderController extends Controller
 
             'associatedOrderID' => 'None',
             'cancelReason' => 'None',
-            'cancelReasonNone' => 'None',
+            'cancelReasonAdditional' => 'None',
             'userCancelReason' => 'None',
             'userCancelReasonAdditional' => 'None',
             'trackingNumber' => '',
@@ -863,7 +863,7 @@ class OrderController extends Controller
             case 'Cancel':
               $orderStatus = 'Order Cancelled';
               if (!$isBulkyOrder) {
-                $this->sentNotificationIfAdminCancelOrder($orderID, $email, $firstName, $lastName, $orderInfo['orderDate'], $totalAmountToPay - 100, $mobilePhone, $fullAddress, $request->cancelReason, null);
+                $this->sentNotificationIfAdminCancelOrder($orderID, $email, $firstName, $lastName, $orderInfo['orderDate'], $totalAmountToPay - 100, $mobilePhone, $fullAddress, $request->cancelReason, $request->cancelReasonAdditional);
               }
 
               //since this function is also being called when the admin approved a cancellation request, we will also put here a condition to determine if its a cancellation request or not
@@ -888,6 +888,7 @@ class OrderController extends Controller
             'orderStatus' => $orderStatus,
             'updateTimeStamp' => $updateTimeStamp,
             'cancelReason' => $request->cancelReason ? $request->cancelReason : 'None',
+            'cancelReasonAdditional' => $request->cancelReasonAdditional ? $request->cancelReasonAdditional : 'None',
             'orderDateDelivery' => $orderDeliveryDate,
             'trackingNumber' => $request->trackingNumber ? $request->trackingNumber : '',
             'estimatedTimeOfDelivery' => $request->estimatedTimeOfDelivery ? $request->estimatedTimeOfDelivery : '',
@@ -901,7 +902,7 @@ class OrderController extends Controller
 
       //check if the order status is parcel out for delivery
       if ($orderStatus == 'Parcel out for delivery') {
-        $this->notifyUsersForOrderDelivery($mobilePhone, $totalAmountToPay, $request->orderID, $paymentMethod, $targetOrder['uid'], $request->trackingNumber, $request->estimatedTimeOfDelivery);
+        // $this->notifyUsersForOrderDelivery($mobilePhone, $totalAmountToPay, $request->orderID, $paymentMethod, $targetOrder['uid'], $request->trackingNumber, $request->estimatedTimeOfDelivery);
 
         $this->sendEmailNotificationForReceipt($request->orderID, $email, $firstName, $lastName, Carbon::now()->toDateString(), $totalAmountToPay - 100, $mobilePhone, $fullAddress, 'delivery', $request->trackingNumber, $request->estimatedTimeOfDelivery);
       }
@@ -1307,7 +1308,7 @@ class OrderController extends Controller
         'is now out for delivery. REMINDER: Once you received your item(s), please confirm it in the ARFITCHECK Website, if we dont hear from you, payment will be automatically transferred to BMIC.'
       );
 
-      $subjectStatus = $type == 'place' ? 'has been received.' : ($type == 'confirm' ? 'has been confirmed.' :
+      $subjectStatus = $type == 'place' ? 'has been received by the system.' : ($type == 'confirm' ? 'has been confirmed.' :
         'is now out for delivery.'
       );
 
@@ -1631,7 +1632,11 @@ class OrderController extends Controller
                </div>
                
                <p>Hi ' . $emailNotificationData['recipient'] . ',</p>
-               <p>Your order request with an order ID of <span class="order-id">' . $emailNotificationData['orderID'] . '</span> has been delivered. Once your received your product(s) kindly CONFIRM it on the ARFITCHECK Website by ' .  Carbon::now()->addDay(2)->toDateString() . ', if we did not hear from you, payment will be automatically transferred to BMIC. </p>
+               <p>Your order request with an order ID of <span class="order-id">' . $emailNotificationData['orderID'] . '</span> has been delivered. Once you received your product(s) kindly CONFIRM it on the ARFITCHECK Website by ' .  Carbon::now()->addDay(2)->toDateString() . ', if we did not hear from you, payment will be automatically transferred to BMIC.  </p>
+
+               <div class="divider"></div>
+               <h3>I HAVE A PROBLEM WITH THE PRODUCT I RECEIVED</h3>
+               <p>For any problems about your order, kindly contact BMIC through their page, <a href="https://www.facebook.com/bmic.clothing" target="_blank">BMIC Facebook Page</a></p>
                
                <div class="divider"></div>
          

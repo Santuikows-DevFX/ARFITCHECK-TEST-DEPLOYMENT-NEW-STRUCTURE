@@ -2,6 +2,7 @@ import React from 'react'
 import { useCookies } from 'react-cookie'
 import { Navigate, Outlet } from 'react-router-dom'
 import { useStateContext } from '../ContextAPI/ContextAPI';
+import { ToastContainer } from 'react-toastify';
 
 const LoginLayout = () => {
 
@@ -19,6 +20,7 @@ const LoginLayout = () => {
   return (
     <div>
         <Outlet/>
+        <ToastContainer/>
     </div>
   )
 }

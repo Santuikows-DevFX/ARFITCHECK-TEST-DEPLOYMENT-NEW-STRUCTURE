@@ -5,6 +5,8 @@ import TransactionHistoryTable from '../../Components/Tables/TransactionHistoryT
 import axiosClient from '../../axios-client';
 import DownloadIcon from '@mui/icons-material/Download';
 import dayjs from 'dayjs';
+import { onValue, ref } from 'firebase/database';
+import { db } from '../../firebase';
 
 
 function TransactionHistory() {
@@ -20,7 +22,19 @@ function TransactionHistory() {
   }, []);
 
   useEffect(() => {
-    fetchOrders();
+    const dbRef = ref(db, 'orders');
+  
+    const listener = onValue(dbRef, (snapshot) => {
+      if (snapshot.exists()) {
+        fetchOrders();
+      } else {
+        console.log("No data available");
+      }
+    }, (error) => {
+      console.error("Error listening to Realtime Database: ", error);
+    });
+  
+    return () => listener();
   }, [])
 
   const fetchOrders = async () => {

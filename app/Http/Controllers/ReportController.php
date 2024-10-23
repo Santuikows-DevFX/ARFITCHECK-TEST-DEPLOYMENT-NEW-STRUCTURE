@@ -90,25 +90,25 @@ class ReportController extends Controller
         }
 
         //this is for customization request when order is being approved, and the user paid
-        foreach($this->database->getReference('customizedRequest')->getSnapshot()->getValue() as $requestID => $weeklyCustomizationRequestInfo) {
-            $requestDate = Carbon::parse($weeklyCustomizationRequestInfo['orderDate']);
-            $dayOfWeek = $requestDate->dayName;
+        // foreach($this->database->getReference('customizedRequest')->getSnapshot()->getValue() as $requestID => $weeklyCustomizationRequestInfo) {
+        //     $requestDate = Carbon::parse($weeklyCustomizationRequestInfo['orderDate']);
+        //     $dayOfWeek = $requestDate->dayName;
 
-            if ($requestDate->between($startOfCurrentWeek, $endOfCurrentWeek) && $weeklyCustomizationRequestInfo['isPaid'] && $weeklyCustomizationRequestInfo['orderStatus'] != 'Waiting for Approval' && $weeklyCustomizationRequestInfo['orderStatus'] != 'Request Cancelled' && $weeklyCustomizationRequestInfo['orderStatus'] != 'Request Cancelled') {
+        //     if ($requestDate->between($startOfCurrentWeek, $endOfCurrentWeek) && $weeklyCustomizationRequestInfo['isPaid'] && $weeklyCustomizationRequestInfo['orderStatus'] != 'Waiting for Approval' && $weeklyCustomizationRequestInfo['orderStatus'] != 'Request Cancelled' && $weeklyCustomizationRequestInfo['orderStatus'] != 'Request Cancelled') {
 
-                $currentWeekRevenue[$dayOfWeek] += $weeklyCustomizationRequestInfo['amountToPay'];
-                $currSalesWithEwallet += $weeklyCustomizationRequestInfo['amountToPay'];
+        //         $currentWeekRevenue[$dayOfWeek] += $weeklyCustomizationRequestInfo['amountToPay'];
+        //         $currSalesWithEwallet += $weeklyCustomizationRequestInfo['amountToPay'];
 
-            }
+        //     }
 
-            if ($requestDate->between($startOfLastWeek, $endOfLastWeek) && $weeklyCustomizationRequestInfo['isPaid'] && $weeklyCustomizationRequestInfo['orderStatus'] != 'Waiting for Approval' && $weeklyCustomizationRequestInfo['orderStatus'] != 'Request Cancelled' && $weeklyCustomizationRequestInfo['orderStatus'] != 'Request Cancelled') {
+        //     if ($requestDate->between($startOfLastWeek, $endOfLastWeek) && $weeklyCustomizationRequestInfo['isPaid'] && $weeklyCustomizationRequestInfo['orderStatus'] != 'Waiting for Approval' && $weeklyCustomizationRequestInfo['orderStatus'] != 'Request Cancelled' && $weeklyCustomizationRequestInfo['orderStatus'] != 'Request Cancelled') {
 
-                $lastWeekRevenue[$dayOfWeek] += $weeklyCustomizationRequestInfo['amountToPay'];
-                $pastSalesWithEwallet += $weeklyCustomizationRequestInfo['amountToPay'];
+        //         $lastWeekRevenue[$dayOfWeek] += $weeklyCustomizationRequestInfo['amountToPay'];
+        //         $pastSalesWithEwallet += $weeklyCustomizationRequestInfo['amountToPay'];
 
-            }
+        //     }
 
-        }
+        // }
 
         foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $weeklyRevenueInfo) {
 
@@ -116,20 +116,20 @@ class ReportController extends Controller
             $dayOfWeek = $orderDate->dayName;
 
             //current week
-            if ($orderDate->between($startOfCurrentWeek, $endOfCurrentWeek) && $weeklyRevenueInfo['paymentMethod'] === 'ewallet' && $weeklyRevenueInfo['orderStatus'] != 'Order Completed' && $weeklyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $weeklyRevenueInfo['orderStatus'] != 'Order Cancelled' && $weeklyRevenueInfo['orderStatus'] != 'Request Rejected' && $weeklyRevenueInfo['orderStatus'] != 'Request Cancelled') {
+            // if ($orderDate->between($startOfCurrentWeek, $endOfCurrentWeek) && $weeklyRevenueInfo['paymentMethod'] === 'ewallet' && $weeklyRevenueInfo['orderStatus'] != 'Order Completed' && $weeklyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $weeklyRevenueInfo['orderStatus'] != 'Order Cancelled' && $weeklyRevenueInfo['orderStatus'] != 'Request Rejected' && $weeklyRevenueInfo['orderStatus'] != 'Request Cancelled') {
 
-                if (!$weeklyRevenueInfo['isBulkyOrder']) {
-                    $currentWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
-                    $currSalesWithEwallet += $weeklyRevenueInfo['amountToPay'];
-                }
+            //     if (!$weeklyRevenueInfo['isBulkyOrder']) {
+            //         $currentWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
+            //         $currSalesWithEwallet += $weeklyRevenueInfo['amountToPay'];
+            //     }
 
-                if ($orderID === $weeklyRevenueInfo['associatedOrderID'] && $weeklyRevenueInfo['isBulkyOrder'] === true) {
+            //     if ($orderID === $weeklyRevenueInfo['associatedOrderID'] && $weeklyRevenueInfo['isBulkyOrder'] === true) {
 
-                    $currentWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
-                    $currSalesWithEwallet += $weeklyRevenueInfo['amountToPay'];
-                }
+            //         $currentWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
+            //         $currSalesWithEwallet += $weeklyRevenueInfo['amountToPay'];
+            //     }
 
-            }
+            // }
 
             if ($orderDate->between($startOfCurrentWeek, $endOfCurrentWeek) && $weeklyRevenueInfo['orderStatus'] === 'Order Completed') {
 
@@ -145,19 +145,19 @@ class ReportController extends Controller
             }
 
             //last week
-            if ($orderDate->between($startOfLastWeek, $endOfLastWeek) && $weeklyRevenueInfo['paymentMethod'] === 'ewallet' && $weeklyRevenueInfo['orderStatus'] != 'Order Completed' && $weeklyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $weeklyRevenueInfo['orderStatus'] != 'Order Cancelled' && $weeklyRevenueInfo['orderStatus'] != 'Request Rejected') {
+            // if ($orderDate->between($startOfLastWeek, $endOfLastWeek) && $weeklyRevenueInfo['paymentMethod'] === 'ewallet' && $weeklyRevenueInfo['orderStatus'] != 'Order Completed' && $weeklyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $weeklyRevenueInfo['orderStatus'] != 'Order Cancelled' && $weeklyRevenueInfo['orderStatus'] != 'Request Rejected' && $weeklyRevenueInfo['orderStatus'] != 'Request Cancelled') {
 
-                if(!$weeklyRevenueInfo['isBulkyOrder']) { 
-                    $lastWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
-                    $pastSalesWithEwallet += $weeklyRevenueInfo['amountToPay'];
-                }
+            //     if(!$weeklyRevenueInfo['isBulkyOrder']) { 
+            //         $lastWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
+            //         $pastSalesWithEwallet += $weeklyRevenueInfo['amountToPay'];
+            //     }
 
-                if ($orderID === $weeklyRevenueInfo['associatedOrderID'] && $weeklyRevenueInfo['isBulkyOrder'] === true) {
+            //     if ($orderID === $weeklyRevenueInfo['associatedOrderID'] && $weeklyRevenueInfo['isBulkyOrder'] === true) {
 
-                    $lastWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
-                    $pastSalesWithEwallet += $weeklyRevenueInfo['amountToPay'];
-                }
-            }
+            //         $lastWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
+            //         $pastSalesWithEwallet += $weeklyRevenueInfo['amountToPay'];
+            //     }
+            // }
 
             if ($orderDate->between($startOfLastWeek, $endOfLastWeek) && $weeklyRevenueInfo['orderStatus'] === 'Order Completed') {
 
@@ -185,52 +185,103 @@ class ReportController extends Controller
         return response()->json($weeklyRevenue);
     }
 
+
     public function montlyRevenue()
     {
-        $currentMonthRevenue = 0;
-        $lastMonthRevenue = 0;
+        $currentMonthRevenueByWeek = [
+            'Week 1' => 0,
+            'Week 2' => 0,
+            'Week 3' => 0,
+            'Week 4' => 0,
+        ];
 
-        // week 1
+        $lastMonthRevenueByWeek = [
+            'Week 1' => 0,
+            'Week 2' => 0,
+            'Week 3' => 0,
+            'Week 4' => 0,
+        ];
+
+        $currentMonthSales = 0;
+        $lastMonthSales = 0;
+
         $currentStartOfMonth = Carbon::now()->startOfMonth()->toDateString();
+        $currentEndOfMonth = Carbon::now()->endOfMonth()->toDateString();
+
         $currentMonthFirstWeekStart = Carbon::parse($currentStartOfMonth)->startOfWeek()->toDateString();
         $currentMonthFirstWeekEnd = Carbon::parse($currentMonthFirstWeekStart)->endOfWeek()->toDateString();
 
-        // week2
         $currentMonthSecondWeekStart = Carbon::parse($currentMonthFirstWeekEnd)->addDay()->toDateString();
-        $currentMonthSecondWeekEnd = Carbon::parse($currentMonthSecondWeekStart)->addWeek()->toDateString();
+        $currentMonthSecondWeekEnd = Carbon::parse($currentMonthSecondWeekStart)->endOfWeek()->toDateString();
 
-        $endOfCurrentMonth = Carbon::now()->endOfMonth()->toDateString();
+        $currentMonthThirdWeekStart = Carbon::parse($currentMonthSecondWeekEnd)->addDay()->toDateString();
+        $currentMonthThirdWeekEnd = Carbon::parse($currentMonthThirdWeekStart)->endOfWeek()->toDateString();
 
-        $startOfLastMonth = Carbon::now()->subMonth()->startOfMonth()->toDateString();
-        $endOfLastMonth = Carbon::now()->subMonth()->endOfMonth()->toDateString();
+        $currentMonthFourthWeekStart = Carbon::parse($currentMonthThirdWeekEnd)->addDay()->toDateString();
+        $currentMonthFourthWeekEnd = Carbon::parse($currentMonthFourthWeekStart)->endOfMonth()->toDateString();
 
+        //---------------------
 
-        $monthlyRevenue = [];
+        $lastStartOfMonth = Carbon::now()->subMonth()->startOfMonth()->toDateString();
+        $lastEndOfMonth = Carbon::now()->subMonth()->endOfMonth()->toDateString();
 
-        foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $monthlyRevenueInfo) {
+        $lastMonthFirstWeekStart = Carbon::parse($lastStartOfMonth)->startOfWeek()->toDateString();
+        $lastMonthFirstWeekEnd = Carbon::parse($lastMonthFirstWeekStart)->endOfWeek()->toDateString();
+
+        $lastMonthSecondWeekStart = Carbon::parse($lastMonthFirstWeekEnd)->addDay()->toDateString();
+        $lastMonthSecondWeekEnd = Carbon::parse($lastMonthSecondWeekStart)->endOfWeek()->toDateString();
+
+        $lastMonthThirdWeekStart = Carbon::parse($lastMonthSecondWeekEnd)->addDay()->toDateString();
+        $lastMonthThirdWeekEnd = Carbon::parse($lastMonthThirdWeekStart)->endOfWeek()->toDateString();
+
+        $lastMonthFourthWeekStart = Carbon::parse($lastMonthThirdWeekEnd)->addDay()->toDateString();
+        $lastMonthFourthWeekEnd = Carbon::parse($lastMonthFourthWeekStart)->endOfMonth()->toDateString();
+
+        foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $monthlyRevenueInfo) {
             $orderDate = Carbon::parse($monthlyRevenueInfo['orderDate'])->toDateString();
 
-            if ($orderDate >= $currentStartOfMonth && $orderDate <= $endOfCurrentMonth && $monthlyRevenueInfo['orderStatus'] === 'Order Completed') {
-                $currentMonthRevenue += $monthlyRevenueInfo['amountToPay'];
+            if ($orderDate >= $currentStartOfMonth && $orderDate <= $currentEndOfMonth && $monthlyRevenueInfo['orderStatus'] === 'Order Completed') {
+                if (!$monthlyRevenueInfo['isBulkyOrder'] || ($orderID === $monthlyRevenueInfo['associatedOrderID'] && $monthlyRevenueInfo['isBulkyOrder'] === true)) {
+                    if ($orderDate >= $currentMonthFirstWeekStart && $orderDate <= $currentMonthFirstWeekEnd) {
+                        $currentMonthRevenueByWeek['Week 1'] += $monthlyRevenueInfo['amountToPay'];
+                    } elseif ($orderDate >= $currentMonthSecondWeekStart && $orderDate <= $currentMonthSecondWeekEnd) {
+                        $currentMonthRevenueByWeek['Week 2'] += $monthlyRevenueInfo['amountToPay'];
+                    } elseif ($orderDate >= $currentMonthThirdWeekStart && $orderDate <= $currentMonthThirdWeekEnd) {
+                        $currentMonthRevenueByWeek['Week 3'] += $monthlyRevenueInfo['amountToPay'];
+                    } elseif ($orderDate >= $currentMonthFourthWeekStart && $orderDate <= $currentMonthFourthWeekEnd) {
+                        $currentMonthRevenueByWeek['Week 4'] += $monthlyRevenueInfo['amountToPay'];
+                    }
+            
+                    $currentMonthSales += $monthlyRevenueInfo['amountToPay'];
+                }
             }
-
-            if ($orderDate >= $startOfLastMonth && $orderDate <= $endOfLastMonth && $monthlyRevenueInfo['orderStatus'] === 'Order Completed') {
-                $lastMonthRevenue += $monthlyRevenueInfo['amountToPay'];
+            
+            if ($orderDate >= $lastStartOfMonth && $orderDate <= $lastEndOfMonth && $monthlyRevenueInfo['orderStatus'] === 'Order Completed') {
+                if (!$monthlyRevenueInfo['isBulkyOrder'] || ($orderID === $monthlyRevenueInfo['associatedOrderID'] && $monthlyRevenueInfo['isBulkyOrder'] === true)) {
+                    if ($orderDate >= $lastMonthFirstWeekStart && $orderDate <= $lastMonthFirstWeekEnd) {
+                        $lastMonthRevenueByWeek['Week 1'] += $monthlyRevenueInfo['amountToPay'];
+                    } elseif ($orderDate >= $lastMonthSecondWeekStart && $orderDate <= $lastMonthSecondWeekEnd) {
+                        $lastMonthRevenueByWeek['Week 2'] += $monthlyRevenueInfo['amountToPay'];
+                    } elseif ($orderDate >= $lastMonthThirdWeekStart && $orderDate <= $lastMonthThirdWeekEnd) {
+                        $lastMonthRevenueByWeek['Week 3'] += $monthlyRevenueInfo['amountToPay'];
+                    } elseif ($orderDate >= $lastMonthFourthWeekStart && $orderDate <= $lastMonthFourthWeekEnd) {
+                        $lastMonthRevenueByWeek['Week 4'] += $monthlyRevenueInfo['amountToPay'];
+                    }
+            
+                    $lastMonthSales += $monthlyRevenueInfo['amountToPay'];
+                }
             }
+            
         }
 
-        $monthlyRevenue[] = [
-            'currentRevenue' => $currentMonthRevenue > 0 ? $currentMonthRevenue : 0,
-            'pastRevenue' => $lastMonthRevenue > 0 ? $lastMonthRevenue : 0,
+        $monthlyRevenue = [
+            'currentRevenue' => $currentMonthRevenueByWeek,
+            'pastRevenue' => $lastMonthRevenueByWeek,
+            'currSales' => $currentMonthSales,
+            'pastSales' => $lastMonthSales,
         ];
 
-        return response()->json([
-            'currMonthFirstWeekStart' => $currentMonthFirstWeekStart,
-            'currMonthFirstWeekEnd' => $currentMonthFirstWeekEnd,
-
-            'currMonthSecondWeekStart' => $currentMonthSecondWeekStart,
-            'currMonthSecondWeekEnd' => $currentMonthSecondWeekEnd,
-        ]);
+        return response()->json($monthlyRevenue);
     }
 
     public function yearlyRevenue()
@@ -252,6 +303,27 @@ class ReportController extends Controller
             $lastYearRevenue[Carbon::create(null, $month)->monthName] = 0;
         }
 
+        // foreach($this->database->getReference('customizedRequest')->getSnapshot()->getValue() as $requestID => $yearlyRevenueInfo) {
+        //     $requestDate = Carbon::parse($yearlyRevenueInfo['orderDate']);
+        //     $monthName = $requestDate->monthName;
+
+        //     if ($requestDate->year === Carbon::now()->year && $yearlyRevenueInfo['isPaid'] && $yearlyRevenueInfo['orderStatus'] != 'Waiting for Approval' && $yearlyRevenueInfo['orderStatus'] != 'Request Cancelled' && $yearlyRevenueInfo['orderStatus'] != 'Request Cancelled') {
+
+        //         $currentYearRevenue[$monthName] += $yearlyRevenueInfo['amountToPay'];
+        //         $currSalesWithEwallet += $yearlyRevenueInfo['amountToPay'];
+
+        //     }
+
+        //     if ($requestDate->year === Carbon::now()->subYear()->year && $yearlyRevenueInfo['isPaid'] && $yearlyRevenueInfo['orderStatus'] != 'Waiting for Approval' && $yearlyRevenueInfo['orderStatus'] != 'Request Cancelled' && $yearlyRevenueInfo['orderStatus'] != 'Request Cancelled') {
+
+        //         $lastYearRevenue[$monthName] += $yearlyRevenueInfo['amountToPay'];
+        //         $pastSalesWithEwallet += $yearlyRevenueInfo['amountToPay'];
+
+        //     }
+
+        // }
+
+
         foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $yearlyRevenueInfo) {
 
             //every loop we parse the order date from the db so we can get the specifc month name from the order date
@@ -259,20 +331,20 @@ class ReportController extends Controller
             //the this will store the month name from the data being parsed from the db
             $monthName = $orderDate->monthName;
 
-            //current year
-            if ($orderDate->year == Carbon::now()->year && $yearlyRevenueInfo['paymentMethod'] === 'ewallet' && $yearlyRevenueInfo['orderStatus'] != 'Order Completed' && $yearlyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $yearlyRevenueInfo['orderStatus'] != 'Order Cancelled' && $yearlyRevenueInfo['orderStatus'] != 'Request Rejected') {
+            // //current year
+            // if ($orderDate->year == Carbon::now()->year && $yearlyRevenueInfo['paymentMethod'] === 'ewallet' && $yearlyRevenueInfo['orderStatus'] != 'Order Completed' && $yearlyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $yearlyRevenueInfo['orderStatus'] != 'Order Cancelled' && $yearlyRevenueInfo['orderStatus'] != 'Request Rejected' && $yearlyRevenueInfo['orderStatus'] != 'Request Cancelled') {
 
-                if(!$yearlyRevenueInfo['isBulkyOrder']) {
-                    $currentYearRevenue[$monthName] += $yearlyRevenueInfo['amountToPay'];
-                    $currSalesWithEwallet += $yearlyRevenueInfo['amountToPay'];
-                }
+            //     if(!$yearlyRevenueInfo['isBulkyOrder']) {
+            //         $currentYearRevenue[$monthName] += $yearlyRevenueInfo['amountToPay'];
+            //         $currSalesWithEwallet += $yearlyRevenueInfo['amountToPay'];
+            //     }
 
-                if ($orderID === $yearlyRevenueInfo['associatedOrderID'] && $yearlyRevenueInfo['isBulkyOrder'] === true) {
+            //     if ($orderID === $yearlyRevenueInfo['associatedOrderID'] && $yearlyRevenueInfo['isBulkyOrder'] === true) {
 
-                    $currentYearRevenue[$monthName] += $yearlyRevenueInfo['amountToPay'];
-                    $currSalesWithEwallet += $yearlyRevenueInfo['amountToPay'];
-                }
-            }
+            //         $currentYearRevenue[$monthName] += $yearlyRevenueInfo['amountToPay'];
+            //         $currSalesWithEwallet += $yearlyRevenueInfo['amountToPay'];
+            //     }
+            // }
 
             if ($orderDate->year == Carbon::now()->year && $yearlyRevenueInfo['orderStatus'] === 'Order Completed') {
 
@@ -288,21 +360,21 @@ class ReportController extends Controller
                 }
             }
 
-            //last year
-            if ($orderDate->year == Carbon::now()->subYear()->year && $yearlyRevenueInfo['paymentMethod'] === 'ewallet' && $yearlyRevenueInfo['orderStatus'] != 'Order Completed' && $yearlyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $yearlyRevenueInfo['orderStatus'] != 'Order Cancelled' && $yearlyRevenueInfo['orderStatus'] != 'Request Rejected') {
+            // //last year
+            // if ($orderDate->year == Carbon::now()->subYear()->year && $yearlyRevenueInfo['paymentMethod'] === 'ewallet' && $yearlyRevenueInfo['orderStatus'] != 'Order Completed' && $yearlyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $yearlyRevenueInfo['orderStatus'] != 'Order Cancelled' && $yearlyRevenueInfo['orderStatus'] != 'Request Rejected') {
 
-                if (!$yearlyRevenueInfo['isBulkyOrder']) {
+            //     if (!$yearlyRevenueInfo['isBulkyOrder']) {
 
-                    $lastYearRevenue[$monthName] += $yearlyRevenueInfo['amountToPay'];
-                    $pastSalesWithEwallet += $yearlyRevenueInfo['amountToPay'];
-                }
+            //         $lastYearRevenue[$monthName] += $yearlyRevenueInfo['amountToPay'];
+            //         $pastSalesWithEwallet += $yearlyRevenueInfo['amountToPay'];
+            //     }
 
-                if ($orderID === $yearlyRevenueInfo['associatedOrderID'] && $yearlyRevenueInfo['isBulkyOrder'] === true) {
+            //     if ($orderID === $yearlyRevenueInfo['associatedOrderID'] && $yearlyRevenueInfo['isBulkyOrder'] === true) {
 
-                    $lastYearRevenue[$monthName] += $yearlyRevenueInfo['amountToPay'];
-                    $pastSalesWithEwallet += $yearlyRevenueInfo['amountToPay'];
-                }
-            }
+            //         $lastYearRevenue[$monthName] += $yearlyRevenueInfo['amountToPay'];
+            //         $pastSalesWithEwallet += $yearlyRevenueInfo['amountToPay'];
+            //     }
+            // }
 
             if ($orderDate->year == Carbon::now()->subYear()->year && $yearlyRevenueInfo['orderStatus'] === 'Order Completed') {
 
@@ -352,16 +424,16 @@ class ReportController extends Controller
                 foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $weeklyRevenueInfo) {
                     $orderDate = Carbon::parse($weeklyRevenueInfo['orderDate']);
 
-                    if ($orderDate->between($startOfCurrentWeek, $endOfCurrentWeek) && $weeklyRevenueInfo['paymentMethod'] === 'ewallet' && $weeklyRevenueInfo['orderStatus'] != 'Order Completed' && $weeklyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $weeklyRevenueInfo['orderStatus'] != 'Order Cancelled' && $weeklyRevenueInfo['orderStatus'] != 'Request Rejected') {
+                    // if ($orderDate->between($startOfCurrentWeek, $endOfCurrentWeek) && $weeklyRevenueInfo['paymentMethod'] === 'ewallet' && $weeklyRevenueInfo['orderStatus'] != 'Order Completed' && $weeklyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $weeklyRevenueInfo['orderStatus'] != 'Order Cancelled' && $weeklyRevenueInfo['orderStatus'] != 'Request Rejected') {
 
-                        if (!$weeklyRevenueInfo['isBulkyOrder']) {
-                            $currentWeekRevenue += $weeklyRevenueInfo['amountToPay'];
-                        }
+                    //     if (!$weeklyRevenueInfo['isBulkyOrder']) {
+                    //         $currentWeekRevenue += $weeklyRevenueInfo['amountToPay'];
+                    //     }
 
-                        if ($orderID === $weeklyRevenueInfo['associatedOrderID'] && $weeklyRevenueInfo['isBulkyOrder'] === true) {
-                            $currentWeekRevenue += $weeklyRevenueInfo['amountToPay'];
-                        }
-                    }
+                    //     if ($orderID === $weeklyRevenueInfo['associatedOrderID'] && $weeklyRevenueInfo['isBulkyOrder'] === true) {
+                    //         $currentWeekRevenue += $weeklyRevenueInfo['amountToPay'];
+                    //     }
+                    // }
 
                     if ($orderDate->between($startOfCurrentWeek, $endOfCurrentWeek) && $weeklyRevenueInfo['orderStatus'] === 'Order Completed') {
 
@@ -406,16 +478,16 @@ class ReportController extends Controller
                 foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $monthlyRevenueInfo) {
                     $orderDate = Carbon::parse($monthlyRevenueInfo['orderDate']);
 
-                    if ($orderDate->between($currentStartOfMonth, $endOfCurrentMonth) && $monthlyRevenueInfo['paymentMethod'] === 'ewallet' && $monthlyRevenueInfo['orderStatus'] != 'Order Completed' && $monthlyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $monthlyRevenueInfo['orderStatus'] != 'Order Cancelled' && $monthlyRevenueInfo['orderStatus'] != 'Request Rejected') {
+                    // if ($orderDate->between($currentStartOfMonth, $endOfCurrentMonth) && $monthlyRevenueInfo['paymentMethod'] === 'ewallet' && $monthlyRevenueInfo['orderStatus'] != 'Order Completed' && $monthlyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $monthlyRevenueInfo['orderStatus'] != 'Order Cancelled' && $monthlyRevenueInfo['orderStatus'] != 'Request Rejected') {
 
-                        if(!$monthlyRevenueInfo['isBulkyOrder']) {
-                            $currentMonthRevenue += $monthlyRevenueInfo['amountToPay'];
-                        }
+                    //     if(!$monthlyRevenueInfo['isBulkyOrder']) {
+                    //         $currentMonthRevenue += $monthlyRevenueInfo['amountToPay'];
+                    //     }
 
-                        if ($orderID === $monthlyRevenueInfo['associatedOrderID'] && $monthlyRevenueInfo['isBulkyOrder'] === true) {
-                            $currentMonthRevenue += $monthlyRevenueInfo['amountToPay'];
-                        }
-                    }
+                    //     if ($orderID === $monthlyRevenueInfo['associatedOrderID'] && $monthlyRevenueInfo['isBulkyOrder'] === true) {
+                    //         $currentMonthRevenue += $monthlyRevenueInfo['amountToPay'];
+                    //     }
+                    // }
 
                     if ($orderDate->between($currentStartOfMonth, $endOfCurrentMonth) && $monthlyRevenueInfo['orderStatus'] === 'Order Completed') {
 
@@ -441,6 +513,8 @@ class ReportController extends Controller
 
                 if ($lastMonthRevenue > 0 && $currentMonthRevenue > 0) {
                     $monthlyPercentageDifference = (($currentMonthRevenue - $lastMonthRevenue) / $lastMonthRevenue)  * 100;
+                }else if ($lastMonthRevenue == 0 && $currentMonthRevenue > 0) {
+                    $monthlyPercentageDifference = 100;
                 }
 
                 //yearly sales summary
@@ -452,16 +526,16 @@ class ReportController extends Controller
                 foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $yearlyRevenueInfo) {
                     $orderDate = Carbon::parse($yearlyRevenueInfo['orderDate']);
 
-                    if ($orderDate->year === Carbon::now()->year && $yearlyRevenueInfo['paymentMethod'] === 'ewallet' && $yearlyRevenueInfo['orderStatus'] != 'Order Completed' && $yearlyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $yearlyRevenueInfo['orderStatus'] != 'Order Cancelled' && $yearlyRevenueInfo['orderStatus'] != 'Request Rejected') {
+                    // if ($orderDate->year === Carbon::now()->year && $yearlyRevenueInfo['paymentMethod'] === 'ewallet' && $yearlyRevenueInfo['orderStatus'] != 'Order Completed' && $yearlyRevenueInfo['orderStatus'] != 'Waiting for Confirmation' && $yearlyRevenueInfo['orderStatus'] != 'Order Cancelled' && $yearlyRevenueInfo['orderStatus'] != 'Request Rejected') {
 
-                        if(!$yearlyRevenueInfo['isBulkyOrder']) {
-                            $currentYearRevenue += $yearlyRevenueInfo['amountToPay'];
-                        }
+                    //     if(!$yearlyRevenueInfo['isBulkyOrder']) {
+                    //         $currentYearRevenue += $yearlyRevenueInfo['amountToPay'];
+                    //     }
 
-                        if ($orderID === $yearlyRevenueInfo['associatedOrderID'] && $yearlyRevenueInfo['isBulkyOrder'] === true) {
-                            $currentYearRevenue += $yearlyRevenueInfo['amountToPay'];
-                        }
-                    }
+                    //     if ($orderID === $yearlyRevenueInfo['associatedOrderID'] && $yearlyRevenueInfo['isBulkyOrder'] === true) {
+                    //         $currentYearRevenue += $yearlyRevenueInfo['amountToPay'];
+                    //     }
+                    // }
 
                     if ($orderDate->year === Carbon::now()->year && $yearlyRevenueInfo['orderStatus'] === 'Order Completed') {
 

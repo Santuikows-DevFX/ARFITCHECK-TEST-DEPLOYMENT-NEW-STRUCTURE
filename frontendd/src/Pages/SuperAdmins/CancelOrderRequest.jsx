@@ -3,7 +3,6 @@ import { Box, Typography, Divider, Grid, Avatar, IconButton } from '@mui/materia
 import { ExcelButton} from '../../Components/UI/Buttons';
 import PreLoader from '../../Components/PreLoader';
 import OrderStatusTable from '../../Components/Tables/OrderStatusTable';
-import { ToastContainer } from 'react-toastify';
 import CancelRequestTable from '../../Components/Tables/CancelRequestTable';
 
 function CancelOrderRequest() {
@@ -38,7 +37,6 @@ function CancelOrderRequest() {
         </Grid>
         <CancelRequestTable/>
       </Box>
-        <ToastContainer />
      </div>
       )}
     </div>

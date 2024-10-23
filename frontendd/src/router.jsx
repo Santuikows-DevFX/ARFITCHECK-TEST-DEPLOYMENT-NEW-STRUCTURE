@@ -115,11 +115,6 @@ const router = createBrowserRouter([
                 element: <SingleProductCart/>
             },
             
-            // {
-            //     path: '/customizedSingleProduct/:productID/:customizedProductImageURL/:smallQnt/:mediumQnt/:largeQnt/:extraLargeQnt/:doubleXLQnt/:tripleXLQnt',
-            //     element: <CustomProdCart/>
-            // },
-
             //checkout & sending custom prd req process
             {
                 path: '/singleProductCheckout/:productID/:quantity/:size',
@@ -168,6 +163,7 @@ const router = createBrowserRouter([
     },
 
     {
+        // path: '/urlErr/:errorMsg/:urlPassed',
         path: '/urlErr',
         element: <URLManipulated/>
     }

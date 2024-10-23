@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { Grid, Avatar, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography,MenuItem, TextField, Box, IconButton, Divider, FormHelperText } from '@mui/material';
+import { Grid, Avatar, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography,MenuItem, TextField, Box, IconButton, Divider, FormHelperText, Backdrop, CircularProgress } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import {  OutlinedButton } from '../UI/Buttons';
 import StyledTextFields from '../UI/TextFields';
@@ -14,50 +14,67 @@ import { ToastContainer, toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Bounce } from 'react-toastify';
 import Close from '@mui/icons-material/Close';
+import { useSnackbar } from 'notistack';
 
-const AddProduct= ({ open, onClose, fetchProducts }) => {
-
+const AddProduct= ({ open, onClose, fetchProducts, zIndex }) => {
+  
   const ProductValidationSchema = Yup.object().shape({
     productName: Yup.string().required('Product Name is required'),
-    price: Yup.number().required('Price is required'),
+    price: Yup.number()
+    .required('Price is required')
+    .min(0, 'Cannot input a price below 0')
+    .max(100000, 'Please enter a much more realistic price.'),
     criticalLevelQuantity: Yup.number()
         .required('Critical Level Qnt is required')
-        .min(0, 'Critical Level Qnt cannot be less than 0'),
+        .min(0, 'Critical Level Qnt cannot be less than 0')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
     category: Yup.string().required('Category is required'),
     description: Yup.string().optional(),
     smallQuantity: Yup.number()
-        .min(0, 'Small Quantity cannot be less than 0')
-        .max(5000, 'Please input a much more realistic quantity.'),
+    .min(0, 'Small Quantity cannot be less than 0')
+    .max(5000, 'Please input a much more realistic quantity.')
+    .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
     mediumQuantity: Yup.number()
         .min(0, 'Medium Quantity cannot be less than 0')
-        .max(5000, 'Please input a much more realistic quantity.'),
+        .max(5000, 'Please input a much more realistic quantity.')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
     largeQuantity: Yup.number()
         .min(0, 'Large Quantity cannot be less than 0')
-        .max(5000, 'Please input a much more realistic quantity.'),
+        .max(5000, 'Please input a much more realistic quantity.')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
     extraLargeQuantity: Yup.number()
         .min(0, 'Extra Large Quantity cannot be less than 0')
-        .max(5000, 'Please input a much more realistic quantity.'),
+        .max(5000, 'Please input a much more realistic quantity.')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
     doubleXLQuantity: Yup.number()
         .min(0, 'Double XL Quantity cannot be less than 0')
-        .max(5000, 'Please input a much more realistic quantity.'),
+        .max(5000, 'Please input a much more realistic quantity.')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
     tripleXLQuantity: Yup.number()
         .min(0, 'Triple XL Quantity cannot be less than 0')
-        .max(5000, 'Please input a much more realistic quantity.'),
+        .max(5000, 'Please input a much more realistic quantity.')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
   });
 
+  const ProductValidationSchemaIfCaps = Yup.object().shape({
+    productName: Yup.string().required('Product Name is required'),
+    price: Yup.number()
+    .required('Price is required')
+    .min(0, 'Cannot input a price below 0')
+    .max(100000, 'Please enter a much more realistic price.'),
+    criticalLevelQuantity: Yup.number()
+        .required('Critical Level Qnt is required')
+        .min(0, 'Critical Level Qnt cannot be less than 0')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
+    category: Yup.string().required('Category is required'),
+    description: Yup.string().optional(),
+    totalQuantity: Yup.number()
+        .min(0, 'Total Quantity cannot be less than 0')
+        .max(5000, 'Please input a much more realistic quantity.')
+        .test('is-integer', 'Only whole numbers are allowed.', value => Number.isInteger(value)),
 
- const ProductValidationSchemaIfCaps = Yup.object().shape({
-  productName: Yup.string().required('Product Name is required'),
-  price: Yup.number().required('Price is required'),
-  criticalLevelQuantity: Yup.number()
-      .required('Critical Level Qnt is required')
-      .min(0, 'Critical Level Qnt cannot be less than 0'),
-  category: Yup.string().required('Category is required'),
-  description: Yup.string().optional(),
-  totalQuantity: Yup.number()
-      .min(0, 'Total Quantity cannot be less than 0')
-      .max(5000, 'Please input a much more realistic quantity.'),
- });
+  });
+  
 
   const categoryOptions = [
     'Hoodies',
@@ -65,26 +82,43 @@ const AddProduct= ({ open, onClose, fetchProducts }) => {
     'Shorts',
     'Caps',
   ];
+
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false)
+  const [addLoading, setAddLoading] = useState(false)
   const [files, setFiles] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('')
+
+  const { enqueueSnackbar  } = useSnackbar();
+
+  useEffect(() => {
+    if (addLoading) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [addLoading]);
 
   const handleAddProduct = (values) => {
     try {
 
+      setAddLoading(true);
+
      if (files.length !== 3) {
-      toast.error('Please upload 3 images of the product.', {
-        position: 'top-right',
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: 'colored',
-        transition: Bounce,
-        style: { fontFamily: 'Kanit', fontSize: '16px' }
+      enqueueSnackbar(`Please upload 3 images of the product.`, { 
+        variant: 'error',
+        anchorOrigin: {
+          vertical: 'top',
+          horizontal: 'right'
+        },
+        autoHideDuration: 2300,
+        style: {
+          fontFamily: 'Kanit',
+          fontSize: '16px'
+        },
+        
       });
+
+      setAddLoading(false);
 
      }else {
       const productVal = new FormData();
@@ -112,42 +146,46 @@ const AddProduct= ({ open, onClose, fetchProducts }) => {
         
         if(data.message === 'Product Added!') {
           
-          toast.success(`${data.message}`, {
-            position: "top-right",
-            autoClose: 1500,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "colored",
-            transition: Bounce,
-            style: { fontFamily: 'Kanit', fontSize: '16px' }
-         });
+         enqueueSnackbar(`${data.message}`, { 
+          variant: 'success',
+          anchorOrigin: {
+            vertical: 'top',
+            horizontal: 'right'
+          },
+          autoHideDuration: 2300,
+          style: {
+            fontFamily: 'Kanit',
+            fontSize: '16px'
+          },
+          
+        });
          
          setFiles([])
          onClose()
-         fetchProducts()
+         setAddLoading(false);
 
         }else {
-          toast.error(`${data.message}`, {
-            position: "top-right",
-            autoClose: 2500,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "colored",
-            transition: Bounce,
-            style: { fontFamily: 'Kanit', fontSize: '16px' }
-         });
+         enqueueSnackbar(`${data.message}`, { 
+          variant: 'error',
+          anchorOrigin: {
+            vertical: 'top',
+            horizontal: 'right'
+          },
+          autoHideDuration: 2300,
+          style: {
+            fontFamily: 'Kanit',
+            fontSize: '16px'
+          },
+          
+        });
+         setAddLoading(false);
         }
       })
      }
   
     } catch (error) {
       console.log(error);
+      setAddLoading(false);
     }
   };
   
@@ -164,17 +202,31 @@ const AddProduct= ({ open, onClose, fetchProducts }) => {
     if (validFiles.length > 0 && totalFiles <= 3) {
       setFiles((prevFiles) => [...prevFiles, ...validFiles]); 
     } else if (totalFiles > 3) {
-      toast.error('Maximum of 3 images only!', {
-        position: 'top-right',
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: 'colored',
-        transition: Bounce,
-        style: { fontFamily: 'Kanit', fontSize: '16px' }
+      enqueueSnackbar(`Maximum of 3 images only!`, { 
+        variant: 'error',
+        anchorOrigin: {
+          vertical: 'top',
+          horizontal: 'right'
+        },
+        autoHideDuration: 2300,
+        style: {
+          fontFamily: 'Kanit',
+          fontSize: '16px'
+        },
+      });
+    }else if (!validFiles) {
+      enqueueSnackbar(`Invalid Image!`, { 
+        variant: 'error',
+        anchorOrigin: {
+          vertical: 'top',
+          horizontal: 'right'
+        },
+        autoHideDuration: 2300,
+        style: {
+          fontFamily: 'Kanit',
+          fontSize: '16px'
+        },
+        
       });
     }
   };
@@ -201,7 +253,14 @@ const AddProduct= ({ open, onClose, fetchProducts }) => {
 
   return (
     <div>
-      <Dialog open={open} onClose={onClose} >
+      {addLoading && (
+        <Backdrop open={true} style={{ zIndex: 1000 + 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100%', backdropFilter: 'blur(2px)' }}>
+            <CircularProgress size={60} sx={{ color: 'white' }} />
+          </div>
+        </Backdrop>
+      )}
+      <Dialog open={open} onClose={onClose} style={{ zIndex: zIndex }} >
         <DialogTitle sx={{ background: 'linear-gradient(to left, #414141  , #000000)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
             <Typography  sx={{ fontFamily: 'Kanit', fontWeight: 'bold', fontSize: 34 }}>
                 ADD PRODUCT IN INVENTORY
@@ -233,6 +292,7 @@ const AddProduct= ({ open, onClose, fetchProducts }) => {
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
+                        cursor: 'pointer'
                       }}
                     >
                       <input {...getInputProps()} />
@@ -249,7 +309,7 @@ const AddProduct= ({ open, onClose, fetchProducts }) => {
                       )}
                     </Box>
                   </Grid>
-                  <Grid item sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: 400 }}>
+                  <Grid item sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: 400, cursor: 'pointer' }}>
                     {[1, 2].map((index) => (
                       <Box
                         key={index}
@@ -304,7 +364,7 @@ const AddProduct= ({ open, onClose, fetchProducts }) => {
                   <Grid item xs={12}>
                     <Field name="criticalLevelQuantity">
                       {({ field, meta }) => (
-                        <StyledTextFields field={field} meta={meta} id="criticalLevelQuantity" label="Critical Level Quantity" />
+                        <StyledTextFields field={field} meta={meta} id="criticalLevelQuantity" label="Critical Level Quantity" type= "number"/>
                       )}
                     </Field>
                   </Grid>
@@ -582,8 +642,8 @@ const AddProduct= ({ open, onClose, fetchProducts }) => {
             </DialogActions>
           </Dialog>
           <DialogActions>
-            <Button color="primary" disabled = {!files || isSubmitting || !isValid || values.productName.length === 0 || values.price.length === 0 || values.category.length === 0 || files.length !== 3} type='submit'>
-            <Typography sx={{position: 'sticky', fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: !files || isSubmitting || !isValid || values.productName.length === 0 || values.price.length === 0 || values.category.length === 0  || files.length !== 3? 'gray' : 'black' }}>
+            <Button color="primary" disabled = {!files || isSubmitting || !isValid || values.productName.length === 0 || values.price.length === 0 || values.category.length === 0 || files.length !== 3 || addLoading} type='submit'>
+            <Typography sx={{position: 'sticky', fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: !files || isSubmitting || !isValid || values.productName.length === 0 || values.price.length === 0 || values.category.length === 0  || files.length !== 3 || addLoading ? 'gray' : 'black' }}>
                 Add
               </Typography>
             </Button>

@@ -9,6 +9,8 @@ import axiosClient from '../../axios-client';
 import { BarChart } from '@mui/x-charts/BarChart';
 import GroupIcon from '@mui/icons-material/Group';
 import { LineChart } from '@mui/x-charts/LineChart';
+import { onValue, ref } from 'firebase/database';
+import { db } from '../../firebase';
 
 function AnalyticsAndReports() {
 
@@ -27,6 +29,7 @@ function AnalyticsAndReports() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [reportsLoading, setReportsLoading] = useState(false)
+  const [salesOptionsLoading, setSalesOptionsLoading] = useState(false)
 
   const [sortOption, setSelectedOption] = useState('Weekly');
   const [currentRevenue, setCurrentRevenue] = useState([0]);
@@ -37,26 +40,6 @@ function AnalyticsAndReports() {
 
   const [pastText, setPastText] = useState('Last Week');
   const [currentText, setCurrentText] = useState('Current Week');
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
-    return () => clearTimeout(timeout);
-  }, []);
-
-  useEffect(() => {
-    setReportsLoading(true)
-    setTimeout(() => {
-      setReportsLoading(false)
-    }, 3000)
-  }, [])
-
-  useEffect(() => {
-    fetchSalesAnalytics()
-    handleFetchReportsData(sortOption)
-  }, []);
-
 
   const dataSets = {
     Weekly: {
@@ -76,8 +59,43 @@ function AnalyticsAndReports() {
     },
   };
 
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  useEffect(() => {
+    setReportsLoading(true)
+    setTimeout(() => {
+      setReportsLoading(false)
+    }, 3000)
+  }, [])
+
+  useEffect(() => {
+    const dbRef = ref(db, 'orders');
+  
+    const listener = onValue(dbRef, (snapshot) => {
+      if (snapshot.exists()) {
+        fetchSalesAnalytics();
+        handleFetchReportsData(sortOption);
+      } else {
+        console.log("No data available");
+      }
+    }, (error) => {
+      console.error("Error listening to Realtime Database: ", error);
+    });
+  
+    return () => listener();
+  }, [sortOption]);
+  
+
   const handleFetchReportsData = async (option) => {
     try {
+
+      setSalesOptionsLoading(true);
+
       setSelectedOption(option);
 
       if(option === 'Daily') {
@@ -93,7 +111,7 @@ function AnalyticsAndReports() {
         setPastText('Previous Year');
         setCurrentText('Current Year');
       }
-      
+
       const fetchSalesReportData = await axiosClient.post(`/rprt/calculateAnalyticsReports`, { dataSort: option });
       // const reportResponse = await axiosClient.get('order/getReportsData');
       // const salesSummaryResponse = await axiosClient.get('rprt/fetchSalesSummary');
@@ -128,12 +146,13 @@ function AnalyticsAndReports() {
         //line graph data
         setCurrData(labelMapper.map(day => fetchSalesReportData.data.currentRevenue[day] || 0));
         setPrevData(labelMapper.map(day => fetchSalesReportData.data.pastRevenue[day] || 0))
-        // setCurrData(getDataSets.currData)
-        // setPrevData(getDataSets.prevData)
         setXLabels(getDataSets.xLabels)
+
+        setSalesOptionsLoading(false)
 
       }
     } catch (error) {
+      setSalesOptionsLoading(false)
       console.log(error);
     }
   };
@@ -267,7 +286,7 @@ function AnalyticsAndReports() {
                         <Button
                           variant="contained"
                           size="small"
-                          disabled={sortOption === 'Weekly'}
+                          disabled={sortOption === 'Weekly' || salesOptionsLoading}
                           sx={{
                             mx: 1,
                             fontFamily: 'Kanit',
@@ -284,7 +303,7 @@ function AnalyticsAndReports() {
                             },
                             background:
                               "linear-gradient(to right, #414141, #000000)",
-                            opacity: sortOption === 'Weekly' ? 0.6 : 1,
+                            opacity: sortOption === 'Weekly' || salesOptionsLoading ? 0.6 : 1,
                           }}
                           onClick={() => handleFetchReportsData('Weekly')}
                         >
@@ -293,7 +312,7 @@ function AnalyticsAndReports() {
                         <Button
                           variant="contained"
                           size="small"
-                          disabled={sortOption === 'Monthly'}
+                          disabled={sortOption === 'Monthly' || salesOptionsLoading}
                           sx={{
                             mx: 1,
                             fontFamily: 'Kanit',
@@ -310,7 +329,7 @@ function AnalyticsAndReports() {
                             },
                             background:
                               "linear-gradient(to right, #414141, #000000)",
-                            opacity: sortOption === 'Monthly' ? 0.6 : 1,
+                            opacity: sortOption === 'Monthly' || salesOptionsLoading ? 0.6 : 1,
                           }}
                           onClick={() => handleFetchReportsData('Monthly')}
                         >
@@ -319,7 +338,7 @@ function AnalyticsAndReports() {
                         <Button
                           variant="contained"
                           size="small"
-                          disabled={sortOption === 'Yearly'}
+                          disabled={sortOption === 'Yearly' || salesOptionsLoading}
                           sx={{
                             mx: 1,
                             fontFamily: 'Kanit',
@@ -336,7 +355,7 @@ function AnalyticsAndReports() {
                             },
                             background:
                               "linear-gradient(to right, #414141, #000000)",
-                            opacity: sortOption === 'Yearly' ? 0.6 : 1,
+                            opacity: sortOption === 'Yearly' || salesOptionsLoading ? 0.6 : 1,
                             
                           }}
                           onClick={() => handleFetchReportsData('Yearly')}

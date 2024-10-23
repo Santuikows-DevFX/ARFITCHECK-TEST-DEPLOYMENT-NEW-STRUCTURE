@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Formik, Form, Field, } from 'formik';
 import * as Yup from 'yup';
-import { Grid, Typography, Dialog, DialogTitle, DialogContent, DialogActions, Button, Divider, InputAdornment, IconButton, TextField, FormHelperText } from '@mui/material';
+import { Grid, Typography, Dialog, DialogTitle, DialogContent, DialogActions, Button, Divider, InputAdornment, IconButton, TextField, FormHelperText, Backdrop, CircularProgress } from '@mui/material';
 import StyledTextFields from '../../Components/UI/TextFields';
 import {Warning, Visibility, VisibilityOff, Close } from '@mui/icons-material';
 
@@ -11,11 +11,17 @@ import { Bounce } from 'react-toastify';
 
 import Swal from 'sweetalert2'
 import axiosClient from '../../axios-client';
+import { useSnackbar } from 'notistack';
 
 const AddStaff = ({ open, onClose, fetchAdminInfo, zIndex }) => {
+
   const StaffValidationSchema = Yup.object().shape({
-    firstName: Yup.string().required('First Name is required'),
-    lastName: Yup.string().required('Last Name is required'),
+    firstName: Yup.string()
+    .matches(/^[A-Za-z\s-]+$/, 'First Name must contain only letters, spaces, or hyphens')
+    .required('First Name is required'),
+    lastName: Yup.string()
+    .matches(/^[A-Za-z\s-]+$/, 'Last Name must contain only letters, spaces, or hyphens')
+    .required('Last Name is required'),
     eMail: Yup.string()
       .email('Invalid email')
       .matches(
@@ -39,6 +45,9 @@ const AddStaff = ({ open, onClose, fetchAdminInfo, zIndex }) => {
   
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [addAdminLoading, setAddAdminLoading] = useState(false);
+
+  const { enqueueSnackbar  } = useSnackbar();
 
   const handleAddAdmin = (values) => {
     try {
@@ -48,7 +57,7 @@ const AddStaff = ({ open, onClose, fetchAdminInfo, zIndex }) => {
       adminData.append('lastName', values.lastName)
       adminData.append('email', values.eMail)
       adminData.append('password', values.password)
-      adminData.append('mobileNumber', values.mobileNum)
+      adminData.append('mobileNumber', `0${values.mobileNum}`)
 
       Swal.fire({
         title: "Add Admin",
@@ -67,40 +76,48 @@ const AddStaff = ({ open, onClose, fetchAdminInfo, zIndex }) => {
       }).then((result) => {
         if (result.isConfirmed) {
 
+          setAddAdminLoading(true)
+
           axiosClient.post('auth/addAdmin', adminData)
           .then(({data}) => {
 
             if(data.message === 'Admin Added Successfully!') { 
-              toast.success(`${data.message}`, {
-                position: "top-right",
-                autoClose: 2300,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "colored",
-                transition: Bounce,
-                style: { fontFamily: 'Kanit', fontSize: '16px' }
+              enqueueSnackbar(`${data.message}`, { 
+                variant: 'success',
+                anchorOrigin: {
+                  vertical: 'top',
+                  horizontal: 'right'
+                },
+                autoHideDuration: 2000,
+                style: {
+                  fontFamily: 'Kanit',
+                  fontSize: '16px'
+                },
+                
               });
 
+              setAddAdminLoading(false)
               fetchAdminInfo()
               onClose();
 
             }else { 
 
-              toast.error(`${data.message}`, {
-                position: "top-right",
-                autoClose: 2300,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "colored",
-                transition: Bounce,
-                style: { fontFamily: 'Kanit', fontSize: '16px' }
+              enqueueSnackbar(`${data.message}`, { 
+                variant: 'error',
+                anchorOrigin: {
+                  vertical: 'top',
+                  horizontal: 'right'
+                },
+                autoHideDuration: 2000,
+                style: {
+                  fontFamily: 'Kanit',
+                  fontSize: '16px'
+                },
+                
               });
+
+              setAddAdminLoading(false)
+
             }
           }) 
         }
@@ -108,11 +125,19 @@ const AddStaff = ({ open, onClose, fetchAdminInfo, zIndex }) => {
 
     } catch (error) {
       console.log(error);
+      setAddAdminLoading(false)
     }
   }
 
   return (
     <div>
+      {addAdminLoading && (
+        <Backdrop open={true} style={{ zIndex: 1000 + 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100%', backdropFilter: 'blur(2px)' }}>
+            <CircularProgress size={60} sx={{ color: 'white' }} />
+          </div>
+        </Backdrop>
+      )}
       <Dialog open={open} onClose={onClose} style={{ zIndex: zIndex }}>
         <DialogTitle sx={{ background: 'linear-gradient(to left, #414141  , #000000)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <Typography  sx={{ fontFamily: 'Kanit', fontWeight: 'bold', fontSize: 34 }}>
@@ -249,7 +274,7 @@ const AddStaff = ({ open, onClose, fetchAdminInfo, zIndex }) => {
                   </Grid>
                 </Grid>
                 <DialogActions>
-                  <Button onClick={onClose}>
+                  <Button onClick={onClose} disabled = {isSubmitting || addAdminLoading}>
                     <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'red' }}>
                       Cancel
                     </Typography>
@@ -257,9 +282,9 @@ const AddStaff = ({ open, onClose, fetchAdminInfo, zIndex }) => {
                   <Button 
                     type='submit' 
                     color="primary" 
-                    disabled={isSubmitting || !isValid || Object.values(values).some(value => value === '')}
+                    disabled={isSubmitting || !isValid || Object.values(values).some(value => value === '') || addAdminLoading}
                   >
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'black', opacity: isSubmitting || !isValid || Object.values(values).some(value => value === '') ? 0.5 : 1 }}>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: '350', color: 'black', opacity: isSubmitting || !isValid || Object.values(values).some(value => value === '') || addAdminLoading ? 0.5 : 1 }}>
                       Add
                     </Typography>
                   </Button>

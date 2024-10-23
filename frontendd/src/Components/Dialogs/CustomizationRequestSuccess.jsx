@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, IconButton, Typography } from '@mui/material';
+import { Grid, IconButton, Typography, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
@@ -105,24 +105,46 @@ function CustomizationRequestSuccess({ onClose, timeStamp }) {
                     />
                     <Typography
                       sx={{
-                        fontFamily: 'Inter',
+                        fontFamily: 'Kanit',
                         fontSize: { xs: 15, sm: 25 },
-                        fontWeight: '1000',
+                        fontWeight: 700,
                         color: '#1E7F1C',
                         paddingY: '1vh',
                       }}
                     >
-                      THANK YOU! <br /> Your request has been received!
+                      THANK YOU! <br /> Your request has been received! Remember to Always check your email for notifications.
                     </Typography>
-
-                    <FilledButton
-                       onClick={() => {
+                    <Button
+                      type="submit"
+                      fullWidth
+                      onClick={() => {
                         navigate('/shop')
                       }}
-                      sx={{ marginTop: '1vh' }}
+                      variant="contained"
+                      sx={{
+                        backgroundColor: "White",
+                        "&:hover": {
+                          backgroundColor: "#414a4c",
+                          color: "white",
+                        },
+                        "&:not(:hover)": {
+                          backgroundColor: "#3d4242",
+                          color: "white",
+                        },
+                        background:
+                          "linear-gradient(to right, #414141, #000000)",
+                      }}
                     >
-                      BACK
-                    </FilledButton>
+                      <Typography
+                        sx={{
+                          fontFamily: "Kanit",
+                          fontSize: { xs: 18, md: 25 },
+                          padding: 0.5,
+                        }}
+                      >
+                        BACK
+                      </Typography>
+                    </Button>
                     </Grid>
                 </Grid>
               </Grid>

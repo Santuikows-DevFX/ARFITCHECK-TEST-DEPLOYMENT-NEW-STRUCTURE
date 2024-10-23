@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
-import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, Typography, TextField, InputAdornment, IconButton, FormHelperText, InputLabel, Select, MenuItem, FormControl } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, Typography, TextField, InputAdornment, IconButton, FormHelperText, InputLabel, Select, MenuItem, FormControl, Backdrop, CircularProgress } from '@mui/material';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { Close, Warning } from '@mui/icons-material';
 import axiosClient from '../../axios-client';
+import { ToastContainer, toast, Bounce} from 'react-toastify';
 
 import 'react-toastify/dist/ReactToastify.css';
+import { useSnackbar } from 'notistack';
 
-const TrackingNumber = ({ open, onClose, orderID, orderType, fetchOrders }) => {
+const TrackingNumber = ({ open, onClose, orderID, orderType, fetchOrders, type }) => {
 
   const [loading, setLoading] = useState(false)
-
+  const { enqueueSnackbar  } = useSnackbar();
   const validationSchema = Yup.object().shape({
     trackingNumber: Yup.string()
     .required('Tracking number is required')
@@ -22,6 +24,14 @@ const TrackingNumber = ({ open, onClose, orderID, orderType, fetchOrders }) => {
     trackingNumber: '',
     estimatedTimeOfDelivery: ''
   };
+
+  useEffect(() => {
+    if (loading) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [loading]);
 
   const handleSetTrackingNumber = async (values) => {
 
@@ -38,18 +48,54 @@ const TrackingNumber = ({ open, onClose, orderID, orderType, fetchOrders }) => {
       };
 
       //do a post request with the email as paramater
-      await axiosClient.post('/order/updateOrder', updateData)
+      const apiEndPoint = type === 'default' ? '/order/updateOrder' : '/custom/updateRequest'
+      await axiosClient.post(`${apiEndPoint}`, updateData)
       .then(({data}) => {
 
         if (data.message) {
-          setLoading(false);
-          fetchOrders();
+
+          let message = type === 'default' ? 'Order Updated' : 'Request Updated! Request was moved to orders'
+
+          enqueueSnackbar(`${message}`, { 
+            variant: 'success',
+            anchorOrigin: {
+              vertical: 'top',
+              horizontal: 'right'
+            },
+            autoHideDuration: 2000,
+            style: {
+              fontFamily: 'Kanit',
+              fontSize: '16px'
+            },
+            
+          });
+
+          setLoading(false)
+          onClose();
+
+        }else {
+          enqueueSnackbar(`Something went wrong.`, { 
+            variant: 'error',
+            anchorOrigin: {
+              vertical: 'top',
+              horizontal: 'right'
+            },
+            autoHideDuration: 2000,
+            style: {
+              fontFamily: 'Kanit',
+              fontSize: '16px'
+            },
+            
+          });
+
+          setLoading(false)
           onClose()
         }
       })
-      
     } catch (error) {
       console.log(error);
+      setLoading(false);
+
     }
   }
 
@@ -61,16 +107,23 @@ const TrackingNumber = ({ open, onClose, orderID, orderType, fetchOrders }) => {
     { label: 'More than 5 hours', value: 5 }
   ];
   
-
   return (
-    <Formik
+   <div>
+     {loading && (
+      <Backdrop open={true} style={{ zIndex: 1000 + 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100%', backdropFilter: 'blur(2px)' }}>
+          <CircularProgress size={60} sx={{ color: 'white' }} />
+        </div>
+      </Backdrop>
+     )}
+     <Formik
       initialValues={{ ...INITIAL_FORM_STATE }}
       validationSchema={validationSchema}
       onSubmit={handleSetTrackingNumber}
-    >
+     >
       {({ values, isValid, resetForm}) => (
         <Form>
-          <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" sx={{ 
+          <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" sx={{zIndex: 1000 ,
             borderRadius: '5px', '& .MuiDialog-paper': { borderRadius: '16px' }}}>
             <DialogTitle sx={{ background: 'linear-gradient(to left, #414141  , #000000)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
             <Typography  sx={{ fontFamily: 'Kanit', fontWeight: 'bold', fontSize: { xs: 20, md: 34 } }}>
@@ -80,7 +133,12 @@ const TrackingNumber = ({ open, onClose, orderID, orderType, fetchOrders }) => {
             </DialogTitle> 
             <DialogContent>
             <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 }, fontWeight: 'normal', color: 'black', paddingY: '1vh', maxHeight: '60vh', overflow: 'auto' }}>
-                Please enter the following information provided by JNT.
+                Please enter the following information provided by JNT. 
+                {type === 'custom' ?                 
+                <>
+                <br />
+                <span style={{ color: 'red' }}>*If this is a custom request and it is out for delivery, it will be moved into orders once you updated the status.</span>
+                </> : ''}
               </Typography>
               <Field name="trackingNumber">
                 {({ field, meta }) => (
@@ -158,6 +216,7 @@ const TrackingNumber = ({ open, onClose, orderID, orderType, fetchOrders }) => {
         </Form>
       )}
     </Formik>
+   </div>
   );
 };
 
