@@ -69,12 +69,10 @@ import { useStateContext } from '../../ContextAPI/ContextAPI';
 import Footer from '../../Components/Footer';
 
 import superAdminBG from '../../../public/assets/shopGraffiti1.png'
-import { onValue, ref } from 'firebase/database';
+import { off, onValue, ref } from 'firebase/database';
 import { db } from '../../firebase';
 
 const SuperAdmin = (props) => {
-
-  //TODO: ADD LOADINGS FOR ALL THE DIALOGS
 
   const { window } = props;
   const theme = useTheme();
@@ -130,7 +128,10 @@ const SuperAdmin = (props) => {
       console.error("Error listening to Realtime Database: ", error);
     });
   
-    return () => listener();
+    return () => {
+      off(dbRef); 
+      listener();
+    };
   }, [])
 
   const handleDrawerClose = () => {

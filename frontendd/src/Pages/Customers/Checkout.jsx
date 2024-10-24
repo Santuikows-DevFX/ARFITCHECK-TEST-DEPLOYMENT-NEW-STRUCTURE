@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { RadioGroup, Typography, Grid, Box, FormControlLabel, Radio, Button, MenuItem , Paper, Checkbox, Select, FormControl, InputLabel, FormHelperText, CircularProgress, Dialog, Accordion, AccordionSummary, AccordionDetails, IconButton } from '@mui/material';
+import { RadioGroup, Typography, Grid, Box, FormControlLabel, Radio, Button, MenuItem , Paper, Checkbox, Select, FormControl, InputLabel, FormHelperText, CircularProgress, Dialog, Accordion, AccordionSummary, AccordionDetails, IconButton, Autocomplete, TextField } from '@mui/material';
 import Navbar from '../../WIdgets/Navbar';
 import Footer from '../../Components/Footer';
 import axiosClient from '../../axios-client';
@@ -11,9 +11,7 @@ import { QrCodeScanner as QrCodeScannerIcon } from '@mui/icons-material';
 import { Form, Field, useFormik, FormikProvider } from 'formik';
 import * as Yup from 'yup'
 
-import { ToastContainer, toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Bounce } from 'react-toastify';
 import { useCookies } from 'react-cookie';
 import StyledTextFields from '../../Components/UI/TextFields';
 import PreLoader from '../../Components/PreLoader';
@@ -28,7 +26,28 @@ import dayjs from 'dayjs';
 import shopGraffitiBG from '../../../public/assets/shopGraffiti1.png'
 import { useSnackbar } from 'notistack';
 
-const provinceOptions = ['Metro Manila'];
+const provinceOptions = [ 
+  'Metro Manila'
+]
+
+const cityOptions = [
+  'Caloocan',
+  'Malabon',
+  'Navotas',
+  'Valenzuela',
+  'Quezon City',
+  'Marikina',
+  'Pasig',
+  'Taguig',
+  'Makati',
+  'Manila',
+  'Mandaluyong',
+  'San Juan',
+  'Pasay',
+  'Parañaque',
+  'Las Piñas',
+  'Muntinlupa',
+];
 
 function Checkout() {
 
@@ -56,6 +75,7 @@ function Checkout() {
 
   //terms and condition stuff
   const [isEulaChecked, setEulaChecked] = useState(false)
+  const [isErrorWithTheNewShipping, setIsErrorWithTheNewShipping] = useState(false);
   const [termsAndConditionDialogOpen, setTermsnAndConditionDialog] = useState(false)
 
   const { enqueueSnackbar  } = useSnackbar();
@@ -65,8 +85,10 @@ function Checkout() {
   const { updateCartWhenCheckedOutSuccess } = useCart();
 
   const ShippingValidationSchema = Yup.object().shape({
-    recipientName: enableAllFields ? Yup.string().required('Recipient Name is required') : Yup.string(),
-    email: enableAllFields ? Yup.string().required('Email is required') : Yup.string(),
+    recipientName: enableAllFields ? 
+      Yup.string().required('Recipient Name is required')
+      .matches(/^[A-Za-z\s-]+$/, 'Recipient Name must contain only letters, spaces, or hyphens')
+      : Yup.string(),
     address: enableAllFields ? Yup.string().required('Address is required') : Yup.string(),
     province: enableAllFields ? Yup.string().required('Province is required') : Yup.string(),
     city: enableAllFields ? Yup.string().required('City is required') : Yup.string(),
@@ -79,7 +101,6 @@ function Checkout() {
   const formik = useFormik({
     initialValues: {
       recipientName: '',
-      email: '',
       address: '',
       city: '',
       province: '',
@@ -89,70 +110,89 @@ function Checkout() {
     validationSchema: ShippingValidationSchema,
     onSubmit: async (values) => {
 
-      setSubmitLoading(true)
+      try {
+        setSubmitLoading(true)
+        const productData = orderDetails.map(product => ({
+          name: product.productName,
+          quantity: product.productQuantity,
+          size: product.productSize
+        }));
+  
+        const productDataJSON = JSON.stringify(productData);
+        setOrderTimeStamp(new Date().toLocaleTimeString("en-PH", { timeZone: "Asia/Manila", hour: '2-digit', minute: '2-digit', hour12: true}))
+        
+        if(enableAllFields) {
 
-      const productData = orderDetails.map(product => ({
-        name: product.productName,
-        quantity: product.productQuantity,
-        size: product.productSize
-      }));
+          const { orderNotes, ...otherValues } = values;
 
-      const productDataJSON = JSON.stringify(productData);
-      setOrderTimeStamp(new Date().toLocaleTimeString("en-PH", { timeZone: "Asia/Manila", hour: '2-digit', minute: '2-digit', hour12: true}))
-      
-      if(enableAllFields == true) {
-
-        const newShippingValues = new FormData();
-        newShippingValues.append('recipientName', values.recipientName);
-        newShippingValues.append('email', values.email);
-        newShippingValues.append('city', values.city);
-        newShippingValues.append('barangay', shippingDetails.barangay);
-        newShippingValues.append('address', values.address);
-        newShippingValues.append('province', values.province);
-        newShippingValues.append('postalCode', values.postalCode);
-        newShippingValues.append('orderNotes', values.orderNotes);
-        newShippingValues.append('paymentMethod', paymentMethod === 'gcash' || paymentMethod === 'paymaya' ? 'ewallet' : 'cash');
-        newShippingValues.append('amountToPay', subtotal);
-        newShippingValues.append('receiptFile', uploadedImage);
-        newShippingValues.append('products', productDataJSON);
-        newShippingValues.append('uid', cookie['?id']);
-        newShippingValues.append('orderType', 'default');
-
-        await axiosClient.post('order/placeOrder', newShippingValues);
-        setTimeout(() => {
-
-          isDialogOpen(true)
-          setSubmitLoading(false)
-
-        }, 1500);
-
-      }else {
-
-        const dbValues = new FormData();
-        dbValues.append('recipientName', userDetails.firstName + ' ' + userDetails.lastName);
-        dbValues.append('email', userDetails.email);
-        dbValues.append('city', shippingDetails.city);
-        dbValues.append('barangay', shippingDetails.barangay);
-        dbValues.append('address', shippingDetails.addressLine);
-        dbValues.append('province', shippingDetails.province);
-        dbValues.append('postalCode', shippingDetails.postalCode);
-        dbValues.append('orderNotes', values.orderNotes);
-        dbValues.append('paymentMethod', paymentMethod === 'gcash' || paymentMethod === 'paymaya' ? 'ewallet' : 'cash');
-        dbValues.append('amountToPay', subtotal);
-        dbValues.append('receiptFile', uploadedImage);
-        dbValues.append('products', productDataJSON);
-        dbValues.append('uid', cookie['?id']);
-        dbValues.append('orderType', 'default');
-
-        await axiosClient.post('order/placeOrder', dbValues);
-        setTimeout(() => {
-
-         setSubmitLoading(false)
-         isDialogOpen(true)
-         updateCartWhenCheckedOutSuccess();
-
-        }, 1500);
-
+          if(enableAllFields && Object.values(otherValues).some((value) => value === '')) {
+            enqueueSnackbar(`I!`, { 
+              variant: 'error',
+              anchorOrigin: {
+                vertical: 'top',
+                horizontal: 'right'
+              },
+              autoHideDuration: 1800,
+              style: {
+                fontFamily: 'Kanit',
+                fontSize: '16px'
+              },
+              
+            });
+          }else {
+            const newShippingValues = new FormData();
+            newShippingValues.append('recipientName', values.recipientName);
+            newShippingValues.append('email', userDetails.email);
+            newShippingValues.append('city', values.city);
+            newShippingValues.append('barangay', shippingDetails.barangay);
+            newShippingValues.append('address', values.address);
+            newShippingValues.append('province', values.province);
+            newShippingValues.append('postalCode', values.postalCode);
+            newShippingValues.append('orderNotes', values.orderNotes);
+            newShippingValues.append('paymentMethod', paymentMethod === 'gcash' || paymentMethod === 'paymaya' ? 'ewallet' : 'cash');
+            newShippingValues.append('amountToPay', subtotal);
+            newShippingValues.append('receiptFile', uploadedImage);
+            newShippingValues.append('products', productDataJSON);
+            newShippingValues.append('uid', cookie['?id']);
+            newShippingValues.append('orderType', 'default');
+    
+            await axiosClient.post('order/placeOrder', newShippingValues);
+            setTimeout(() => {
+    
+              isDialogOpen(true)
+              setSubmitLoading(false)
+    
+            }, 1500);
+          }
+        }else {
+  
+          const dbValues = new FormData();
+          dbValues.append('recipientName', userDetails.firstName + ' ' + userDetails.lastName);
+          dbValues.append('email', userDetails.email);
+          dbValues.append('city', shippingDetails.city);
+          dbValues.append('barangay', shippingDetails.barangay);
+          dbValues.append('address', shippingDetails.addressLine);
+          dbValues.append('province', shippingDetails.province);
+          dbValues.append('postalCode', shippingDetails.postalCode);
+          dbValues.append('orderNotes', values.orderNotes);
+          dbValues.append('paymentMethod', paymentMethod === 'gcash' || paymentMethod === 'paymaya' ? 'ewallet' : 'cash');
+          dbValues.append('amountToPay', subtotal);
+          dbValues.append('receiptFile', uploadedImage);
+          dbValues.append('products', productDataJSON);
+          dbValues.append('uid', cookie['?id']);
+          dbValues.append('orderType', 'default');
+  
+          await axiosClient.post('order/placeOrder', dbValues);
+          setTimeout(() => {
+  
+           setSubmitLoading(false)
+           isDialogOpen(true)
+           updateCartWhenCheckedOutSuccess();
+  
+          }, 1500);
+        }
+      } catch (error) {
+        console.log(error);
       }
     },
   });
@@ -270,12 +310,33 @@ function Checkout() {
     }
   };
 
+  //served as a validation if the are some errors in the new shipping fields. I did this because the left section is not connected to the right section where the check box is located.
+  const handleCloseEULACheck = () => {
+    setEulaChecked(false)
+    setEnablePlaceOrder(false)
+    setIsErrorWithTheNewShipping(true)
+  }
+
+  const handleShipToOtherAddress = (event) => {
+
+    if (event.target.checked) {
+      setEnableAllFields(true)
+    }else {
+      setEnableAllFields(false)
+      setIsErrorWithTheNewShipping(false)
+    }
+
+    setEulaChecked(false)
+    setEnablePlaceOrder(false)
+
+  }
+
   const handleAgree = () => {
     setEulaChecked(true);
     setTermsnAndConditionDialog(false);
   };
 
-  //tersm and condition dialog
+  //terms and condition dialog
   const handleTermsAndCondiDialogOpen = () => {
     setTermsnAndConditionDialog(true)
   }
@@ -312,161 +373,196 @@ function Checkout() {
             backgroundColor: 'rgba(255, 255, 255, 0.9)'
           }}>
             <FormikProvider value={formik}>
-              <Form>
-                <Typography sx={{
-                  fontFamily: 'Kanit',
-                  fontSize: { xs:25, md: 30 },
-                  fontWeight: 'bold',
-                  color: 'black',
-                  paddingY: { xs:0, md: "1vh" },
-                  textAlign: "left"
-                }}>
-                  {enableAllFields ? 'SHIPPING DETAILS' : 'BILLING DETAILS'}
-                </Typography>
-                <Divider sx={{ my: 2, backgroundColor: 'black' }} />
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Field name="recipientName">
-                      {({ field, meta }) => (
-                        <StyledTextFields
-                          field={{
-                            ...field,
-                            value: !enableAllFields ? `${userDetails.firstName} ${userDetails.lastName}` : field.value
-                          }}
-                          meta={meta}
-                          id="recipientName"
-                          label="Recipient"
-                          disabled={!enableAllFields}
-                        />
-                      )}
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Field name="email">
-                      {({ field, meta }) => (
-                        <StyledTextFields
-                          field={{
-                            ...field,
-                            value: !enableAllFields ? `${userDetails.email}` : field.value
-                          }}
-                          meta={meta}
-                          id="email"
-                          label="Email"
-                          disabled={!enableAllFields}
-                        />
-                      )}
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Field name="province">
-                      {({ field, meta }) => (
-                        <FormControl fullWidth variant="filled">
-                          <InputLabel htmlFor="province" sx={{ fontFamily: 'Kanit' }}>Province</InputLabel>
-                          <Select
-                            {...field}
-                            inputProps={{ id: 'province' }}
-                            value={enableAllFields ? '' : 'Metro Manila'}
-                            fullWidth
-                            error={meta.touched && meta.error}
-                            disabled={!enableAllFields}
-                          >
-                            {provinceOptions.map((option) => (
-                              <MenuItem key={option} value={option}>
-                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, color: 'black' }}>
-                                  {option}
-                                </Typography>
-                              </MenuItem>
-                            ))}
-                          </Select>
-                          {meta.touched && meta.error && (
-                            <FormHelperText error>{meta.error}</FormHelperText>
-                          )}
-                        </FormControl>
-                      )}
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Field name="address">
-                      {({ field, meta }) => (
-                        <StyledTextFields
-                          field={{
-                            ...field,
-                            value: !enableAllFields ? `${shippingDetails.addressLine}` : field.value
-                          }}
-                          meta={meta}
-                          id="address"
-                          label="Address Line"
-                          disabled={!enableAllFields}
-                        />
-                      )}
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Field name="city">
-                      {({ field, meta }) => (
-                        <StyledTextFields
-                          field={{
-                            ...field,
-                            value: !enableAllFields ? `${shippingDetails.city}` : field.value
-                          }}
-                          meta={meta}
-                          id="city"
-                          label="City"
-                          disabled={!enableAllFields}
-                        />
-                      )}
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Field name="postalCode">
-                      {({ field, meta }) => (
-                        <StyledTextFields
-                          field={{
-                            ...field,
-                            value: !enableAllFields ? `${shippingDetails.postalCode}` : field.value
-                          }}
-                          meta={meta}
-                          id="postalCode"
-                          label="Postal Code"
-                          disabled={!enableAllFields}
-                        />
-                      )}
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Field name="orderNotes">
-                      {({ field, meta }) => (
-                        <StyledTextFields
-                          field={{ ...field }}
-                          meta={meta}
-                          id="orderNotes"
-                          label="Order Notes (optional)"
-                          multiline
-                          rows={4}
-                        />
-                      )}
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={enableAllFields}
-                          onChange={(e) => setEnableAllFields(e.target.checked)}
-                          color="primary"
-                          size="small"
-                          sx={{ transform: 'scale(0.9)' }}
-                        />
-                      }
-                      label={<Typography sx = {{ fontFamily: 'Kanit', fontSize: {xs: 16 , md: 18} }}>Ship to different address?</Typography>}
-                    />
-                  </Grid>
-                </Grid>
-              </Form>
+            <Form>
+                 <Typography sx={{
+                   fontFamily: 'Kanit',
+                   fontSize: { xs:25, md: 30 },
+                   fontWeight: 'bold',
+                   color: 'black',
+                   paddingY: { xs:0, md: "1vh" },
+                   textAlign: "left"
+                 }}>
+                   {enableAllFields ? 'SHIPPING DETAILS' : 'BILLING DETAILS'}
+                 </Typography>
+                 <Divider sx={{ my: 2, backgroundColor: 'black' }} />
+                 <Grid container spacing={2}>
+                   <Grid item xs={12}>
+                     <Field name="recipientName">
+                       {({ field, meta }) => (
+                         <StyledTextFields
+                           field={{
+                             ...field,
+                             value: !enableAllFields ? `${userDetails.firstName} ${userDetails.lastName}` : field.value
+                           }}
+                           meta={meta}
+                           handleCloseEULACheck={handleCloseEULACheck}
+                           id="recipientName"
+                           label="Recipient"
+                           disabled={!enableAllFields}
+                           fullWidth
+                         />
+                       )}
+                     </Field>
+                   </Grid>
+                   <Grid item xs={12}>
+                     <Field name="province">
+                       {({ field, meta, form }) => (
+                         <FormControl fullWidth variant="filled">
+                           <Autocomplete
+                             {...field}
+                             id="province"
+                             options={provinceOptions}
+                             getOptionLabel={(option) => option}
+                             onChange={(event, value) => form.setFieldValue('province', value)}
+                             value={!enableAllFields ? `${shippingDetails.province}` : field.value}
+                             disabled={!enableAllFields}
+                             renderInput={(params) => (
+                               <TextField
+                                 {...params}
+                                 label="Province"
+                                 variant="filled"
+                                 error={meta.touched && Boolean(meta.error)}
+                                 InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } } }}
+                                 sx={{
+                                   '& input': { pt: { xs: 2, sm: 2, md: 3 }, fontFamily: 'Kanit', fontSize: { xs: 12, md: 16 } },
+                                 }}
+                                 disabled={!enableAllFields}
+                               />
+                             )}
+                             renderOption={(props, option) => (
+                               <li {...props}>
+                                 <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } }}>
+                                   {option}
+                                 </Typography>
+                               </li>
+                             )}
+                           />
+                           {meta.touched && meta.error && (
+                            <>
+                              <FormHelperText sx={{ fontFamily: 'Kanit', fontSize: 14, color: 'red' }}>
+                               {meta.error}
+                              </FormHelperText>
+                            </>
+                           )}
+                         </FormControl>
+                       )}
+                     </Field>
+                   </Grid>
+                   <Grid item xs={12}>
+                     <Field name="address">
+                       {({ field, meta }) => (
+                         <StyledTextFields
+                           field={{
+                             ...field,
+                             value: !enableAllFields ? `${shippingDetails.addressLine}` : field.value
+                           }}
+                           meta={meta}
+                           handleCloseEULACheck={handleCloseEULACheck}
+                           id="address"
+                           label="Address Line"
+                           disabled={!enableAllFields}
+                         />
+                       )}
+                     </Field>
+                   </Grid>
+                   <Grid item xs={12}>
+                   <Field name="city">
+                       {({ field, meta, form }) => (
+                         <FormControl fullWidth variant="filled">
+                           <Autocomplete
+                             {...field}
+                             id="city"
+                             options={cityOptions}
+                             getOptionLabel={(option) => option}
+                             onChange={(event, value) => form.setFieldValue('city', value)}
+                             value={!enableAllFields ? `${shippingDetails.city}` : field.value}
+                             disabled={!enableAllFields}
+                             renderInput={(params) => (
+                               <TextField
+                                 {...params}
+                                 label="City / Municipality"
+                                 variant="filled"
+                                 error={meta.touched && Boolean(meta.error)}
+                                 InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } } }}
+                                 sx={{
+                                   '& input': { pt: { xs: 2, sm: 2, md: 3 }, fontFamily: 'Kanit', fontSize: { xs: 12, md: 16 } },
+                                 }}
+                                 disabled={!enableAllFields}
+                               />
+                             )}
+                             renderOption={(props, option) => (
+                               <li {...props}>
+                                 <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } }}>
+                                   {option}
+                                 </Typography>
+                               </li>
+                             )}
+                           />
+                           {meta.touched && meta.error && (
+                              <>
+                                <FormHelperText sx={{ fontFamily: 'Kanit', fontSize: 14, color: 'red' }}>
+                                {meta.error}
+                                </FormHelperText>
+                                {/* {meta.error && handleCloseEULACheck()} */}
+                              </>
+                           )}
+                         </FormControl>
+                       )}
+                     </Field>
+                   </Grid>
+                   <Grid item xs={12} sm={6}>
+                     <Field name="postalCode">
+                       {({ field, meta }) => (
+                         <StyledTextFields
+                           field={{
+                             ...field,
+                             value: !enableAllFields ? `${shippingDetails.postalCode}` : field.value
+                           }}
+                           meta={meta}
+                           handleCloseEULACheck={handleCloseEULACheck}
+                           id="postalCode"
+                           label="Postal Code"
+                           disabled={!enableAllFields}
+                         />
+                       )}
+                     </Field>
+                   </Grid>
+                   <Grid item xs={12} sm={6}>
+                     <Field name="orderNotes">
+                       {({ field, meta }) => (
+                         <StyledTextFields
+                           field={{ ...field }}
+                           meta={meta}
+                           handleCloseEULACheck={handleCloseEULACheck}
+                           id="orderNotes"
+                           label="Order Notes (optional)"
+                           multiline
+                           rows={4}
+                         />
+                       )}
+                     </Field>
+                   </Grid>
+                   <Grid item xs={12}>
+                     <FormControlLabel
+                       control={
+                         <Checkbox
+                           checked={enableAllFields}
+                           onChange = {handleShipToOtherAddress}
+                           color="primary"
+                           size="small"
+                           sx={{ transform: 'scale(0.9)' }}
+                         />
+                       }
+                       label={<Typography sx = {{ fontFamily: 'Kanit', fontSize: {xs: 16 , md: 18} }}>Ship to different address?</Typography>}
+                     />
+                   </Grid>
+                 </Grid>
+               </Form>
             </FormikProvider>
           </Paper>
         </Box>
       </Grid>
+      {/* RIGHT SECTION */}
       <Grid item xs={12} md={5} sx={{
         backgroundColor: '#F5F7F8',
         display: 'flex',
@@ -562,83 +658,60 @@ function Checkout() {
         }}>
           <Box sx={{ m: "5%" }}>
           <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize:  { xs: 25, md: 30 }, fontWeight: 'bold', color: 'black' }}>
-                     PAYMENT METHOD <br />
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 }, fontWeight: '300', color: 'black' }}>
-                     View all the available payment method along with its respective qr codes
-                    </Typography>
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails >
-                  <RadioGroup value={paymentMethod} onChange={handlePaymentMethodChange}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Typography sx={{ fontFamily: 'Kanit' }}>COD (Cash on Delivery)</Typography>
-                        <Radio
-                          value="cash"
-                          name="radio-buttons"
-                          inputProps={{ 'aria-label': 'cash' }}
-                        />
-                      </Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography sx={{ fontFamily: 'Kanit' }}>G-cash</Typography>
-                      <Box>
-                        <IconButton >
-                           <QrCodeScannerIcon onClick = {handleGcashQRCodeOpen} />
-                        </IconButton>
-                      <Radio
-                          value="gcash"
-                          name="radio-buttons"
-                          inputProps={{ 'aria-label': 'gcash' }}
-                      /></Box>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography sx={{ fontFamily: 'Kanit', fontSize:  { xs: 25, md: 30 }, fontWeight: 'bold', color: 'black' }}>
+                  PAYMENT METHOD <br />
+                <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 }, fontWeight: '300', color: 'black' }}>
+                  View all the available payment method along with its respective qr codes
+                </Typography>
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails >
+              <RadioGroup value={paymentMethod} onChange={handlePaymentMethodChange}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography sx={{ fontFamily: 'Kanit' }}>COD (Cash on Delivery)</Typography>
+                    <Radio
+                      value="cash"
+                      name="radio-buttons"
+                      inputProps={{ 'aria-label': 'cash' }}
+                    />
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography sx={{ fontFamily: 'Kanit' }}>Paymaya</Typography>
-                      <Box>
-                        <IconButton >
-                           <QrCodeScannerIcon onClick = {handlePaymayaQRCodeOpen} />
-                        </IconButton>
-                      <Radio
-                          value="paymaya"
-                          name="radio-buttons"
-                          inputProps={{ 'aria-label': 'paymaya' }}
-                      /></Box>
-                  </Box>
-                  </RadioGroup>
-                </AccordionDetails>
-                {paymentMethod === 'gcash' && (
-                  <Accordion>
-                    <AccordionDetails>
-                      <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 22 }, color: 'gray' }}>
-                        Please upload a screenshot or photo of your <b>Gcash</b> receipt as proof of payment.
-                      </Typography>
-                        <Box sx={{ mt: 2 }}>
-                          <Box sx={{ mt: 2 }}>
-                            <Dropzone onDrop={onDrop} accept="image/jpeg, image/png, image/jpg">
-                              {({ getRootProps, getInputProps }) => (
-                                <div {...getRootProps()} style={{ cursor: 'pointer', width: '100%', height: '200px', backgroundColor: 'white', borderRadius: '10px', border: '2px dashed #666', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                  <input {...getInputProps()} />
-                                  {uploadedImage ? (
-                                    <img src={URL.createObjectURL(uploadedImage)} alt="Uploaded" style={{ maxWidth: '100%', maxHeight: '100%' }} />
-                                  ) : (
-                                    <CloudUploadIcon sx={{ fontSize: 60, color: '#666' }} />
-                                  )}
-                                </div>
-                              )}
-                            </Dropzone>
-                          </Box>
-                       </Box>
-                    </AccordionDetails>
-                  </Accordion>
-                )}
-                {paymentMethod === 'paymaya' && (
-                  <Accordion>
-                    <AccordionDetails>
-                      <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 25 }, color: 'gray' }}>
-                        Please upload a screenshot or photo of your <b>Paymaya</b> receipt as proof of payment.
-                      </Typography>
+                  <Typography sx={{ fontFamily: 'Kanit' }}>G-cash</Typography>
+                  <Box>
+                    <IconButton >
+                        <QrCodeScannerIcon onClick = {handleGcashQRCodeOpen} />
+                    </IconButton>
+                  <Radio
+                      value="gcash"
+                      name="radio-buttons"
+                      inputProps={{ 'aria-label': 'gcash' }}
+                  /></Box>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography sx={{ fontFamily: 'Kanit' }}>Paymaya</Typography>
+                  <Box>
+                    <IconButton >
+                        <QrCodeScannerIcon onClick = {handlePaymayaQRCodeOpen} />
+                    </IconButton>
+                  <Radio
+                      value="paymaya"
+                      name="radio-buttons"
+                      inputProps={{ 'aria-label': 'paymaya' }}
+                  /></Box>
+              </Box>
+              </RadioGroup>
+            </AccordionDetails>
+            {paymentMethod === 'gcash' && (
+              <Accordion>
+                <AccordionDetails>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 22 }, color: 'gray' }}>
+                    Please upload a screenshot or photo of your <b>Gcash</b> receipt as proof of payment.
+                  </Typography>
+                    <Box sx={{ mt: 2 }}>
                       <Box sx={{ mt: 2 }}>
-                        <Box sx={{ mt: 2 }}>
+                        <Dropzone onDrop={onDrop} accept="image/jpeg, image/png, image/jpg">
+                          {({ getRootProps, getInputProps }) => (
                             <div {...getRootProps()} style={{ cursor: 'pointer', width: '100%', height: '200px', backgroundColor: 'white', borderRadius: '10px', border: '2px dashed #666', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                               <input {...getInputProps()} />
                               {uploadedImage ? (
@@ -646,17 +719,44 @@ function Checkout() {
                               ) : (
                                 <CloudUploadIcon sx={{ fontSize: 60, color: '#666' }} />
                               )}
-                          </div>
-                          </Box>
+                            </div>
+                          )}
+                        </Dropzone>
                       </Box>
-                    </AccordionDetails>
-                  </Accordion>
-                )}
+                    </Box>
+                </AccordionDetails>
+              </Accordion>
+            )}
+            {paymentMethod === 'paymaya' && (
+              <Accordion>
+                <AccordionDetails>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 25 }, color: 'gray' }}>
+                    Please upload a screenshot or photo of your <b>Paymaya</b> receipt as proof of payment.
+                  </Typography>
+                  <Box sx={{ mt: 2 }}>
+                    <Box sx={{ mt: 2 }}>
+                        <div {...getRootProps()} style={{ cursor: 'pointer', width: '100%', height: '200px', backgroundColor: 'white', borderRadius: '10px', border: '2px dashed #666', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                          <input {...getInputProps()} />
+                          {uploadedImage ? (
+                            <img src={URL.createObjectURL(uploadedImage)} alt="Uploaded" style={{ maxWidth: '100%', maxHeight: '100%' }} />
+                          ) : (
+                            <CloudUploadIcon sx={{ fontSize: 60, color: '#666' }} />
+                          )}
+                      </div>
+                      </Box>
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
+            )}
           </Accordion>
           <FormControlLabel
-            control={<Checkbox checked={isEulaChecked} onChange={handleEulaChecked} sx={{ 
-              transform: 'scale(0.8)' 
-            }} />}
+            control={
+              <Checkbox checked={isEulaChecked} onChange={handleEulaChecked} 
+              sx={{ 
+                transform: 'scale(0.8)' 
+              }} 
+              disabled = {isErrorWithTheNewShipping}
+            />}
             label={
               <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: 16 }}>
                 I Agree with the&nbsp;
@@ -673,7 +773,9 @@ function Checkout() {
           {/* Place order button */}
           <Button
             fullWidth
-            onClick={formik.handleSubmit}
+            onClick={() => {
+              formik.handleSubmit();
+            }}
             variant="contained"
             disabled={!enablePlaceOrder || submitLoading}
             sx={{
@@ -721,7 +823,6 @@ function Checkout() {
             </div>
         </Dialog>
         <Footer/>
-        {/* <ToastContainer/> */}
         </>
       )}
     </div>

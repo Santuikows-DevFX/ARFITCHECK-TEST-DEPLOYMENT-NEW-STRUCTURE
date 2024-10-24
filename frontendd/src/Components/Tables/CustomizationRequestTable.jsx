@@ -16,7 +16,7 @@ import ViewCustomProductDetails from '../Dialogs/ViewCustomProductDetails';
 import RejectOrder from '../Dialogs/RejectOrder';
 import ViewCustomizationPaymentReceipt from '../Dialogs/ViewCustomizationPaymenReceipt';
 import TrackingNumber from '../Dialogs/TrackingNumber';
-import { onValue, ref } from 'firebase/database';
+import { off, onValue, ref } from 'firebase/database';
 import { db } from '../../firebase';
 
 const CustomizationRequestTable = () => {
@@ -55,7 +55,10 @@ const CustomizationRequestTable = () => {
       console.error("Error listening to Realtime Database: ", error);
     });
   
-    return () => listener();
+    return () => {
+      off(dbRef); 
+      listener();
+    };
   }, []);
 
   const fetchOrders = async () => {

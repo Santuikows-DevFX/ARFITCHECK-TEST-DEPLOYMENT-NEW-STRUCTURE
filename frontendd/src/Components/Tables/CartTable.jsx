@@ -97,7 +97,7 @@ const CartTable = () => {
               vertical: 'top',
               horizontal: 'right'
             },
-            autoHideDuration: 1800,
+            autoHideDuration: 800,
             style: {
               fontFamily: 'Kanit',
               fontSize: '16px'

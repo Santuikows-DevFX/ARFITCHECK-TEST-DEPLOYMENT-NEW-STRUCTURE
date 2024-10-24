@@ -164,7 +164,7 @@ function ProductDescription({ product, onClose }) {
                             vertical: 'top',
                             horizontal: 'right'
                         },
-                        autoHideDuration: 1000,
+                        autoHideDuration: 800,
                         style: {
                             fontFamily: 'Kanit',
                             fontSize: '16px'

@@ -172,5 +172,5 @@ Route::prefix('custom')->controller(CustomRequestController::class)->group(funct
     Route::post('/rejectCancelCustomizationRequest', 'rejectCancelCustomizationRequest');
 
     //test email notif
-    Route::post('sendEmailNotificationForReceipt', 'sendEmailNotificationForReceipt');
+    Route::post('/sendEmailNotificationForAdminIfRequestPaid', 'sendEmailNotificationForAdminIfRequestPaid');
 });

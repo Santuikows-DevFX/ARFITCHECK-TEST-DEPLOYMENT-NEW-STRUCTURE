@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { TextField, InputAdornment, IconButton, FormHelperText } from '@mui/material';
 
-
-const StyledTextFields = ({ field, meta, id, label, inputProps, errorText, type, disabled}) => {
+const StyledTextFields = ({ field, meta, id, label, inputProps, errorText, type, disabled, isEulaChecked, handleCloseEULACheck }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleTogglePasswordVisibility = () => {
@@ -12,7 +11,7 @@ const StyledTextFields = ({ field, meta, id, label, inputProps, errorText, type,
   return (
     <>
       <TextField
-        {...field}
+        {...field} // Pass Formik's field props which includes onChange, onBlur, value, etc.
         id={id}
         disabled={disabled}
         label={label}
@@ -25,6 +24,10 @@ const StyledTextFields = ({ field, meta, id, label, inputProps, errorText, type,
         InputProps={type === 'password' && {
           endAdornment: (
             <InputAdornment position="end">
+              <IconButton
+                onClick={handleTogglePasswordVisibility}
+              >
+              </IconButton>
             </InputAdornment>
           )
         }}

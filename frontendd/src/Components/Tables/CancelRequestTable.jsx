@@ -8,7 +8,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
-import { onValue, ref } from 'firebase/database';
+import { off, onValue, ref } from 'firebase/database';
 import { db } from '../../firebase';
 
 const CancelRequestTable = () => {
@@ -34,8 +34,6 @@ const CancelRequestTable = () => {
   
     const listener = onValue(dbRef, (snapshot) => {
       if (snapshot.exists()) {
-        console.log('tae');
-        
         fetchOrders();
       } else {
         console.log("No data available");
@@ -43,8 +41,10 @@ const CancelRequestTable = () => {
     }, (error) => {
       console.error("Error listening to Realtime Database: ", error);
     });
-  
-    return () => listener();
+    return () => {
+      off(dbRef); 
+      listener();
+    };
   }, []);
 
   const fetchOrders = async () => {

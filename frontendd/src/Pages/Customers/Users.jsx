@@ -38,7 +38,7 @@ import { ToastContainer } from 'react-toastify';
 
 import userGraffitiBG from '../../../public/assets/customerGraffiti.png'
 import LogoImage from '../../../public/assets/Logo.jpg';
-import { onValue, ref } from 'firebase/database';
+import { off, onValue, ref } from 'firebase/database';
 import { db } from '../../firebase';
 
 const drawerWidth = 240;
@@ -76,7 +76,10 @@ function Users(props) {
       console.error("Error listening to Realtime Database: ", error);
     });
   
-    return () => listener();
+    return () => {
+      off(dbRef); 
+      listener();
+    };
   }, [])
 
   const fetchNotificationData = async () => {
@@ -171,7 +174,7 @@ function Users(props) {
     setAnchorEl(null);
     
     Swal.fire({
-        title: "Are you sure you want to logout?",
+        title: "Logout?",
         text: "",
         icon: "question",
         showCancelButton: true,

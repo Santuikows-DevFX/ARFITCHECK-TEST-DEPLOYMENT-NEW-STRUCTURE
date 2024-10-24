@@ -20,7 +20,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import 'react-toastify/dist/ReactToastify.css';
 import ProductRating from '../Dialogs/ProductRating';
-import { onValue, ref } from 'firebase/database';
+import { off, onValue, ref } from 'firebase/database';
 import { db } from '../../firebase';
 
 const OrderHistoryTable = () => {
@@ -52,7 +52,10 @@ const OrderHistoryTable = () => {
       console.error("Error listening to Realtime Database: ", error);
     });
   
-    return () => listener();
+    return () => {
+      off(dbRef); 
+      listener();
+    };
   }, [])
 
   const fetchMyOrders = async () => {

@@ -36,6 +36,8 @@ import Zoom from "../WIdgets/Zoom.jsx";
 
 function Login() {
 
+  document.documentElement.style.setProperty('--primary', 'white');
+
   const [isLoading, setIsLoading] = useState(true);
   const [isLogginIn, setLogginIn] = useState(false);
   const [sessionLogin, setSessionLogin] = useState(false)

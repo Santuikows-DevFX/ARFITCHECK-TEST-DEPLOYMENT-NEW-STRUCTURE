@@ -107,6 +107,7 @@ const ViewCancelOrderRequest = ({ open, onClose, zIndex, orderInfo, orderID, fet
                     
                 });
 
+                fetchOrders();
                 onClose();
                 setUpdateCancelRequestLoading(false)
 
@@ -144,6 +145,7 @@ const ViewCancelOrderRequest = ({ open, onClose, zIndex, orderInfo, orderID, fet
                     },
                     
                 });
+                fetchOrders();
                 onClose();
                 setUpdateCancelRequestLoading(false)
             });

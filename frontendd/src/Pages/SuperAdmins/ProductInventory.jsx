@@ -10,7 +10,7 @@ import { useCookies } from 'react-cookie';
 import DownloadIcon from '@mui/icons-material/Download';
 import dayjs from 'dayjs';
 import { db } from '../../firebase';
-import { onValue, ref } from 'firebase/database';
+import { off, onValue, ref } from 'firebase/database';
 
 function ProductInventory() {
     const [isLoading, setIsLoading] = React.useState(true);
@@ -41,7 +41,10 @@ function ProductInventory() {
         console.error("Error listening to Realtime Database: ", error);
       });
     
-      return () => listener();
+      return () => {
+        off(dbRef); 
+        listener();
+      };
     }, []);
 
     const fetchProducts = async () => {

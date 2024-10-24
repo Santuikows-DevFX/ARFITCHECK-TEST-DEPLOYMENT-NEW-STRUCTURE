@@ -26,7 +26,7 @@ import bmicHighLightImageTwo from '../../public/assets/bmicHomePage.png';
 import bmicComingSoonPrdImageSample from '../../public/assets/productComingSoonSample.png';
 import bmicCoverImage from '../../public/assets/bmicHomePageLogoImage.png'
 
-import { onValue, ref } from 'firebase/database';
+import { off, onValue, ref } from 'firebase/database';
 import { db } from '../firebase.js';
 
 const comingSoonPrd = [
@@ -72,7 +72,10 @@ const Home = () => {
       console.error("Error listening to Realtime Database: ", error);
     });
   
-    return () => listener();
+    return () => {
+      off(dbRef); 
+      listener();
+    };
   }, [])
 
   const fetchProducts = async () => {
@@ -151,6 +154,9 @@ const Home = () => {
 
       const timeDiff = getCurrentDate.getTime() - deliveryDate.getTime();
       const dayDiff = timeDiff / (1000 * 3600 * 24) // => 1 day = 1000 * 60 * 60 * 24
+
+      console.log(dayDiff);
+      
 
       //check natin if yung diff from curr date and updated date when delivered is est 1 day @ 8:30 something
       if (dayDiff > 1.55 && !isReceived) {
@@ -311,23 +317,85 @@ const Home = () => {
     switch (currentPage) {
       case 1:
         return (
-          <Box sx={{ width: '100%', height: { xs: '60%', sm: '40vh', md: '95vh' }, overflow: 'hidden' }}>
-            <img src= {homeSliderImageOne} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <Box 
+            sx={{ 
+              width: '100%', 
+              height: { xs: '60%', sm: '40vh', md: '95vh' }, 
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
+            <Box 
+              component="img"
+              src={homeSliderImageOne}
+              sx={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                filter: 'blur(5px) brightness(60%)',
+              }}
+            />
+    
+            <Box
+              sx={{
+                position: 'absolute',
+                top: {xs: '60%', md: '38%'},
+                left: '10%',
+                transform: 'translateY(-50%)',
+                color: '#fff',
+                textAlign: 'left',
+              }}
+            >
+              <Typography sx={{fontFamily: 'Storm', fontSize: { xs: 40, md: 120 },textShadow: '4px 4px 4px rgba(0, 0, 0, 0.9)' }}>
+                B.MIC CLOTHING
+              </Typography>
+              
+              <Typography sx={{ mb: {xs: 1, md: 2}, mt: {xs: -0.5, md: -5} ,fontFamily: 'Kanit', fontSize: { xs: 10, md: 35 },textShadow: '4px 4px 4px rgba(0, 0, 0, 0.6)' }}>
+                Get and Try our App
+              </Typography>
+              <a href="/tool" style={{ textDecoration: 'none' }}>
+                <Button
+                  sx={{
+                    backgroundColor: "White",
+                    "&:hover": {
+                      backgroundColor: "#414a4c",
+                      color: "white",
+                    },
+                    "&:not(:hover)": {
+                      backgroundColor: "#3d4242",
+                      color: "white",
+                    },
+                    background:
+                      "linear-gradient(to right, #414141, #000000)",
+                    padding: { xs: '5px 16px', md: '10px 20px' },
+                    borderRadius: '5px',
+                    fontFamily: 'Kanit',
+                    fontSize: { xs: '8px', md: '16px' }
+                  }}
+                >
+                  Download Here
+                </Button>
+              </a>
+
+            </Box>
           </Box>
         );
+          
       case 2:
         return (
-          <Box sx={{ width: '100%',height: { xs: '50%', sm: '40vh', md: '95vh' }, overflow: 'hidden' }}>
+          <Box sx={{ width: '100%', height: { xs: '50%', sm: '40vh', md: '95vh' }, overflow: 'hidden' }}>
             <video autoPlay loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }}>
-              <source src= {homeSliderVideo} type="video/mp4" />
+              <source src={homeSliderVideo} type="video/mp4" />
             </video>
           </Box>
         );
-        
+          
       default:
         return null;
     }
   };
+  
+  
 
   return (
     <div>
@@ -340,6 +408,8 @@ const Home = () => {
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: "#dbdbdb", boxShadow: 5 }}>
             <Pagination count={2} page={currentPage} onChange={handlePageChange} />
           </Box>
+
+          {/* PAMPA IMPRESS LANG */}
           <Box 
             sx={{ 
               backgroundImage: `url(${shopGraffiti})`, 
@@ -503,56 +573,68 @@ const Home = () => {
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat',
-              py: { xs: 2, sm: 4, md: 6 },
+              minHeight: '100vh', 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
               textAlign: 'center',
               overflow: 'hidden',
             }}
           >
-            <Grid container justifyContent="center" sx={{maxWidth: '1700px', padding: { xs: 1, sm: 2 } }}>
+            <Grid
+              container
+              justifyContent="center"
+              alignItems="center"
+              sx={{
+                maxWidth: '1700px',
+                padding: { xs: 1, sm: 2 },
+                minHeight: '100%', // Ensures full height of the parent
+              }}
+            >
               <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: { xs: 3 } }}>
                 <Box
                   component="img"
                   src={bmicCoverImage}
                   alt="Edited Image"
                   sx={{
-                    width: { xs: '90%', md: '80%' }, 
+                    width: { xs: '90%', md: '80%' },
                     height: 'auto',
                     borderRadius: '8px',
-                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.8)', 
+                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.8)',
                   }}
                 />
               </Grid>
-              <Grid justifyContent="center" item xs={12} md={6} sx={{ mx: { xs: 2.5, md: 'auto' }, width: { xs: '80%', md: '100%'} }}>
+              <Grid item xs={12} md={6} sx={{ mx: { xs: 2.5, md: 'auto' }, width: { xs: '80%', md: '100%' } }}>
                 <Slider {...comingSoonSliderSettings}>
                   {comingSoonPrd.map((product, index) => (
                     <div key={index}>
-                     <Card 
-                      sx={{ 
-                        borderRadius: '8px', 
-                        boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)', 
-                        height: { xs: '48vh', sm: '10vh', md: 'auto' },
-                        maxWidth: { xs: '600px', md: '660px'},
-                        ml: {xs: 'auto', md: 12}
-                      }}> 
-                      <CardMedia
-                        component="img"
-                        image={product.image}
-                        alt={product.name}
+                      <Card
                         sx={{
                           borderRadius: '8px',
-                          objectFit: 'cover', 
-                          height: { xs: '48vh', sm: '10vh', md: '70.6vh' }, 
-                          width: '100%'
+                          boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
+                          height: { xs: '48vh', sm: '10vh', md: 'auto' },
+                          maxWidth: { xs: '600px', md: '660px' },
+                          ml: { xs: 'auto', md: 12 },
                         }}
-                      />
-                    </Card>
+                      >
+                        <CardMedia
+                          component="img"
+                          image={product.image}
+                          alt={product.name}
+                          sx={{
+                            borderRadius: '8px',
+                            objectFit: 'cover',
+                            height: { xs: '48vh', sm: '10vh', md: '70.6vh' },
+                            width: '100%',
+                          }}
+                        />
+                      </Card>
                     </div>
                   ))}
                 </Slider>
               </Grid>
             </Grid>
           </Box>
-
           {/* CATEGORIES */}
           <Box 
             sx={{ 
@@ -669,73 +751,6 @@ const Home = () => {
           ))}
           </Grid>
           </Box>
-          {/* TO BE CHANGED
-          <Box sx={{ padding: 2, textAlign: 'center' }} style={styles.root}>
-            <Grid container spacing={2} justifyContent="center">
-              <Grid item xs={12} md={4}>
-                <Typography sx={{ fontFamily: "Kanit", fontSize: { xs: 20, sm: 25, md: 30 }, fontWeight: "bold", textAlign: "center", color: "white" }}>
-                  BE NOTIFIED
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Formik
-                  initialValues={{ email: '' }}
-                  validationSchema={validationSchema}
-                  onSubmit={(values, { setSubmitting }) => {
-                    console.log('Form submitted:', values);
-                    setSubmitting(false);
-                  }}
-                >
-                  {({ isSubmitting }) => (
-                    <Form>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={12} md={8}>
-                          <Field name="email">
-                            {({ field, meta }) => (
-                              <div>
-                                <TextField
-                                  {...field}
-                                  id="email"
-                                  label="Email"
-                                  variant="filled"
-                                  fullWidth
-                                  type='email'
-                                  InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } } }}
-                                  sx={{
-                                    '& input': { pt: { xs: 2, sm: 2, md: 3 } },
-                                    backgroundColor: '#E0DFDF'
-                                  }}
-                                  inputProps={{ style: { fontSize: 16, fontFamily: 'Kanit' } }}
-                                  error={meta.touched && Boolean(meta.error)}
-                                  InputProps={{
-                                    endAdornment: meta.touched && meta.error ? (
-                                      <InputAdornment position="end">
-                                        <IconButton>
-                                          <Warning color="error" />
-                                        </IconButton>
-                                      </InputAdornment>
-                                    ) : null
-                                  }}
-                                />
-                                {meta.touched && meta.error && (
-                                  <FormHelperText sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 15 }, color: 'red' }}>
-                                    {meta.error}
-                                  </FormHelperText>
-                                )}
-                              </div>
-                            )}
-                          </Field>
-                        </Grid>
-                        <Grid item xs={12} sm={12} md={4}>
-                          <FilledButton disabled={isSubmitting} type="submit">SUBSCRIBE</FilledButton>
-                        </Grid>
-                      </Grid>
-                    </Form>
-                  )}
-                </Formik>
-              </Grid>
-            </Grid>
-          </Box> */}
           <Dialog open={modalOpen} onClose={handleCloseModal} fullWidth maxWidth="xl">
               {selectedProduct && (
                   <ProductDescription product={selectedProduct} onClose={handleCloseModal} />

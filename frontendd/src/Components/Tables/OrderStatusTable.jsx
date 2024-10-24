@@ -11,7 +11,7 @@ import Swal from 'sweetalert2';
 import CancelOrder from '../Dialogs/CancelOrder';
 import dayjs from 'dayjs';
 import TrackingNumber from '../Dialogs/TrackingNumber';
-import { onValue, ref } from 'firebase/database';
+import { off, onValue, ref } from 'firebase/database';
 import { db } from '../../firebase';
 
 const OrderStatusTable = () => {
@@ -46,7 +46,10 @@ const OrderStatusTable = () => {
       console.error("Error listening to Realtime Database: ", error);
     });
   
-    return () => listener();
+    return () => {
+      off(dbRef); 
+      listener();
+    };
   }, []);
 
   const checkIfOrderDelivered = (orderDateDelivery, orderID) => {

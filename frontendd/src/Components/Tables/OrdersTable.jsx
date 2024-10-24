@@ -23,7 +23,7 @@ import Swal from 'sweetalert2';
 import 'react-toastify/dist/ReactToastify.css';
 import { Bounce } from 'react-toastify';
 import { useSnackbar } from 'notistack';
-import { onValue, ref } from 'firebase/database';
+import { off, onValue, ref } from 'firebase/database';
 import { db } from '../../firebase';
 
 const OrdersTable = () => {
@@ -60,7 +60,10 @@ const OrdersTable = () => {
       console.error("Error listening to Realtime Database: ", error);
     });
   
-    return () => listener();
+    return () => {
+      off(dbRef); 
+      listener();
+    };
   }, [])
 
   const checkIfOrderDelivered = (orderDateDelivery, orderID, isNotified) => {

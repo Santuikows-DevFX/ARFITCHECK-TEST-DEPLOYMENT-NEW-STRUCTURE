@@ -61,7 +61,7 @@ import TransactionHistory from '../SuperAdmins/TransactionHistory';
 import ClothingSize from '../SuperAdmins/ClothingSize';
 
 import adminBG from '../../../public/assets/shopGraffiti1.png'
-import { onValue, ref } from 'firebase/database';
+import { off, onValue, ref } from 'firebase/database';
 import { db } from '../../firebase';
 
 const SuperAdmin = (props) => {
@@ -119,7 +119,11 @@ const SuperAdmin = (props) => {
       console.error("Error listening to Realtime Database: ", error);
     });
   
-    return () => listener();
+    return () => {
+      off(dbRef); 
+      listener();
+    };
+    
   }, [])
 
 
@@ -350,7 +354,7 @@ const SuperAdmin = (props) => {
     handleMobileMenuClose();
     
     Swal.fire({
-        title: "Are you sure you want to logout?",
+        title: "Logout?",
         text: "",
         icon: "question",
         showCancelButton: true,

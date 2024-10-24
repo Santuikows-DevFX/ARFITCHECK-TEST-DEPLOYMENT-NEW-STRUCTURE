@@ -24,13 +24,11 @@
     font-family: 'Kanit', sans-serif !important;
 }
 
+@font-face {
+  font-family: 'Storm';
+  src: url('/fonts/Storm.ttf') format('truetype'); 
+  font-weight: normal;
+  font-style: normal;
+}
 
-/* 
-.swal2-popup {
-  max-width: 100% !important; 
-  width: auto !important;
-  margin: 0 !important; 
-  padding: 1rem; 
-  box-sizing: border-box;   
-} */
 

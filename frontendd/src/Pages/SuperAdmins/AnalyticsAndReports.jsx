@@ -9,10 +9,12 @@ import axiosClient from '../../axios-client';
 import { BarChart } from '@mui/x-charts/BarChart';
 import GroupIcon from '@mui/icons-material/Group';
 import { LineChart } from '@mui/x-charts/LineChart';
-import { onValue, ref } from 'firebase/database';
+import { off, onValue, ref } from 'firebase/database';
 import { db } from '../../firebase';
 
 function AnalyticsAndReports() {
+
+  document.documentElement.style.setProperty('--primary', 'black');
 
   const [reportsData, setReportsData] = useState({
     totalOrders: 0,
@@ -87,7 +89,10 @@ function AnalyticsAndReports() {
       console.error("Error listening to Realtime Database: ", error);
     });
   
-    return () => listener();
+    return () => {
+      off(dbRef); 
+      listener();
+    };
   }, [sortOption]);
   
 

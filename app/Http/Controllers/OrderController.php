@@ -473,6 +473,7 @@ class OrderController extends Controller
 
       //notify the admin for cancel request
       $this->notifyAdmin(Carbon::now()->toDateString(), Carbon::now('Asia/Manila')->format('h:i A'), 'Cancel', $request->orderID);
+      $targetOrder['orderStatus'] === 'Waiting for Confirmation' ? '' : $this->sendEmailNotificationForAdminIfCancelRequest($request->orderID);
 
       $message = 'Cancellation Request Sent! It will be processed within 2-3 business days.';
       return response(compact('message'));
@@ -902,7 +903,7 @@ class OrderController extends Controller
 
       //check if the order status is parcel out for delivery
       if ($orderStatus == 'Parcel out for delivery') {
-        // $this->notifyUsersForOrderDelivery($mobilePhone, $totalAmountToPay, $request->orderID, $paymentMethod, $targetOrder['uid'], $request->trackingNumber, $request->estimatedTimeOfDelivery);
+        $this->notifyUsersForOrderDelivery($mobilePhone, $totalAmountToPay, $request->orderID, $paymentMethod, $targetOrder['uid'], $request->trackingNumber, $request->estimatedTimeOfDelivery);
 
         $this->sendEmailNotificationForReceipt($request->orderID, $email, $firstName, $lastName, Carbon::now()->toDateString(), $totalAmountToPay - 100, $mobilePhone, $fullAddress, 'delivery', $request->trackingNumber, $request->estimatedTimeOfDelivery);
       }
@@ -1554,12 +1555,243 @@ class OrderController extends Controller
     }
   }
 
+  public function sendEmailNotificationForAdminIfCancelRequest($requestID)
+  {
+      try {
+
+          $emailNotificationData = [
+              'subject' => 'A customer requested to cancel a order with order ID ' . $requestID . '.',
+              'paymentDate' => Carbon::now()->toDateString(),
+              'requestID' => $requestID,
+              'paymentMethod' => 'E-Wallet',
+              'email' =>  'bmicclothes@gmail.com',
+              'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
+          ];
+
+          Mail::send([], [], function ($message) use ($emailNotificationData) {
+              $htmlBody = '
+              <html>
+                  <head>
+                  <style>
+                      body {
+                      font-family: Arial, sans-serif;
+                      background-color: #f4f4f4;
+                      padding: 20px;
+                      }
+                      .container {
+                      max-width: 600px;
+                      margin: 0 auto;
+                      background-color: #ffffff;
+                      padding: 20px;
+                      border-radius: 8px;
+                      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                      }
+                      h1, h2, h3 {
+                      color: #333333;
+                      }
+                      p {
+                      color: #555555;
+                      line-height: 1.6;
+                      }
+                      .divider {
+                      border-top: 1px solid #dddddd;
+                      margin: 20px 0;
+                      }
+                      .order-id {
+                      font-weight: bold;
+                      }
+                      .footer {
+                      margin-top: 20px;
+                      text-align: center;
+                      color: #888888;
+                      font-size: 12px;
+                      }
+                      .logo {
+                      text-align: center;
+                      margin-bottom: 20px;
+                      }
+                      .logo img {
+                      max-width: 100px; /* Adjust the size of the image */
+                      }
+                  </style>
+                  </head>
+                  <body>
+                  <div class="container">
+                      <div class="logo">
+                      <img src="' . $emailNotificationData['url'] . '" alt="Logo" style="width: 200px; height: auto;">
+                      </div>
+                      
+                      <p>A customer requested to cancel a order with an order ID of <span class="order-id">' . $emailNotificationData['requestID'] . '</span>. 
+                      
+                      <div class="divider"></div>
+                       <p>
+                          <a href="https://www.facebook.com/bmic.clothing" target="_blank">Visit BMIC on Facebook</a>
+                      </p>
+                  <div class="footer">
+                      <p>&copy; ' . date('Y') . ' ARFITCHECK. All rights reserved.</p>
+                  </div>
+                  </body>
+              </html>
+              ';
+
+              $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+              $message->to($emailNotificationData['email'])
+                  ->subject($emailNotificationData['subject'])
+                  ->html($htmlBody);
+          });
+
+          return response()->json([
+              'message' => 'Email sent successfully!'
+          ]);
+      } catch (\Exception $e) {
+          return response($e->getMessage());
+      }
+  }
+
+  public function sendEmailNotificationForAdmin($requestID, $email, $firstName, $lastName, $requestDate, $subtotal, $phoneNumber, $fullAddress, $type, $trackingNumber, $estimatedTimeOfDelivery)
+    {
+        try {
+
+            $status = $type == 'place'
+                ? 'an order has been placed.'
+                : ($type == 'approve'
+                    ? 'has been approved. You may now also process the payment for this request until ' . Carbon::now()->addDay(2)->toDateString() . ', if you did not process your payment within the set timeframe, your customization request will be automatically cancelled.'
+                    : ($type == 'reject'
+                        ? 'has been rejected. Your customize request might be over complicated, your design contains inappropriate graphics, etc. For more details, you may contact BMIC on their Facebook.'
+                        : ($type == 'cancel'
+                            ? 'has been cancelled. Your request will no longer be processed.'
+                            : 'is now out for delivery. REMINDER: Once you receive your item(s), please confirm it on the ARFITCHECK Website. If we don’t hear from you, payment will be automatically transferred to BMIC.'
+                        )
+                    )
+                );
+
+            $subjectStatus = $type == 'place'
+                ? 'has been placed.'
+                : ($type == 'approve'
+                    ? 'has been approved.'
+                    : ($type == 'reject'
+                        ? 'has been rejected.'
+                        : ($type == 'cancel'
+                            ? 'has been cancelled.'
+                            : 'is now out for delivery.'
+                        )
+                    )
+                );
+
+            $estTimeManipulator = $estimatedTimeOfDelivery === 1 ? '1 - 2' : ($estimatedTimeOfDelivery === 2 ? '2 - 3' : ($estimatedTimeOfDelivery === 3 ? '3 - 4' : ($estimatedTimeOfDelivery === 4 ? '4 - 5' : '5+')));
+
+            $emailNotificationData = [
+                'subject' => 'A order with order ID ' . $requestID . ' ' . $subjectStatus,
+                'email' =>  'bmicclothes@gmail.com',
+                'status' => $status,
+                'requestID' => $requestID,
+                'requestDate' => $requestDate,
+                'subtotal' => $subtotal,
+                'phoneNumber' => $phoneNumber,
+                'fullAddress' => $fullAddress,
+                'recipient' => $firstName,
+                'recipientLN' => $lastName,
+                'trackingNumber' => $trackingNumber != null ? $trackingNumber : '-',
+                'estimatedTimeOfDelivery' => $estimatedTimeOfDelivery != null ? $estTimeManipulator : '-',
+                'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
+            ];
+
+            Mail::send([], [], function ($message) use ($emailNotificationData) {
+                $htmlBody = '
+                <html>
+                    <head>
+                    <style>
+                        body {
+                        font-family: Arial, sans-serif;
+                        background-color: #f4f4f4;
+                        padding: 20px;
+                        }
+                        .container {
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #ffffff;
+                        padding: 20px;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                        }
+                        h1, h2, h3 {
+                        color: #333333;
+                        }
+                        p {
+                        color: #555555;
+                        line-height: 1.6;
+                        }
+                        .divider {
+                        border-top: 1px solid #dddddd;
+                        margin: 20px 0;
+                        }
+                        .order-id {
+                        font-weight: bold;
+                        }
+                        .footer {
+                        margin-top: 20px;
+                        text-align: center;
+                        color: #888888;
+                        font-size: 12px;
+                        }
+                        .logo {
+                        text-align: center;
+                        margin-bottom: 20px;
+                        }
+                        .logo img {
+                        max-width: 100px; /* Adjust the size of the image */
+                        }
+                    </style>
+                    </head>
+                    <body>
+                    <div class="container">
+                        <div class="logo">
+                        <img src="' . $emailNotificationData['url'] . '" alt="Logo" style="width: 200px; height: auto;">
+                        </div>
+                        
+                        <p>Hi B.MIC,</p>
+                        <p>Your customization request with an request ID of <span class="order-id">' . $emailNotificationData['requestID'] . '</span> ' . $emailNotificationData['status'] . '</p>
+                        
+                        <div class="divider"></div>
+                
+                        <h3>REQUEST DETAILS</h3>
+                        <p><strong>Order ID:</strong> ' . $emailNotificationData['requestID'] . '</p>
+                        <p><strong>Order Date:</strong> ' . $emailNotificationData['requestDate'] . '</p>
+                        
+                        <div class="divider"></div>
+                
+                        <p><strong>Subtotal:</strong> P' . $emailNotificationData['subtotal'] . '</p>
+                        <p><strong>Shipping Fee:</strong> P100</p>
+                        <p><strong>Total Payment:</strong> P' . ($emailNotificationData['subtotal'] + 100) . '</p>
+                
+                    </div>
+                
+                    <div class="footer">
+                        <p>&copy; ' . date('Y') . ' ARFITCHECK. All rights reserved.</p>
+                    </div>
+                    </body>
+                </html>
+                ';
+
+                $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+                $message->to($emailNotificationData['email'])
+                    ->subject($emailNotificationData['subject'])
+                    ->html($htmlBody);
+            });
+
+            return response()->json([
+                'message' => 'Email sent successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response($e->getMessage());
+        }
+    }
   // this function is what is being called if the admin clicked the "Notfy User"
   public function sendEmailForDeliveryNotification($orderID, $email, $firstName, $lastName, $orderDate, $subtotal, $phoneNumber, $fullAddress, $type, $trackingNumber)
   {
     try {
 
-      $status = $type == 'place' ? 'has been received. Kindly wait until BMIC confirmed your order(s).' : ($type == 'confirm' ? 'has been confirmed. BMIC has been notified to start preparing and shipping your item(s).' :
+      $status = $type == 'place' ? 'has been received. Kindly wait until BMIC confirmed your order(s).' : ($type == 'confirm' ? 'has been confirmed. BMIC will now start preparing your item(s).' :
         'is now out for delivery. REMINDER: Once you received your item(s), please confirm it in the ARFITCHECK Website, if we dont hear from you, payment will be automatically transferred to BMIC.'
       );
 

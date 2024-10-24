@@ -22,7 +22,7 @@ import ViewCustomProductDetails from './ViewCustomProductDetails';
 import ProcessPayment from './ProcessPayment';
 import { ToastContainer } from 'react-toastify';
 import UserCancelCustomRequests from './UserCancelCustomRequests';
-import { onValue, ref } from 'firebase/database';
+import { off, onValue, ref } from 'firebase/database';
 import { db } from '../../firebase';
 
 const MyCustomizationRequestsTable = () => {
@@ -59,7 +59,10 @@ const MyCustomizationRequestsTable = () => {
       console.error("Error listening to Realtime Database: ", error);
     });
   
-    return () => listener();
+    return () => {
+      off(dbRef); 
+      listener();
+    };
   }, [])
 
   const fetchMyOrders = async () => {
