@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { RadioGroup, Typography, Grid, Box, FormControlLabel, Radio, Button, MenuItem , Paper, Checkbox, Select, FormControl, InputLabel, FormHelperText, CircularProgress, Dialog, Accordion, AccordionSummary, AccordionDetails, IconButton } from '@mui/material';
+import { RadioGroup, Typography, Grid, Box, FormControlLabel, Radio, Button, MenuItem , Paper, Checkbox, Select, FormControl, InputLabel, FormHelperText, CircularProgress, Dialog, Accordion, AccordionSummary, AccordionDetails, IconButton, Autocomplete, TextField } from '@mui/material';
 import axiosClient from '../../../axios-client';
 import { Divider } from '@mui/material';
 import Dropzone, { useDropzone } from 'react-dropzone';
@@ -26,8 +26,30 @@ import { useCart } from '../../../ContextAPI/CartProvider';
 
 import shopGraffitiBG from '../../../../public/assets/shopGraffiti1.png'
 import { useSnackbar } from 'notistack';
+import TermsAndConditions from '../../TermsAndConditions';
 
-const provinceOptions = ['Metro Manila'];
+const provinceOptions = [ 
+  'Metro Manila'
+]
+
+const cityOptions = [
+  'Caloocan',
+  'Malabon',
+  'Navotas',
+  'Valenzuela',
+  'Quezon City',
+  'Marikina',
+  'Pasig',
+  'Taguig',
+  'Makati',
+  'Manila',
+  'Mandaluyong',
+  'San Juan',
+  'Pasay',
+  'Parañaque',
+  'Las Piñas',
+  'Muntinlupa',
+];
 
 function SingleProductCheckout() {
 
@@ -57,6 +79,7 @@ function SingleProductCheckout() {
 
   //terms and condition stuff
   const [isEulaChecked, setEulaChecked] = useState(false)
+  const [isErrorWithTheNewShipping, setIsErrorWithTheNewShipping] = useState(false);
   const [termsAndConditionDialogOpen, setTermsnAndConditionDialog] = useState(false)
 
   const { enqueueSnackbar  } = useSnackbar();
@@ -66,8 +89,10 @@ function SingleProductCheckout() {
   const { updateCartWhenCheckedOutSuccess } = useCart();
 
   const ShippingValidationSchema = Yup.object().shape({
-    recipientName: enableAllFields ? Yup.string().required('Recipient Name is required') : Yup.string(),
-    email: enableAllFields ? Yup.string().required('Email is required') : Yup.string(),
+    recipientName: enableAllFields ? 
+      Yup.string().required('Recipient Name is required')
+      .matches(/^[A-Za-z\s-]+$/, 'Recipient Name must contain only letters, spaces, or hyphens')
+      : Yup.string(),
     address: enableAllFields ? Yup.string().required('Address is required') : Yup.string(),
     province: enableAllFields ? Yup.string().required('Province is required') : Yup.string(),
     city: enableAllFields ? Yup.string().required('City is required') : Yup.string(),
@@ -80,7 +105,6 @@ function SingleProductCheckout() {
   const formik = useFormik({
     initialValues: {
       recipientName: '',
-      email: '',
       address: '',
       city: '',
       province: '',
@@ -90,70 +114,91 @@ function SingleProductCheckout() {
     validationSchema: ShippingValidationSchema,
     onSubmit: async (values) => {
 
-      setSubmitLoading(true)
-
-      setOrderTimeStamp(new Date().toLocaleTimeString("en-PH", { timeZone: "Asia/Manila", hour: '2-digit', minute: '2-digit', hour12: true}))
-
-      if(enableAllFields == true) {
-
-        const newShippingValues = new FormData();
-        newShippingValues.append('recipientName', values.recipientName);
-        newShippingValues.append('email', values.email);
-        newShippingValues.append('city', values.city);
-        newShippingValues.append('barangay', shippingDetails.barangay);
-        newShippingValues.append('address', values.address);
-        newShippingValues.append('province', values.province);
-        newShippingValues.append('postalCode', values.postalCode);
-        newShippingValues.append('orderNotes', values.orderNotes);
-        newShippingValues.append('paymentMethod', paymentMethod === 'gcash' || paymentMethod === 'paymaya' ? 'ewallet' : 'cash');
-        newShippingValues.append('amountToPay', subtotal);
-        newShippingValues.append('receiptFile', uploadedImage);
-        newShippingValues.append('uid', cookie['?id']);
-        newShippingValues.append('orderType', 'default');
+      try {
+        setSubmitLoading(true)
+        const productData = orderDetails.map(product => ({
+          name: product.productName,
+          quantity: product.productQuantity,
+          size: product.productSize
+        }));
+  
+        const productDataJSON = JSON.stringify(productData);
+        setOrderTimeStamp(new Date().toLocaleTimeString("en-PH", { timeZone: "Asia/Manila", hour: '2-digit', minute: '2-digit', hour12: true}))
         
-        newShippingValues.append('productID', productID); 
-        newShippingValues.append('productQuantity', quantity);
-        newShippingValues.append('productSize', size)
+        if(enableAllFields) {
 
-        await axiosClient.post('order/singleProductPlaceOrder', newShippingValues);
-        setTimeout(() => {
+          const { orderNotes, ...otherValues } = values;
 
-          isDialogOpen(true)
-          setSubmitLoading(false)
-          updateCartWhenCheckedOutSuccess();
-
-        }, 1500);
-
-      }else {
-
-        const dbValues = new FormData();
-        dbValues.append('recipientName', userDetails.firstName + ' ' + userDetails.lastName);
-        dbValues.append('email', userDetails.email);
-        dbValues.append('city', shippingDetails.city);
-        dbValues.append('barangay', shippingDetails.barangay);
-        dbValues.append('address', shippingDetails.addressLine);
-        dbValues.append('province', shippingDetails.province);
-        dbValues.append('postalCode', shippingDetails.postalCode);
-        dbValues.append('orderNotes', values.orderNotes);
-        dbValues.append('paymentMethod', paymentMethod === 'gcash' || paymentMethod === 'paymaya' ? 'ewallet' : 'cash');
-        dbValues.append('amountToPay', subtotal);
-        dbValues.append('receiptFile', uploadedImage);
-        dbValues.append('uid', cookie['?id']);
-        dbValues.append('orderType', 'default');
-
-        dbValues.append('productID', productID);
-        dbValues.append('productQuantity', quantity);
-        dbValues.append('productSize', size)
-
-        await axiosClient.post('order/singleProductPlaceOrder', dbValues);
-        setTimeout(() => {
-
-         setSubmitLoading(false)
-         isDialogOpen(true)
-         updateCartWhenCheckedOutSuccess();
-
-        }, 1500);
-
+          if(enableAllFields && Object.values(otherValues).some((value) => value === '')) {
+            enqueueSnackbar(`I!`, { 
+              variant: 'error',
+              anchorOrigin: {
+                vertical: 'top',
+                horizontal: 'right'
+              },
+              autoHideDuration: 1800,
+              style: {
+                fontFamily: 'Kanit',
+                fontSize: '16px'
+              },
+              
+            });
+          }else {
+            const newShippingValues = new FormData();
+            newShippingValues.append('recipientName', values.recipientName);
+            newShippingValues.append('email', userDetails.email);
+            newShippingValues.append('city', values.city);
+            newShippingValues.append('barangay', shippingDetails.barangay);
+            newShippingValues.append('address', values.address);
+            newShippingValues.append('province', values.province);
+            newShippingValues.append('postalCode', values.postalCode);
+            newShippingValues.append('orderNotes', values.orderNotes);
+            newShippingValues.append('paymentMethod', paymentMethod === 'gcash' || paymentMethod === 'paymaya' ? 'ewallet' : 'cash');
+            newShippingValues.append('amountToPay', subtotal);
+            newShippingValues.append('receiptFile', uploadedImage);
+            newShippingValues.append('productID', productID);
+            newShippingValues.append('products', productDataJSON);
+            newShippingValues.append('uid', cookie['?id']);
+            newShippingValues.append('orderType', 'default');
+    
+            await axiosClient.post('order/singleProductPlaceOrder', newShippingValues);
+            setTimeout(() => {
+    
+              isDialogOpen(true)
+              setSubmitLoading(false)
+    
+            }, 1500);
+          }
+        }else {
+  
+          const dbValues = new FormData();
+          dbValues.append('recipientName', userDetails.firstName + ' ' + userDetails.lastName);
+          dbValues.append('email', userDetails.email);
+          dbValues.append('city', shippingDetails.city);
+          dbValues.append('barangay', shippingDetails.barangay);
+          dbValues.append('address', shippingDetails.addressLine);
+          dbValues.append('province', shippingDetails.province);
+          dbValues.append('postalCode', shippingDetails.postalCode);
+          dbValues.append('orderNotes', values.orderNotes);
+          dbValues.append('paymentMethod', paymentMethod === 'gcash' || paymentMethod === 'paymaya' ? 'ewallet' : 'cash');
+          dbValues.append('amountToPay', subtotal);
+          dbValues.append('receiptFile', uploadedImage);
+          dbValues.append('productID', productID);
+          dbValues.append('products', productDataJSON);
+          dbValues.append('uid', cookie['?id']);
+          dbValues.append('orderType', 'default');
+  
+          await axiosClient.post('order/singleProductPlaceOrder', dbValues);
+          setTimeout(() => {
+  
+           setSubmitLoading(false)
+           isDialogOpen(true)
+           updateCartWhenCheckedOutSuccess();
+  
+          }, 1500);
+        }
+      } catch (error) {
+        console.log(error);
       }
     },
   });
@@ -197,6 +242,7 @@ function SingleProductCheckout() {
       setUploadedImage(receiptFile);
       // setEnablePlaceOrder(true);
     } else {
+
       enqueueSnackbar(`Invalid Image!`, { 
         variant: 'error',
         anchorOrigin: {
@@ -273,6 +319,27 @@ function SingleProductCheckout() {
     setTermsnAndConditionDialog(false);
   };
 
+   //served as a validation if the are some errors in the new shipping fields. I did this because the left section is not connected to the right section where the check box is located.
+  const handleCloseEULACheck = () => {
+    setEulaChecked(false)
+    setEnablePlaceOrder(false)
+    setIsErrorWithTheNewShipping(true)
+  }
+
+  const handleShipToOtherAddress = (event) => {
+
+    if (event.target.checked) {
+      setEnableAllFields(true)
+    }else {
+      setEnableAllFields(false)
+      setIsErrorWithTheNewShipping(false)
+    }
+
+    setEulaChecked(false)
+    setEnablePlaceOrder(false)
+
+  }
+
   //tersm and condition dialog
   const handleTermsAndCondiDialogOpen = () => {
     setTermsnAndConditionDialog(true)
@@ -306,160 +373,195 @@ function SingleProductCheckout() {
             width: '98%',
             margin: 'auto',
             boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)',
-            backgroundColor: 'rgba(255, 255, 255, 0.9)'
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            mt: {xs: 1, md: 'auto'}
           }}>
-            <FormikProvider value={formik}>
-              <Form>
-                <Typography sx={{
-                  fontFamily: 'Kanit',
-                  fontSize: { xs:25, md: 30 },
-                  fontWeight: 'bold',
-                  color: 'black',
-                  paddingY: { xs:0, md: "1vh" },
-                  textAlign: "left"
-                }}>
-                  {enableAllFields ? 'SHIPPING DETAILS' : 'BILLING DETAILS'}
-                </Typography>
-                <Divider sx={{ my: 2, backgroundColor: 'black' }} />
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Field name="recipientName">
-                      {({ field, meta }) => (
-                        <StyledTextFields
-                          field={{
-                            ...field,
-                            value: !enableAllFields ? `${userDetails.firstName} ${userDetails.lastName}` : field.value
-                          }}
-                          meta={meta}
-                          id="recipientName"
-                          label="Recipient"
-                          disabled={!enableAllFields}
-                        />
-                      )}
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Field name="email">
-                      {({ field, meta }) => (
-                        <StyledTextFields
-                          field={{
-                            ...field,
-                            value: !enableAllFields ? `${userDetails.email}` : field.value
-                          }}
-                          meta={meta}
-                          id="email"
-                          label="Email"
-                          disabled={!enableAllFields}
-                        />
-                      )}
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Field name="province">
-                      {({ field, meta }) => (
-                        <FormControl fullWidth variant="filled">
-                          <InputLabel htmlFor="province" sx={{ fontFamily: 'Kanit' }}>Province</InputLabel>
-                          <Select
-                            {...field}
-                            inputProps={{ id: 'province' }}
-                            value={enableAllFields ? '' : 'Metro Manila'}
-                            fullWidth
-                            error={meta.touched && meta.error}
-                            disabled={!enableAllFields}
-                          >
-                            {provinceOptions.map((option) => (
-                              <MenuItem key={option} value={option}>
-                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, color: 'black' }}>
-                                  {option}
-                                </Typography>
-                              </MenuItem>
-                            ))}
-                          </Select>
-                          {meta.touched && meta.error && (
-                            <FormHelperText error>{meta.error}</FormHelperText>
-                          )}
-                        </FormControl>
-                      )}
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Field name="address">
-                      {({ field, meta }) => (
-                        <StyledTextFields
-                          field={{
-                            ...field,
-                            value: !enableAllFields ? `${shippingDetails.addressLine}` : field.value
-                          }}
-                          meta={meta}
-                          id="address"
-                          label="Address Line"
-                          disabled={!enableAllFields}
-                        />
-                      )}
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Field name="city">
-                      {({ field, meta }) => (
-                        <StyledTextFields
-                          field={{
-                            ...field,
-                            value: !enableAllFields ? `${shippingDetails.city}` : field.value
-                          }}
-                          meta={meta}
-                          id="city"
-                          label="City"
-                          disabled={!enableAllFields}
-                        />
-                      )}
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Field name="postalCode">
-                      {({ field, meta }) => (
-                        <StyledTextFields
-                          field={{
-                            ...field,
-                            value: !enableAllFields ? `${shippingDetails.postalCode}` : field.value
-                          }}
-                          meta={meta}
-                          id="postalCode"
-                          label="Postal Code"
-                          disabled={!enableAllFields}
-                        />
-                      )}
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Field name="orderNotes">
-                      {({ field, meta }) => (
-                        <StyledTextFields
-                          field={{ ...field }}
-                          meta={meta}
-                          id="orderNotes"
-                          label="Order Notes (optional)"
-                          multiline
-                          rows={4}
-                        />
-                      )}
-                    </Field>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={enableAllFields}
-                          onChange={(e) => setEnableAllFields(e.target.checked)}
-                          color="primary"
-                          size="small"
-                          sx={{ transform: 'scale(0.9)' }}
-                        />
-                      }
-                      label={<Typography sx = {{ fontFamily: 'Kanit', fontSize: {xs: 16 , md: 18} }}>Ship to different address?</Typography>}
-                    />
-                  </Grid>
-                </Grid>
-              </Form>
+           <FormikProvider value={formik}>
+               <Form>
+                 <Typography sx={{
+                   fontFamily: 'Kanit',
+                   fontSize: { xs:25, md: 30 },
+                   fontWeight: 'bold',
+                   color: 'black',
+                   paddingY: { xs:0, md: "1vh" },
+                   textAlign: "left"
+                 }}>
+                   {enableAllFields ? 'SHIPPING DETAILS' : 'BILLING DETAILS'}
+                 </Typography>
+                 <Divider sx={{ my: 2, backgroundColor: 'black' }} />
+                 <Grid container spacing={2}>
+                   <Grid item xs={12}>
+                     <Field name="recipientName">
+                       {({ field, meta }) => (
+                         <StyledTextFields
+                           field={{
+                             ...field,
+                             value: !enableAllFields ? `${userDetails.firstName} ${userDetails.lastName}` : field.value
+                           }}
+                           meta={meta}
+                           handleCloseEULACheck={handleCloseEULACheck}
+                           id="recipientName"
+                           label="Recipient"
+                           disabled={!enableAllFields}
+                           fullWidth
+                         />
+                       )}
+                     </Field>
+                   </Grid>
+                   <Grid item xs={12}>
+                     <Field name="province">
+                       {({ field, meta, form }) => (
+                         <FormControl fullWidth variant="filled">
+                           <Autocomplete
+                             {...field}
+                             id="province"
+                             options={provinceOptions}
+                             getOptionLabel={(option) => option}
+                             onChange={(event, value) => form.setFieldValue('province', value)}
+                             value={!enableAllFields ? `${shippingDetails.province}` : field.value}
+                             disabled={!enableAllFields}
+                             renderInput={(params) => (
+                               <TextField
+                                 {...params}
+                                 label="Province"
+                                 variant="filled"
+                                 error={meta.touched && Boolean(meta.error)}
+                                 InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } } }}
+                                 sx={{
+                                   '& input': { pt: { xs: 2, sm: 2, md: 3 }, fontFamily: 'Kanit', fontSize: { xs: 12, md: 16 } },
+                                 }}
+                                 disabled={!enableAllFields}
+                               />
+                             )}
+                             renderOption={(props, option) => (
+                               <li {...props}>
+                                 <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } }}>
+                                   {option}
+                                 </Typography>
+                               </li>
+                             )}
+                           />
+                           {meta.touched && meta.error && (
+                            <>
+                              <FormHelperText sx={{ fontFamily: 'Kanit', fontSize: 14, color: 'red' }}>
+                               {meta.error}
+                              </FormHelperText>
+                            </>
+                           )}
+                         </FormControl>
+                       )}
+                     </Field>
+                   </Grid>
+                   <Grid item xs={12}>
+                     <Field name="address">
+                       {({ field, meta }) => (
+                         <StyledTextFields
+                           field={{
+                             ...field,
+                             value: !enableAllFields ? `${shippingDetails.addressLine}` : field.value
+                           }}
+                           meta={meta}
+                           handleCloseEULACheck={handleCloseEULACheck}
+                           id="address"
+                           label="Address Line"
+                           disabled={!enableAllFields}
+                         />
+                       )}
+                     </Field>
+                   </Grid>
+                   <Grid item xs={12}>
+                   <Field name="city">
+                       {({ field, meta, form }) => (
+                         <FormControl fullWidth variant="filled">
+                           <Autocomplete
+                             {...field}
+                             id="city"
+                             options={cityOptions}
+                             getOptionLabel={(option) => option}
+                             onChange={(event, value) => form.setFieldValue('city', value)}
+                             value={!enableAllFields ? `${shippingDetails.city}` : field.value}
+                             disabled={!enableAllFields}
+                             renderInput={(params) => (
+                               <TextField
+                                 {...params}
+                                 label="City / Municipality"
+                                 variant="filled"
+                                 error={meta.touched && Boolean(meta.error)}
+                                 InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } } }}
+                                 sx={{
+                                   '& input': { pt: { xs: 2, sm: 2, md: 3 }, fontFamily: 'Kanit', fontSize: { xs: 12, md: 16 } },
+                                 }}
+                                 disabled={!enableAllFields}
+                               />
+                             )}
+                             renderOption={(props, option) => (
+                               <li {...props}>
+                                 <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } }}>
+                                   {option}
+                                 </Typography>
+                               </li>
+                             )}
+                           />
+                           {meta.touched && meta.error && (
+                              <>
+                                <FormHelperText sx={{ fontFamily: 'Kanit', fontSize: 14, color: 'red' }}>
+                                {meta.error}
+                                </FormHelperText>
+                                {/* {meta.error && handleCloseEULACheck()} */}
+                              </>
+                           )}
+                         </FormControl>
+                       )}
+                     </Field>
+                   </Grid>
+                   <Grid item xs={12} sm={6}>
+                     <Field name="postalCode">
+                       {({ field, meta }) => (
+                         <StyledTextFields
+                           field={{
+                             ...field,
+                             value: !enableAllFields ? `${shippingDetails.postalCode}` : field.value
+                           }}
+                           meta={meta}
+                           handleCloseEULACheck={handleCloseEULACheck}
+                           id="postalCode"
+                           label="Postal Code"
+                           disabled={!enableAllFields}
+                         />
+                       )}
+                     </Field>
+                   </Grid>
+                   <Grid item xs={12} sm={6}>
+                     <Field name="orderNotes">
+                       {({ field, meta }) => (
+                         <StyledTextFields
+                           field={{ ...field }}
+                           meta={meta}
+                           handleCloseEULACheck={handleCloseEULACheck}
+                           id="orderNotes"
+                           label="Order Notes (optional)"
+                           multiline
+                           rows={4}
+                         />
+                       )}
+                     </Field>
+                   </Grid>
+                   <Grid item xs={12}>
+                     <FormControlLabel
+                       control={
+                         <Checkbox
+                           checked={enableAllFields}
+                           onChange = {handleShipToOtherAddress}
+                           color="primary"
+                           size="small"
+                           sx={{ transform: 'scale(0.9)' }}
+                         />
+                       }
+                       label={<Typography sx = {{ fontFamily: 'Kanit', fontSize: {xs: 16 , md: 18} }}>Ship to different address?</Typography>}
+                     />
+                   </Grid>
+                 </Grid>
+               </Form>
             </FormikProvider>
           </Paper>
         </Box>
@@ -651,17 +753,21 @@ function SingleProductCheckout() {
                 )}
               </Accordion>
               <FormControlLabel
-                control={<Checkbox checked={isEulaChecked} onChange={handleEulaChecked} sx={{ 
-                  transform: 'scale(0.8)' 
-                }} />}
+                control={<Checkbox checked={isEulaChecked} 
+                  onChange={handleEulaChecked} 
+                  sx={{ 
+                    transform: 'scale(0.8)' 
+                  }} 
+                  disabled = {isErrorWithTheNewShipping}
+                />}
                 label={
-                  <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: 16 }}>
-                    I Agree with the&nbsp;
+                  <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: {xs: 12, md: 16} }}>
+                    I've Read and Agree with the&nbsp;
                     <span style={{ color: "#1A5276" }}>
                       <b onClick={(event) => {
                         event.preventDefault(); 
                         handleTermsAndCondiDialogOpen();
-                      }}> Terms and Conditions</b>
+                      }}> Terms and Conditions*</b>
                     </span>
                   </Typography>
                 }
@@ -672,12 +778,12 @@ function SingleProductCheckout() {
                           fullWidth
                           onClick={formik.handleSubmit}
                           variant="contained"
-                          disabled={!enablePlaceOrder}
+                          disabled={!enablePlaceOrder || submitLoading}
                           sx={{
                             backgroundColor: 'White',
                             '&:hover': { backgroundColor: '#414a4c', color: 'white' },
                             '&:not(:hover)': { backgroundColor: '#3d4242', color: 'white' },
-                            opacity: enablePlaceOrder ? 1 : 0.5,
+                            opacity: !enablePlaceOrder || submitLoading ? 0.5 : 1,
                             background: 'linear-gradient(to right, #414141, #000000)'
                           }}
                         >
@@ -709,10 +815,10 @@ function SingleProductCheckout() {
                   </Grid>
                 </Grid> 
               </Grid>
-            <CheckoutTermsAndConditions open={termsAndConditionDialogOpen} onClose={handleTermsAndCondiDialogClose} onAgree={handleAgree}/>
+            <TermsAndConditions open={termsAndConditionDialogOpen} onClose={handleTermsAndCondiDialogClose} onAgree={handleAgree}/>
             <GCash open={gCashDialogOpen} onClose={handleGcashQRCodeClose} />
             <Paymaya open={paymayaDialogOpen} onClose={handlePaymayaQRCodeClose} />
-            <Dialog open={dialoOpen} onClose={handleDialogClose} maxWidth="xl" fullWidth PaperProps={{ style: { maxHeight: '100vh' } }}>
+            <Dialog open={dialoOpen} onClose={handleDialogClose} maxWidth="md" fullWidth PaperProps={{ style: { maxHeight: '100vh' } }}>
                 <div>
                   <OrderSuccess onClose={handleDialogClose} timeStamp={orderTimeStamp}/>
                 </div>

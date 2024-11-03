@@ -151,6 +151,7 @@ class OrderController extends Controller
     $totalProducts = 0;
     $customizedOrders = 0;
     $customizedRequest = 0;
+    $cancelledOrders = 0;
 
     $totalUsers = 0;
 
@@ -205,8 +206,12 @@ class OrderController extends Controller
           $completedOrders++;
         }
 
-        if ($orderInfo['orderType'] == 'custom') {
+        if ($orderInfo['orderType'] === 'custom') {
           $customizedOrders++;
+        }
+
+        if ($orderInfo['orderStatus'] == 'Order Cancelled' || $orderInfo['orderStatus'] == 'Request Cancelled') {
+          $cancelledOrders++;
         }
       }
     }
@@ -216,6 +221,7 @@ class OrderController extends Controller
       'pendingOrders' => $pendingOrders == 0 ? 0 : $pendingOrders - $totalNumberOfDuplicatesForTotalOrders,
       'completedOrders' => $completedOrders + $totalNumberOfDuplicatesForCompletedOrders,
       'customizedOrders' => $customizedOrders + $customizedRequest,
+      'cancelledOrder' => $cancelledOrders,
       'totalProducts' => $totalProducts,
       'totalUsers' => $totalUsers
     ]);
@@ -1919,133 +1925,4 @@ class OrderController extends Controller
       return response($e->getMessage());
     }
   }
-
-  // public function testingEmailWithButton($orderID, $email, $firstName, $lastName, $orderDate, $subtotal, $phoneNumber, $fullAddress, $type, $trackingNumber)
-  // {
-  //   try {
-
-  //     $status = $type == 'place' ? 'has been received. Kindly wait until BMIC confirmed your order(s).' : ($type == 'confirm' ? 'has been confirmed. BMIC has been notified to start preparing and shipping your item(s).' :
-  //       'is now out for delivery. REMINDER: Once you received your item(s), please confirm it in the ARFITCHECK Website, if we dont hear from you, payment will be automatically transferred to BMIC.'
-  //     );
-
-  //     $emailNotificationData = [
-  //       'subject' => 'Your order ' . $orderID . ' has been delivered.',
-  //       'email' =>  $email,
-  //       'status' => $status,
-  //       'orderID' => $orderID,
-  //       'orderDate' => $orderDate,
-  //       'subtotal' => $subtotal,
-  //       'phoneNumber' => $phoneNumber,
-  //       'trackingNumber' => $trackingNumber,
-  //       'fullAddress' => $fullAddress,
-  //       'recipient' => $firstName,
-  //       'recipientLN' => $lastName,
-  //       'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
-  //     ];
-
-  //     Mail::send([], [], function ($message) use ($emailNotificationData) {
-  //       $htmlBody = '
-  //        <html>
-  //          <head>
-  //            <style>
-  //              body {
-  //                font-family: Arial, sans-serif;
-  //                background-color: #f4f4f4;
-  //                padding: 20px;
-  //              }
-  //              .container {
-  //                max-width: 600px;
-  //                margin: 0 auto;
-  //                background-color: #ffffff;
-  //                padding: 20px;
-  //                border-radius: 8px;
-  //                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  //              }
-  //              h1, h2, h3 {
-  //                color: #333333;
-  //              }
-  //              p {
-  //                color: #555555;
-  //                line-height: 1.6;
-  //              }
-  //              .divider {
-  //                border-top: 1px solid #dddddd;
-  //                margin: 20px 0;
-  //              }
-  //              .order-id {
-  //                font-weight: bold;
-  //              }
-  //              .footer {
-  //                margin-top: 20px;
-  //                text-align: center;
-  //                color: #888888;
-  //                font-size: 12px;
-  //              }
-  //              .logo {
-  //                text-align: center;
-  //                margin-bottom: 20px;
-  //              }
-  //              .logo img {
-  //                max-width: 100px; /* Adjust the size of the image */
-  //              }
-  //            </style>
-  //          </head>
-  //          <body>
-  //            <div class="container">
-  //              <div class="logo">
-  //                <img src="' . $emailNotificationData['url'] . '" alt="Logo" style="width: 200px; height: auto;">
-  //              </div>
-               
-  //              <p>Hi ' . $emailNotificationData['recipient'] . ',</p>
-  //              <p>Your order request with an order ID of <span class="order-id">' . $emailNotificationData['orderID'] . '</span> has been delivered. Once your received your product(s) kindly CONFIRM it on the ARFITCHECK Website by ' .  Carbon::now()->addDay(2)->toDateString() . ', if we did not hear from you, payment will be automatically transferred to BMIC. </p>
-               
-  //              <div class="divider"></div>
-         
-  //              <h3>ORDER DETAILS</h3>
-  //              <p><strong>Order ID:</strong> ' . $emailNotificationData['orderID'] . '</p>
-  //              <p><strong>Order Date:</strong> ' . $emailNotificationData['orderDate'] . '</p>
-               
-  //              <div class="divider"></div>
-         
-  //              <p><strong>Subtotal:</strong> P' . $emailNotificationData['subtotal'] . '</p>
-  //              <p><strong>Shipping Fee:</strong> P100</p>
-  //              <p><strong>Total Payment:</strong> P' . ($emailNotificationData['subtotal'] + 100) . '</p>
-         
-  //              <div class="divider"></div>
-         
-  //              <h3>DELIVERY DETAILS</h3>
-  //              <p><strong>Recipient Name:</strong> ' . $emailNotificationData['recipient'] . ' ' . $emailNotificationData['recipientLN'] . '</p>
-  //              <p><strong>Phone Number:</strong> ' . $emailNotificationData['phoneNumber'] . '</p>
-  //              <p><strong>Shipping Address:</strong> ' . $emailNotificationData['fullAddress'] . '</p>
-  //              <p><strong>Tracking Number:</strong> ' . $emailNotificationData['trackingNumber'] . '</p>
-         
-  //              <div class="divider"></div>
-         
-  //              <h3>WHAT\'S NEXT</h3>
-  //              <p>Kindly wait for your shipment. Once you receive and accept the product(s), kindly confirm this in ARFITCHECK Web. If we dont hear from you, the payment will be automatically transferred to BMIC.</p>
-  //              <p>
-  //               <a href="https://www.facebook.com/bmic.clothing" target="_blank">Visit BMIC on Facebook</a>
-  //             </p>
-  //            </div>
-         
-  //            <div class="footer">
-  //              <p>&copy; ' . date('Y') . ' ARFITCHECK. All rights reserved.</p>
-  //            </div>
-  //          </body>
-  //        </html>
-  //        ';
-
-  //       $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
-  //       $message->to($emailNotificationData['email'])
-  //         ->subject($emailNotificationData['subject'])
-  //         ->html($htmlBody);
-  //     });
-
-  //     return response()->json([
-  //       'message' => 'Email sent to ' . $email . '.'
-  //     ], 200);
-  //   } catch (\Exception $e) {
-  //     return response($e->getMessage());
-  //   }
-  // }
 }

@@ -133,38 +133,37 @@ function TransactionHistory() {
        <Box m={2} >
       <Grid container direction="column" spacing={2}>
         <Grid item container justifyContent="space-between" alignItems="center">
-          <Typography sx={{ fontFamily: 'Kanit', fontSize: 50, fontWeight: 'bold', color: 'black', paddingY: '1vh' }}>
+          <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 30, md: 50 }, fontWeight: 'bold', color: 'black', paddingY: '1vh' }}>
             Transaction History
           </Typography>
-          <Grid container spacing={4} sx={{ width: "45%", justifyContent:'flex-end', alignItems: "center" }}>
-        <Grid item xs={6}>
-          <Button
+          <Grid container spacing={2} justifyContent="flex-end" alignItems="center" sx={{ width: '100%' }}>
+            <Grid item xs="auto">
+              <Button
                 type="submit"
-                fullWidth
                 variant="contained"
                 sx={{
                   backgroundColor: '#196F3D',
                   color: 'white',
                   '&:not(:hover)': { backgroundColor: '#317000', color: 'white' },
                   '&:hover': { backgroundColor: '#239B56' },
-                  fontSize: { xs: 10, md: 16 },  
-                  padding: { xs: '0.3rem 0.6rem', md: '0.5rem 1rem' },  
+                  fontSize: { xs: 10, md: 16 },
+                  padding: { xs: '0.3rem 0.6rem', md: '0.5rem 1rem' },
                   fontFamily: 'Kanit',
                   fontWeight: 'bold',
                 }}
                 startIcon={<DownloadIcon />}
                 onClick={handleSaveAsExcel}
-
-          >
-                <Typography sx={{ fontFamily: 'Kanit', fontSize: 24.5, padding: 0.5 }}>Save as .CSV</Typography>
-          </Button>
-        </Grid>
-      </Grid>
+              >
+                <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 14 }, padding: 0.5 }}>
+                   .CSV
+                </Typography>
+              </Button>
+            </Grid>
+          </Grid>
         </Grid>
         <Grid item>
           <Divider sx={{ borderTopWidth: 2, mb : 3 }}/>
         </Grid>
-      
       </Grid>
        <TransactionHistoryTable mergedProductOrders={completedOrders}/>
      </Box>

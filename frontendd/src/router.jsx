@@ -24,6 +24,8 @@ import SingleProductCheckout from './Pages/Customers/SingleProdCheckout/SinglePr
 import PageNotFound from './Pages/ErrorPages/PageNotFound.jsx';
 import CustomProductRequest from './Pages/Customers/CustomProductRequest/CustomProductRequest.jsx';
 import URLManipulated from './Pages/ErrorPages/URLManipulatedErr.jsx';
+import HomeNotAuth from './Pages/Customers/HomeNotAuth.jsx';
+import ShopNotAuth from './Pages/ShopNotAuth.jsx';
 
 const router = createBrowserRouter([
 
@@ -31,9 +33,35 @@ const router = createBrowserRouter([
         path: '/',
         element: <LoginLayout/>,
         children: [
+
             {
                 path: '/',
-                element: <Navigate to="/login"/>
+                element: <Navigate to="/homeViewOnly"/>
+            },
+
+            {
+                path: '/homeViewOnly',
+                element: <HomeNotAuth/>
+            }, 
+
+            {
+                path: '/shopViewOnly',
+                element: <ShopNotAuth/>
+            },
+
+            {
+                path: '/shopViewOnly/:category',
+                element: <ShopNotAuth/>
+            },
+
+            {
+                path: '/aboutViewOnly',
+                element: <About/>
+            },
+            
+            {
+                path: '/toolViewOnly',
+                element: <Tool/>
             },
 
             {

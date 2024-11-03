@@ -1,5 +1,5 @@
-import React from 'react';
-import { Typography, Grid, Box, Button } from '@mui/material';
+import React, { useState } from 'react';
+import { Typography, Grid, Box, Button, CircularProgress } from '@mui/material';
 import Footer from '../Components/Footer.jsx';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
@@ -7,8 +7,6 @@ import Navbar from '../Widgets/Navbar.jsx';
 import cpImage from '../../public/assets/cp.png'
 import downloadGraffitiBG from '../../public/assets/dlGraffiti.png'
 import { useSnackbar } from 'notistack';
-
-const APP_URL = 'http://localhost:3000/lax.png';
 
 const styles = {
   root: {
@@ -28,16 +26,38 @@ const styles = {
 
 function Tool() {
 
+  const [downloadLoading, setDownloadLoading] = useState(false);
+
   const { enqueueSnackbar  } = useSnackbar();
 
-  const handleDownload = (APP_URL) => {
-    const fileName = APP_URL.split('/').pop();
-    const aTag = document.createElement('a');
-    aTag.href = APP_URL;
-    aTag.setAttribute('download', fileName);
-    document.body.appendChild(aTag);
-    aTag.click();
-    document.body.removeChild(aTag);
+  const handleDownload = () => {
+
+    setDownloadLoading(true)
+
+    const fileURL = '../apk/arfit_app.apk'
+    const link = document.createElement('a');
+    link.href = fileURL;
+    link.setAttribute('download', 'ARFITCHECK.apk');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setTimeout(() => {
+      setDownloadLoading(false)
+      enqueueSnackbar(`APK download in progress, check your notification.`, { 
+        variant: 'success',
+        anchorOrigin: {
+          vertical: 'top',
+          horizontal: 'right'
+        },
+        autoHideDuration: 2500,
+        style: {
+          fontFamily: 'Kanit',
+          fontSize: '16px'
+        },
+        
+      });
+    }, 1200)
   };
 
   const handleTemporaryDownload = () => {
@@ -100,14 +120,15 @@ function Tool() {
           md={6} 
           sx={{ 
             textAlign: { xs: 'center', md: 'left' }, 
-            px: { xs: 2, md: 5 }
+            px: { xs: 2, md: 5 },
+            mt: { xs: 2 }
           }}
         >
           <Box sx={styles.translucentBox} data-aos="fade-right" data-aos-delay="400">
             <Typography sx={{ color: 'black', fontSize: { xs: 15, md: 40 }, fontFamily: "Kanit", fontWeight: "bold" }}>
               Try our
             </Typography>
-            <Typography sx={{ color: 'black', fontSize: { xs: 50, md: 75 }, fontFamily: "Kanit", fontWeight: "bold" }}>
+            <Typography sx={{ color: 'black', fontSize: { xs: 40, md: 75 }, fontFamily: "Kanit", fontWeight: "bold" }}>
               ARFITCHECK
             </Typography>
             <Typography sx={{ color: 'black', fontSize: { xs: 12, md: 20 }, fontFamily: "Kanit", fontWeight: "Regular" }}>
@@ -131,24 +152,23 @@ function Tool() {
                   },
                   background:
                     "linear-gradient(to right, #414141, #000000)",
-                  // opacity: !isValid? 0.7 : 1,
+                  opacity: downloadLoading? 0.7 : 1,
                 }}
-                // onClick={() => handleDownload(APP_URL)}
                 onClick={() => handleTemporaryDownload()}
             
               >
                 <Typography
                   sx={{
                     fontFamily: "Kanit",
-                    fontSize: { xs: 18, md: 20 },
+                    fontSize: { xs: 14, md: 18 },
                     padding: 0.5,
-                    // visibility: isLogginIn ? "hidden" : "visible",
+                    visibility: downloadLoading ? "hidden" : "visible",
                   }}
                 >
                   DOWNLOAD APK
                 </Typography>
 
-                {/* {isLogginIn && (
+                {downloadLoading && (
                   <CircularProgress
                     size={24}
                     color="inherit"
@@ -160,7 +180,7 @@ function Tool() {
                       marginLeft: "-12px",
                     }}
                   />
-                )} */}
+                )}
                 </Button>
               </Grid>
             </Grid>

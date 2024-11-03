@@ -687,7 +687,7 @@ const MyCustomizationRequestsTable = () => {
                                   mb: 0.8
                                 }}
                               >
-                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, padding: 0.5 }}>PAY</Typography>
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12, md: 14}, padding: 0.5 }}>PAY</Typography>
                               </Button>
                               <Button
                                 type="submit"
@@ -702,7 +702,7 @@ const MyCustomizationRequestsTable = () => {
                                   mb: 0.8
                                 }}
                               >
-                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, padding: 0.5 }}>VIEW</Typography>
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12, md: 14}, padding: 0.5 }}>VIEW</Typography>
                               </Button>
                               <Button
                                 type="submit"
@@ -715,7 +715,7 @@ const MyCustomizationRequestsTable = () => {
                                   '&:not(:hover)': { backgroundColor: '#860000', color: 'white' },
                                 }}
                               >
-                                <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, padding: 0.5 }}>CANCEL</Typography>
+                                <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12, md: 14}, padding: 0.5 }}>CANCEL</Typography>
                               </Button>
                               </>
                             )} 
@@ -738,7 +738,7 @@ const MyCustomizationRequestsTable = () => {
                               mb: 1.5
                             }}
                           >
-                            <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, padding: 0.5 }}>VIEW</Typography>
+                            <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12, md: 14}, padding: 0.5 }}>VIEW</Typography>
                           </Button>
                           </>
                     )

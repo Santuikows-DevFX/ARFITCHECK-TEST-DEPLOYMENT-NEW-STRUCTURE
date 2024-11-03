@@ -6,8 +6,10 @@ import AddTaskIcon from '@mui/icons-material/AddTask';
 import BuildIcon from '@mui/icons-material/Build';
 import PreLoader from '../../Components/PreLoader';
 import axiosClient from '../../axios-client';
-import { BarChart } from '@mui/x-charts/BarChart';
+import CancelScheduleSendIcon from '@mui/icons-material/CancelScheduleSend';
 import GroupIcon from '@mui/icons-material/Group';
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { off, onValue, ref } from 'firebase/database';
 import { db } from '../../firebase';
@@ -21,6 +23,7 @@ function AnalyticsAndReports() {
     pendingOrders: 0,
     completedOrders: 0,
     totalProducts: 0,
+    cancelledOrders: 0
   });
 
   const [salesSummary, setSalesSummary] = useState({
@@ -180,6 +183,8 @@ function AnalyticsAndReports() {
     }
   }
 
+  //TODO: ADD DAILY SA CHOICES FOR SALES CHART, IF POSSIBLE MAGAWA YUNG SA SIGN UP NA KAPAG BINACK OR HINDI KINONTINUE YUNG VERIFICATION MAWAWALA YUNG SINIGN UP. ADD HOODIES SIZE CHART & SIZE TABLE && MACHINE LEARNING IMPROVEMENT
+
   return (
     <div>
       {isLoading ? (
@@ -199,22 +204,22 @@ function AnalyticsAndReports() {
           <Grid container spacing={3}>
               <Grid item xs={12} sm={6} md={4} lg={2.4}>
             <Tooltip 
-             title={<Typography sx={{ fontFamily: 'Kanit', fontSize: 14 }}>Indicates the total users registered in ARFITCHECK.</Typography>} 
+             title={<Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12, md: 14} }}>Indicates the total number of cancelled orders. It also includes cancelled customization requests.</Typography>} 
              placement="top" arrow>
               <Box sx={{ background: 'linear-gradient(to right, #A00000, #C62128)', textAlign: 'center', padding: '20px', borderRadius: 5, boxShadow: 5, position: 'relative' }}>
-                <GroupIcon sx={{ fontSize: { xs: 30, md: 40 }, color: 'white' }} />
+                <HighlightOffIcon sx={{ fontSize: { xs: 30, md: 40 }, color: 'white' }} />
                 <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 16, md: 20 }, fontWeight: 'medium', color: 'white' }}>
-                  Total Users
+                  Cancelled Orders
                 </Typography>
                 <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 30, md: 50 }, fontWeight: 'bold', color: 'white' }}>
-                  {reportsLoading ? <CircularProgress sx={{ color: 'white' }} /> : reportsData.totalUsers || 0}
+                  {reportsLoading ? <CircularProgress sx={{ color: 'white' }} /> : reportsData.cancelledOrder || 0}
                 </Typography>
               </Box>
             </Tooltip>
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={2.4}>
             <Tooltip 
-             title={<Typography sx={{ fontFamily: 'Kanit', fontSize: 14 }}>Indicates the total number of pending orders.</Typography>} 
+             title={<Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12, md: 14} }}>Indicates the total number of pending orders.</Typography>} 
              placement="top" arrow>
               <Box sx={{ background: 'linear-gradient(to right, #f1c40f, #9a7d0a)', textAlign: 'center', padding: '20px', borderRadius: 5, boxShadow: 5 }}>
                 <HourglassEmptyIcon sx={{ fontSize: { xs: 30, md: 40 }, color: 'white' }} />
@@ -229,7 +234,7 @@ function AnalyticsAndReports() {
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={2.4}>
             <Tooltip 
-             title={<Typography sx={{ fontFamily: 'Kanit', fontSize: 14 }}>Indicates the total number of completed orders.</Typography>} 
+             title={<Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12, md: 14} }}>Indicates the total number of completed orders.</Typography>} 
              placement="top" arrow>
               <Box sx={{ background: 'linear-gradient(to right, #28b463, #196f3d)', textAlign: 'center', padding: '20px', borderRadius: 5, boxShadow: 5 }}>
                 <AddTaskIcon sx={{ fontSize: { xs: 30, md: 40 }, color: 'white' }} />
@@ -244,7 +249,7 @@ function AnalyticsAndReports() {
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={2.4}>
             <Tooltip 
-             title={<Typography sx={{ fontFamily: 'Kanit', fontSize: 14 }}>Indicates the total number of customization requests. It includes the completed requests</Typography>} 
+             title={<Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12, md: 14} }}>Indicates the total number of customization requests. It includes the completed requests</Typography>} 
              placement="top" arrow>
               <Box sx={{ background: 'linear-gradient(to right, #3498db, #21618c)', textAlign: 'center', padding: '20px', borderRadius: 5, boxShadow: 5 }}>
                 <BuildIcon sx={{ fontSize: { xs: 30, md: 40 }, color: 'white' }} />
@@ -259,7 +264,7 @@ function AnalyticsAndReports() {
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={2.4}>
             <Tooltip 
-             title={<Typography sx={{ fontFamily: 'Kanit', fontSize: 14 }}>Indicates the total number of products available..</Typography>} 
+             title={<Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12, md: 14} }}>Indicates the total number of products available..</Typography>} 
              placement="top" arrow>
               <Box sx={{ background: 'linear-gradient(to right, #f39c12, #935116)', textAlign: 'center', padding: '20px', borderRadius: 5, boxShadow: 5 }}>
                 <LocalMallIcon sx={{ fontSize: { xs: 30, md: 40 }, color: 'white' }} />
@@ -284,7 +289,7 @@ function AnalyticsAndReports() {
                   }}>
                   <Grid item>
                     <Grid container justifyContent="space-between" alignItems="center">
-                      <Typography sx={{ fontFamily: 'Kanit', fontWeight: 'bold', color: 'black', fontSize: 40 }}>
+                      <Typography sx={{ fontFamily: 'Kanit', fontWeight: 'bold', color: 'black', fontSize: {xs: 25, md: 40} }}>
                         SALES CHART
                       </Typography>
                       <Box>

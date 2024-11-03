@@ -19,9 +19,8 @@ function ShippingDetails() {
          {isLoading ? (
         <PreLoader />
       ) : (
-      <Box m={2} height="100vh">
+      <Box m={2} sx={{ minHeight: '100vh' }}>
       <Details/>
-      
       <Shipping/>
       </Box>
       )}

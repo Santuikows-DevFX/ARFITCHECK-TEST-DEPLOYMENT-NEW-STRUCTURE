@@ -20,16 +20,19 @@ import Sizes from '../../Components/Dialogs/Sizes';
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
 import { useSnackbar } from 'notistack';
+import { useNavigate } from 'react-router-dom';
 
 function ProductDescription({ product, onClose }) {
 
     const { productName, productDescription, productImage, productPrice, productCategory, productQuantity, smallQuantity, mediumQuantity, largeQuantity, extraLargeQuantity, doubleXLQuantity, tripleXLQuantity, productRating } = product;
 
     const [selectedSize, setSelectedSize] = useState('');
-    const [cookie, removeCookie] = useCookies(['?id'])
+    const [cookie, removeCookie] = useCookies(['?id', '?sessiontoken'])
     const [sizeStock, setSizeStock] = useState('')
     const [modalOpen, setModalOpen] = useState(false);
     const [addToCartLoading, setAddToCartLoading] = useState(false);
+
+    const navigator = useNavigate();
 
     const { enqueueSnackbar  } = useSnackbar();
 
@@ -153,46 +156,49 @@ function ProductDescription({ product, onClose }) {
 
             setAddToCartLoading(true)
 
-             await axiosClient.post('cart/insertCartItems', cartValue)
-            .then(({data}) => {
-                
-                if(data.message === "Added to Cart!") {
+            if ((!localStorage.getItem('?sessiontoken'))) {
 
-                    enqueueSnackbar(`${data.message}`, { 
-                        variant: 'success',
-                        anchorOrigin: {
-                            vertical: 'top',
-                            horizontal: 'right'
-                        },
-                        autoHideDuration: 800,
-                        style: {
-                            fontFamily: 'Kanit',
-                            fontSize: '16px'
-                        },
-                    });
+                navigator('/login');
 
-                    addToCart(cartValue)
-                    setAddToCartLoading(false)
+            }else {
+                await axiosClient.post('cart/insertCartItems', cartValue)
+                .then(({data}) => {
+                    
+                    if(data.message === "Added to Cart!") {
 
-                }else {
-                    enqueueSnackbar(`${data.message}`, { 
-                        variant: 'error',
-                        anchorOrigin: {
-                            vertical: 'top',
-                            horizontal: 'right'
-                        },
-                        autoHideDuration: 1800,
-                        style: {
-                            fontFamily: 'Kanit',
-                            fontSize: '16px'
-                        },
-                    });
-                }
-            })
+                        enqueueSnackbar(`${data.message}`, { 
+                            variant: 'success',
+                            anchorOrigin: {
+                                vertical: 'top',
+                                horizontal: 'right'
+                            },
+                            autoHideDuration: 800,
+                            style: {
+                                fontFamily: 'Kanit',
+                                fontSize: '16px'
+                            },
+                        });
 
+                        addToCart(cartValue)
+                        setAddToCartLoading(false)
 
+                    }else {
+                        enqueueSnackbar(`${data.message}`, { 
+                            variant: 'error',
+                            anchorOrigin: {
+                                vertical: 'top',
+                                horizontal: 'right'
+                            },
+                            autoHideDuration: 1800,
+                            style: {
+                                fontFamily: 'Kanit',
+                                fontSize: '16px'
+                            },
+                        });
+                    }
+                })
+            }
           }
-
         }catch(error) {
             console.log(error);
         } 
@@ -227,10 +233,10 @@ function ProductDescription({ product, onClose }) {
                 <Form>
                     <Grid container>
                     <IconButton aria-label="close" onClick={onClose} sx={{ position: 'absolute', top: 0, right: 0 }}>
-                        <CloseIcon />
+                        <CloseIcon sx={{ color: {xs: 'white', md: 'black'} }} />
                     </IconButton>
-                        <Grid item xs={12} md={4} sx={{ background: 'linear-gradient(to left, #414141  , #000000)', height: { xs: '50vh', md: '95vh' }, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                        <Slider {...settings} style={{ height: 'auto', width: '90%'}}>
+                    <Grid item xs={12} md={4} sx={{ background: 'linear-gradient(to left, #414141 , #000000)', height: { xs: '50vh', md: '95vh' }, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', overflow: 'hidden' }}>
+                        <Slider {...settings} style={{ height: 'auto', width: '90%' }}>
                             {productImages.map((image, index) => (
                                 <div key={index} style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                                     <img
@@ -239,7 +245,7 @@ function ProductDescription({ product, onClose }) {
                                         style={{
                                             width: '100%',
                                             height: 'auto',
-                                            maxHeight: '90%',  
+                                            maxHeight: '90%',
                                             aspectRatio: '1/1',
                                             objectFit: 'cover',
                                             borderRadius: '8px',
@@ -251,8 +257,11 @@ function ProductDescription({ product, onClose }) {
                                 </div>
                             ))}
                         </Slider>
-                        </Grid>
-                        <Grid item xs={12} md={8} sx={{ backgroundColor: '#F5F7F8' }}>
+                        <Typography color="white" sx={{ mt: 2, textAlign: 'center', fontFamily: 'Kanit', fontSize: { xs: 12, md: 16} }}>
+                            *Click / Tap the image to view it fullscreen
+                        </Typography>
+                    </Grid>
+                        <Grid item xs={12} md={8} sx={{ backgroundColor: '#F5F7F8', mt: {xs: 1} }}>
                             <Box sx={{ mx: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 25, md: 50 }, fontWeight: 'bold', color: 'black' }}>
                                     {productName}
@@ -269,8 +278,8 @@ function ProductDescription({ product, onClose }) {
                                 <Grid container direction="column" spacing={2} sx={{ pb: '5%' }}>
                                     <Grid item container justifyContent="space-between" alignItems="center">
                                         <Grid item xs={12} sm={6}>
-                                            <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 30 }, fontWeight: 'bold', color: 'black' }}>
-                                                Price: <b>₱{productPrice}.00</b>
+                                            <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 30 }, fontWeight: 800, color: 'black' }}>
+                                                Price: ₱{productPrice}.00
                                             </Typography> 
                                             <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 22 }, fontWeight: 400, color: 'black' }}>
                                                 Category: <span style={{ fontWeight: 'bold' }}><b>{productCategory.toUpperCase()}</b></span>
@@ -295,7 +304,7 @@ function ProductDescription({ product, onClose }) {
                                             <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 35 }, fontWeight: 'bold', color: 'black'}}>
                                                 PRODUCT DESCRIPTION:
                                             </Typography>
-                                            <Typography sx={{ fontFamily: 'Inter', fontSize: { xs: 12, md: 24 }, fontWeight: 'regular', color: 'black', pb: '5%' }}>
+                                            <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 18.5 }, fontWeight: 'regular', color: 'black', pb: '5%' }}>
                                                 {productDescription}
                                             </Typography>
                                        </Grid>
@@ -331,7 +340,7 @@ function ProductDescription({ product, onClose }) {
                                                     background: 'linear-gradient(to right, #414141  , #000000)'
                                                 }}
                                             >
-                                                <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 20, md: 25 }, p: 0.5, visibility: addToCartLoading ? 'hidden' : 'visible'}}>ADD TO CART</Typography>
+                                                <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 15, md: 20 }, p: 0.5, visibility: addToCartLoading ? 'hidden' : 'visible'}}>ADD TO CART</Typography>
                                                 {addToCartLoading && (
                                                     <CircularProgress
                                                         size={24}
@@ -365,7 +374,7 @@ function ProductDescription({ product, onClose }) {
                                                         },
                                                     }}
                                             >
-                                            <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 20, md: 25 }, p: 0.5, color: 'black' }}>SIZE CHART</Typography>
+                                            <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 15, md: 20 }, p: 0.5, color: 'black' }}>SIZE CHART</Typography>
                                             </Button>
                                             <Grid container sx={{ width: { xs: '100%', sm: '100%' }, justifyContent: 'center', alignItems: 'center' }}>
                                                 <Field name="size">
@@ -381,67 +390,67 @@ function ProductDescription({ product, onClose }) {
                                                     >
                                                         <MenuItem value="S" disabled={smallQuantity <= 0}>
                                                             {smallQuantity > 0 ? (
-                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 } }}>
+                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 }, fontFamily: 'Kanit' }}>
                                                                     S
                                                                 </Typography>
                                                             ) : (
-                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 } }}>
-                                                                    S - <span style={{ color: 'red', fontWeight: 'bold' }}>Out of stock</span>
+                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 }, fontFamily: 'Kanit' }}>
+                                                                    S - <span style={{ color: 'red', fontWeight: 500 }}>Out of stock</span>
                                                                 </Typography>
                                                             )}
                                                         </MenuItem>
                                                         <MenuItem value="M" disabled={mediumQuantity <= 0}>
                                                             {mediumQuantity > 0 ? (
-                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 } }}>
+                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 }, fontFamily: 'Kanit' }}>
                                                                     M
                                                                 </Typography>
                                                             ) : (
-                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 } }}>
-                                                                    M - <span style={{ color: 'red', fontWeight: 'bold' }}>Out of stock</span>
+                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 }, fontFamily: 'Kanit' }}>
+                                                                    M - <span style={{ color: 'red', fontWeight: 500 }}>Out of stock</span>
                                                                 </Typography>
                                                             )}
                                                         </MenuItem>
                                                         <MenuItem value="L" disabled={largeQuantity <= 0}>
                                                             {largeQuantity > 0 ? (
-                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 } }}>
+                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 }, fontFamily: 'Kanit' }}>
                                                                     L
                                                                 </Typography>
                                                             ) : (
-                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 } }}>
-                                                                    L - <span style={{ color: 'red', fontWeight: 'bold' }}>Out of stock</span>
+                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 }, fontFamily: 'Kanit' }}>
+                                                                    L - <span style={{ color: 'red', fontWeight: 500 }}>Out of stock</span>
                                                                 </Typography>
                                                             )}
                                                         </MenuItem>
                                                         <MenuItem value="XL" disabled={extraLargeQuantity <= 0}>
                                                             {extraLargeQuantity > 0 ? (
-                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 } }}>
+                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 }, fontFamily: 'Kanit' }}>
                                                                     XL
                                                                 </Typography>
                                                             ) : (
-                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 } }}>
-                                                                    XL - <span style={{ color: 'red', fontWeight: 'bold' }}>Out of stock</span>
+                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 }, fontFamily: 'Kanit' }}>
+                                                                    XL - <span style={{ color: 'red', fontWeight: 500 }}>Out of stock</span>
                                                                 </Typography>
                                                             )}
                                                         </MenuItem>
                                                         <MenuItem value="2XL" disabled={doubleXLQuantity <= 0}>
                                                             {doubleXLQuantity > 0 ? (
-                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 } }}>
+                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 }, fontFamily: 'Kanit' }}>
                                                                     2XL
                                                                 </Typography>
                                                             ) : (
-                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 } }}>
-                                                                    2XL - <span style={{ color: 'red', fontWeight: 'bold' }}>Out of stock</span>
+                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 }, fontFamily: 'Kanit' }}>
+                                                                    2XL - <span style={{ color: 'red', fontWeight: 500 }}>Out of stock</span>
                                                                 </Typography>
                                                             )}
                                                         </MenuItem>
                                                         <MenuItem value="3XL" disabled={tripleXLQuantity <= 0}>
                                                             {tripleXLQuantity > 0 ? (
-                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 } }}>
+                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 }, fontFamily: 'Kanit' }}>
                                                                     3XL
                                                                 </Typography>
                                                             ) : (
-                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 } }}>
-                                                                    3XL - <span style={{ color: 'red', fontWeight: 'bold' }}>Out of stock</span>
+                                                                <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: 20 }, fontFamily: 'Kanit' }}>
+                                                                    3XL - <span style={{ color: 'red', fontWeight: 500 }}>Out of stock</span>
                                                                 </Typography>
                                                             )}
                                                         </MenuItem>
@@ -477,7 +486,7 @@ function ProductDescription({ product, onClose }) {
                                                     background: 'linear-gradient(to right, #414141  , #000000)'
                                                 }}
                                             >
-                                                <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 20, md: 25 }, p: 0.5, visibility: addToCartLoading ? 'hidden' : 'visible'}}>ADD TO CART</Typography>
+                                                <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 15, md: 20 }, p: 0.5, visibility: addToCartLoading ? 'hidden' : 'visible'}}>ADD TO CART</Typography>
                                                 {addToCartLoading && (
                                                     <CircularProgress
                                                         size={24}

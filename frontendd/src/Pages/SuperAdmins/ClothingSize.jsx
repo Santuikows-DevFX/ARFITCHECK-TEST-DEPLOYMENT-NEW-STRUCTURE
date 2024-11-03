@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, Box, Typography, Divider, MenuItem, TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress } from '@mui/material';
+import { Grid, Box, Typography, Divider, MenuItem, TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Tooltip } from '@mui/material';
 import PreLoader from '../../Components/PreLoader';
-import { useCookies } from 'react-cookie';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import axiosClient from '../../axios-client';
-
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { Bounce } from 'react-toastify';
 import { useSnackbar } from 'notistack';
 
 function ClothingSize() {
@@ -120,7 +116,7 @@ function ClothingSize() {
         <Box m={2} height="100vh" sx={{ mt: 5 }}>
           <Grid container direction="column" spacing={2}>
             <Grid item container justifyContent="space-between" alignItems="center">
-              <Typography sx={{ fontFamily: 'Kanit', fontSize: 50, fontWeight: 'bold', color: 'black', paddingY: '1vh' }}>
+              <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 30, md: 50 }, fontWeight: 'bold', color: 'black', paddingY: '1vh' }}>
                 Size Table
               </Typography>
               <Grid container spacing={4} sx={{ width: "45%", justifyContent: 'center', alignItems: "center" }}>
@@ -161,6 +157,7 @@ function ClothingSize() {
                 <Button
                   variant="contained"
                   onClick={handleSaveChanges}
+                  disabled = {isSaveLoading}
                   sx={{
                     backgroundColor: 'White',
                     '&:hover': { backgroundColor: '#414a4c', color: 'white' },
@@ -218,29 +215,41 @@ function ClothingSize() {
             <Box mt={3}>
               <Grid container spacing={4}>
                 <Grid item xs={12} md={6}>
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 24, fontWeight: 'bold', color: 'black', mb: 2, textAlign: 'center' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 2 }}>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 24, fontWeight: 'bold', color: 'black', textAlign: 'center' }}>
                     BMIC Size
                   </Typography>
+                  <Tooltip 
+                    title={
+                      <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, fontWeight: 'medium' }}>
+                          This is the size chart provided by B.MIC
+                      </Typography>
+                    }
+                    arrow
+                  >
+                    <HelpOutlineIcon sx={{ fontSize: 20, color: 'black', ml: 1, cursor: 'pointer' }} />
+                  </Tooltip>
+                </Box>
                   <TableContainer component={Paper}>
                     <Table>
                       <TableHead>
                         <TableRow>
                           <TableCell sx={{ backgroundColor: 'black', color: 'white', textAlign: 'center' }}>
-                            <Typography sx={{ fontFamily: 'Inter', fontSize: 17, fontWeight: 600, paddingY: '1vh' }}>
+                            <Typography sx={{ fontFamily: 'Kanit', fontSize: 17, fontWeight: 600, paddingY: '1vh' }}>
                               SIZE
                             </Typography>
                           </TableCell>
                           <TableCell sx={{ backgroundColor: 'black', color: 'white', textAlign: 'center' }}>
                             <Typography sx={{ fontFamily: 'Inter', fontSize: 17, fontWeight: 600, paddingY: '1vh' }}>
-                              {selectedCategory === 'T-Shirt' ? 'WIDTH (inch.)' : 'WAIST (inch.)'}
+                              {selectedCategory === 'T-Shirt' || selectedCategory === 'Hoodies' ? 'WIDTH (inch.)' : 'WAIST (inch.)'}
                             </Typography>
                           </TableCell>
                           <TableCell sx={{ backgroundColor: 'black', color: 'white', textAlign: 'center' }}>
                             <Typography sx={{ fontFamily: 'Inter', fontSize: 17, fontWeight: 600, paddingY: '1vh' }}>
-                              {selectedCategory === 'T-Shirt' ? 'LENGTH (inch.)' : 'LENGTH (inch.)'}
+                              {selectedCategory === 'T-Shirt' || selectedCategory === 'Hoodies' ? 'LENGTH (inch.)' : 'LENGTH (inch.)'}
                             </Typography>
                           </TableCell>
-                          {selectedCategory === 'T-Shirt' && (
+                          {selectedCategory === 'T-Shirt' || selectedCategory === 'Hoodies' && (
                             <TableCell sx={{ backgroundColor: 'black', color: 'white', textAlign: 'center' }}>
                               <Typography sx={{ fontFamily: 'Inter', fontSize: 17, fontWeight: 600, paddingY: '1vh' }}>
                                 SLEEVES (inch.)
@@ -269,17 +278,19 @@ function ClothingSize() {
                                 <TextField
                                   fullWidth
                                   variant="standard"
-                                  value={size.sizeInfo[selectedCategory === 'T-Shirt' ? 'width' : 'waist']}
-                                  onChange={(e) => handleInputChange(e, size.sizeID, selectedCategory === 'T-Shirt' ? 'width' : 'waist')}
+                                  value={size.sizeInfo[selectedCategory === 'T-Shirt' || selectedCategory === 'Hoodies' ? 'width' : 'waist']}
+                                  onChange={(e) => handleInputChange(e, size.sizeID, selectedCategory === 'T-Shirt' || selectedCategory === 'Hoodies' ? 'width' : 'waist')}
                                   sx={{
-                                    fontFamily: 'Inter',
-                                    fontSize: 14, 
-                                    fontWeight: 500,
-                                    color: 'black',
                                     width: '70px',
                                     padding: '0 5px', 
                                   }}
                                   InputProps={{
+                                    sx: {
+                                      fontFamily: 'Kanit', 
+                                      fontSize: 16,
+                                      fontWeight: 500,
+                                      color: 'black',
+                                    },
                                     inputProps: {
                                       min: 0,
                                     },
@@ -287,7 +298,7 @@ function ClothingSize() {
                                 />
                               ) : (
                                 <Typography sx={{ fontFamily: 'Inter', fontSize: 15, fontWeight: 600 }}>
-                                  {size.sizeInfo[selectedCategory === 'T-Shirt' ? 'width' : 'waist']}
+                                  {size.sizeInfo[selectedCategory === 'T-Shirt' || selectedCategory === 'Hoodies' ? 'width' : 'waist']}
                                 </Typography>
                               )}
                             </TableCell>
@@ -299,14 +310,16 @@ function ClothingSize() {
                                   value={size.sizeInfo.length}
                                   onChange={(e) => handleInputChange(e, size.sizeID, 'length')}
                                   sx={{
-                                    fontFamily: 'Inter',
-                                    fontSize: 14, 
-                                    fontWeight: 500,
-                                    color: 'black',
                                     width: '70px',
                                     padding: '0 5px', 
                                   }}
                                   InputProps={{
+                                    sx: {
+                                      fontFamily: 'Kanit', 
+                                      fontSize: 16,
+                                      fontWeight: 500,
+                                      color: 'black',
+                                    },
                                     inputProps: {
                                       min: 0,
                                     },
@@ -318,7 +331,7 @@ function ClothingSize() {
                                 </Typography>
                               )}
                             </TableCell>
-                            {selectedCategory === 'T-Shirt' && (
+                            {selectedCategory === 'T-Shirt' || selectedCategory === 'Hoodies' && (
                               <TableCell sx={{ textAlign: 'center' }}>
                                 {editing ? (
                                   <TextField
@@ -327,14 +340,16 @@ function ClothingSize() {
                                     value={size.sizeInfo.sleeves}
                                     onChange={(e) => handleInputChange(e, size.sizeID, 'sleeves')}
                                     sx={{
-                                      fontFamily: 'Inter',
-                                      fontSize: 14, 
-                                      fontWeight: 500,
-                                      color: 'black',
                                       width: '70px',
                                       padding: '0 5px', 
                                     }}
                                     InputProps={{
+                                      sx: {
+                                        fontFamily: 'Kanit', 
+                                        fontSize: 16,
+                                        fontWeight: 500,
+                                        color: 'black',
+                                      },
                                       inputProps: {
                                         min: 0,
                                       },
@@ -384,24 +399,36 @@ function ClothingSize() {
                   </TableContainer>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 24, fontWeight: 'bold', color: 'black', mb: 2, textAlign: 'center' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 2 }}>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 24, fontWeight: 'bold', color: 'black', textAlign: 'center' }}>
                     Size Conversion
                   </Typography>
+                  <Tooltip 
+                    title={
+                      <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, fontWeight: 'medium' }}>
+                          This displays the converted measurements from Inches into Centimeters. Formula used for unit conversion is (Value in Inches * 2.54).
+                      </Typography>
+                    }
+                    arrow
+                  >
+                    <HelpOutlineIcon sx={{ fontSize: 20, color: 'black', ml: 1, cursor: 'pointer' }} />
+                  </Tooltip>
+                </Box>
                   <TableContainer component={Paper}>
                     <Table>
                       <TableHead>
                         <TableRow>
                           <TableCell sx={{ backgroundColor: 'black', color: 'white', textAlign: 'center' }}>
                             <Typography sx={{ fontFamily: 'Inter', fontSize: 17, fontWeight: 600, paddingY: '1vh' }}>
-                              {selectedCategory === 'T-Shirt' ? 'WIDTH (cm)' : 'WAIST (cm)'}
+                              {selectedCategory === 'T-Shirt' || selectedCategory === 'Hoodies' ? 'WIDTH (cm)' : 'WAIST (cm)'}
                             </Typography>
                           </TableCell>
                           <TableCell sx={{ backgroundColor: 'black', color: 'white', textAlign: 'center' }}>
                             <Typography sx={{ fontFamily: 'Inter', fontSize: 17, fontWeight: 600, paddingY: '1vh' }}>
-                              {selectedCategory === 'T-Shirt' ? 'LENGTH (cm)' : 'LENGTH (cm)'}
+                              {selectedCategory === 'T-Shirt' || selectedCategory === 'Hoodies' ? 'LENGTH (cm)' : 'LENGTH (cm)'}
                             </Typography>
                           </TableCell>
-                          {selectedCategory === 'T-Shirt' && (
+                          {selectedCategory === 'T-Shirt' || selectedCategory === 'Hoodies' && (
                             <TableCell sx={{ backgroundColor: 'black', color: 'white', textAlign: 'center' }}>
                               <Typography sx={{ fontFamily: 'Inter', fontSize: 17, fontWeight: 600, paddingY: '1vh' }}>
                                 SLEEVES (cm)
@@ -437,7 +464,7 @@ function ClothingSize() {
                           <TableRow key={index}>
                             <TableCell sx={{ textAlign: 'center' }}>
                               <Typography sx={{ fontFamily: 'Inter', fontSize: 15, fontWeight: 600 }}>
-                                {selectedCategory === 'T-Shirt' ? size.sizeInfo.centiWidth : size.sizeInfo.centiWaist}
+                                {selectedCategory === 'T-Shirt' || selectedCategory === 'Hoodies' ? size.sizeInfo.centiWidth : size.sizeInfo.centiWaist}
                               </Typography>
                             </TableCell>
                             <TableCell sx={{ textAlign: 'center' }}>
@@ -445,7 +472,7 @@ function ClothingSize() {
                                 {size.sizeInfo.centiLength}
                               </Typography>
                             </TableCell>
-                            {selectedCategory === 'T-Shirt' && (
+                            {selectedCategory === 'T-Shirt' || selectedCategory === 'Hoodies' && (
                               <TableCell sx={{ textAlign: 'center' }}>
                                 <Typography sx={{ fontFamily: 'Inter', fontSize: 15, fontWeight: 600 }}>
                                   {size.sizeInfo.centiSleeves}

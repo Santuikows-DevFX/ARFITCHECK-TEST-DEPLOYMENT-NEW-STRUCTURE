@@ -388,7 +388,7 @@ const SuperAdmin = (props) => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await axiosClient.patch(`/auth/updateAllAdminNotification/${cookie['?id']}`)
+      await axiosClient.post(`/auth/updateAllAdminNotification/${cookie['?id']}`)
       fetchNotificationData();
     } catch (error) { 
       console.log(error);
@@ -528,15 +528,6 @@ const SuperAdmin = (props) => {
                 
                 <Divider sx={{ backgroundColor: 'black' }} />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1 }}>
-                  <Button
-                    size="small"
-                    startIcon={<MailIcon />}
-                    onClick={handleMarkAllAsRead}
-                    sx={{ fontSize: '0.65rem', color: 'gray' }}
-                    disabled={notificationData.length == 0 ? true : false}
-                  >
-                    Mark All as Read
-                  </Button>
                   <Button
                     size="small"
                     startIcon={<DeleteIcon />}

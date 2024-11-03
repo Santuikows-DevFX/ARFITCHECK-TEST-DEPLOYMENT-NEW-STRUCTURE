@@ -237,6 +237,8 @@ class ReportController extends Controller
         $lastMonthFourthWeekStart = Carbon::parse($lastMonthThirdWeekEnd)->addDay()->toDateString();
         $lastMonthFourthWeekEnd = Carbon::parse($lastMonthFourthWeekStart)->endOfMonth()->toDateString();
 
+        $test = [];
+
         foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $monthlyRevenueInfo) {
             $orderDate = Carbon::parse($monthlyRevenueInfo['orderDate'])->toDateString();
 
@@ -271,7 +273,6 @@ class ReportController extends Controller
                     $lastMonthSales += $monthlyRevenueInfo['amountToPay'];
                 }
             }
-            
         }
 
         $monthlyRevenue = [

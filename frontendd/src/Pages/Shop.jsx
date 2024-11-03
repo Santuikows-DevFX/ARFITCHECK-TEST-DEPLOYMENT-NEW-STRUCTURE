@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Grid, Card, CardContent, Typography, Dialog, Box, TextField, InputAdornment, IconButton, CardActionArea, CardMedia, Button, Rating, CircularProgress, Tabs, Tab, Pagination, FormHelperText } from '@mui/material';
+import { Grid, Card, CardContent, Typography, Dialog, Box, TextField, InputAdornment, IconButton, CardActionArea, CardMedia, Button, Rating, CircularProgress, Tabs, Tab, Pagination, FormHelperText, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 
 import SearchIcon from '@mui/icons-material/Search';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
@@ -13,10 +13,6 @@ import axiosClient from '../axios-client';
 import ProductDescription from './Customers/ProductDescription';
 import { useCookies } from 'react-cookie';
 import PreLoader from '../Components/PreLoader';
-
-import { ToastContainer, toast} from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { Bounce } from 'react-toastify';
 
 import AOS from 'aos';
 import 'aos/dist/aos.css'
@@ -34,7 +30,8 @@ import { useSnackbar } from 'notistack';
 AOS.init({
     duration: 600, 
     easing: 'ease-out-back', 
-  });
+});
+
 const styles = {
     root: {
         backgroundColor: '#ffffff',
@@ -47,7 +44,6 @@ const styles = {
     },
     searchBox: {
         marginTop: 20,
-        marginBottom: 20,
     },
     cardImage: {
         height: 200,
@@ -60,6 +56,7 @@ const styles = {
     }
 };
 
+
 function Shop() {
 
     document.documentElement.style.setProperty('--primary', 'black');
@@ -69,10 +66,11 @@ function Shop() {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [noProductMessage, setNoProductMessage] = useState('');
-    const [minPrice, setMinPrice] = useState('');
-    const [maxPrice, setMaxPrice] = useState('');
+    const [sortPrice, setSortPrice] = useState('');
+    const [minPrice , setMinPrice] = useState('')
+    const [maxPrice, setMaxPrice] = useState('')
 
-    const [products, setProducts] = useState([]);
+    const [products, setProducts] = useState([]);   
     const [filteredSearchProducts, setFilteredSearchProducts] = useState([]);
     const [categoryCount, setCategoryCount] = useState([]);
 
@@ -103,6 +101,12 @@ function Shop() {
         
     }, [category]);
 
+    useEffect(() => {
+        if (sortPrice) {
+            sortProducts(sortPrice);
+        }
+    }, [sortPrice]);
+
     const categories = [
         { name: 'All', icon: <img src={allIcon} alt='icon' style={{ width: '35px', height: '35px' }}/>, count: categoryCount.totalProduct},
         { name: 'T-shirts', icon: <img src={shirtIcon} alt='icon' style={{ width: '35px', height: '35px' }}/> ,count: categoryCount.totalTShirt },
@@ -110,6 +114,17 @@ function Shop() {
         { name: 'Caps', icon: <img src={capIcon} alt='icon' style={{ width: '35px', height: '35px' }}/> , count: categoryCount.totalCaps},
         { name: 'Hoodies', icon: <img src={hoodieIcon} alt='icon' style={{ width: '35px', height: '35px' }}/>, count: categoryCount.totalHoodies},
     ];
+
+    const sortProducts = (order) => {
+        const sortedProducts = [...filteredSearchProducts].sort((a, b) => {
+            const priceA = a.productInfo.productPrice;
+            const priceB = b.productInfo.productPrice;
+    
+            return order === 'asc' ? priceA - priceB : priceB - priceA;
+        });
+    
+        setFilteredSearchProducts(sortedProducts);
+    };
 
     const fetchProductsByChosenCateg = async () => {
         try {
@@ -122,6 +137,7 @@ function Shop() {
                 setProducts(productResponse.data);
                 setFilteredSearchProducts(productResponse.data);
                 setCategoryCount(categoryCountResponse.data);
+                setSortPrice(null)
             }
 
         }catch(error) {
@@ -132,7 +148,7 @@ function Shop() {
     const fetchProducts = async () => {
         try {
             isLoading(true);
-            const productResponse = await axiosClient.get(`prd/getProducts/${cookie['?role']}`);
+            const productResponse = await axiosClient.get(`prd/getProducts/user`);
             const categoryCountResponse = await axiosClient.get('prd/getCategoryCount');
 
             if (productResponse.data && categoryCountResponse.data) {
@@ -183,6 +199,7 @@ function Shop() {
     const handleCategoryFilter = async (newHeaderText, count) => {
         const currentTime = new Date().getTime();
         setIsCooldown(true);
+        setCurrentPage(1)
 
         if (currentTime - lastClickTimeRef.current < COOLDOWN_TIME) {
             enqueueSnackbar(`You might want to calm down a bit...`, { 
@@ -208,15 +225,43 @@ function Shop() {
 
         try {
             const category = { category: newHeaderText };
-            const filteredProductByCategory = await axiosClient.post('prd/getProductByCategory', category);
-            if (filteredProductByCategory.data && count > 0) {
-                setNoProductMessage(0);
-                setProducts(filteredProductByCategory.data);
-                setFilteredSearchProducts(filteredProductByCategory.data);
-                setCategoryChoosingLoading(false)
-            } else {
-                setNoProductMessage(1);
-                setCategoryChoosingLoading(false)
+
+            if(isPriceFilter) {
+
+                const productData = { minimumPrice: parseInt(minPrice), maximumPrice: parseInt(maxPrice), category: newHeaderText };
+                const response = newHeaderText === 'ALL PRODUCTS' ? 
+                await axiosClient.post('prd/getProductByPriceRange', { minimumPrice: parseInt(minPrice), maximumPrice: parseInt(maxPrice) }) : 
+                await axiosClient.post('prd/getProductByPriceAndCategory', productData);
+
+                console.log(newHeaderText === 'ALL PRODUCTS' ? '' : productData);
+
+                if (response.data) {
+                    setNoProductMessage(0);
+                    setProducts(response.data);
+                    setFilteredSearchProducts(response.data);
+                    setCategoryChoosingLoading(false)
+                    setSortPrice(null)
+                } else {
+                    setNoProductMessage(1);
+                    setCategoryChoosingLoading(false)
+                    setSortPrice(null)
+                }
+
+            }else {
+
+                const filteredProductByCategory = await axiosClient.post('prd/getProductByCategory', category);
+                if (filteredProductByCategory.data && count > 0) {
+                    setNoProductMessage(0);
+                    setProducts(filteredProductByCategory.data);
+                    setFilteredSearchProducts(filteredProductByCategory.data);
+                    setCategoryChoosingLoading(false)
+                    setSortPrice(null)
+                } else {
+                    setNoProductMessage(1);
+                    setCategoryChoosingLoading(false)
+                    setSortPrice(null)
+                }
+                
             }
 
             setTimeout(() => {
@@ -240,25 +285,70 @@ function Shop() {
 
         setApplyFilterLoading(true)
 
-        console.log(values);
-
         try {
           if (type === 'find') {
-            const numericRegex = /^[0-9]*$/;
+
+            if(applyFilterLoading) {
+
+                enqueueSnackbar(`You might want to calm down a bit.`, { 
+                    variant: 'warning',
+                    anchorOrigin: {
+                      vertical: 'top',
+                      horizontal: 'right'
+                    },
+                    autoHideDuration: 1800,
+                    style: {
+                      fontFamily: 'Kanit',
+                      fontSize: '16px'
+                    },
+                });
+
+                setApplyFilterLoading(false);
+                return;
+            }
 
             if (parseInt(values?.minPrice) <= parseInt(values?.maxPrice) && values?.minPrice !== '' && values?.maxPrice !== '') {
-                const priceRange = { minimumPrice: parseInt(values?.minPrice), maximumPrice: parseInt(values?.maxPrice) };
-                const response = await axiosClient.post('prd/getProductByPriceRange', priceRange);
-                setIsPriceFilter(true)
-                if (response.data.message) {
-                    setNoProductMessage(1);
-                } else {
-                    
-                    setNoProductMessage(0);
-                    setProducts(response.data);
-                    setFilteredSearchProducts(response.data);
+
+                if(headerText === 'ALL PRODUCTS') {
+
+                    const priceRange = { minimumPrice: parseInt(values?.minPrice), maximumPrice: parseInt(values?.maxPrice)};
+                    const response = await axiosClient.post('prd/getProductByPriceRange', priceRange);
+    
+                    setMinPrice(values?.minPrice);
+                    setMaxPrice(values?.maxPrice);
+    
+                    setIsPriceFilter(true)
+                    if (response.data.message) {
+                        setNoProductMessage(1);
+                    } else {
+                        
+                        setNoProductMessage(0);
+                        setProducts(response.data);
+                        setFilteredSearchProducts(response.data);
+                    }
+                    setApplyFilterLoading(false)
+
+                }else {
+
+                    const productData = { minimumPrice: parseInt(values?.minPrice), maximumPrice: parseInt(values?.maxPrice), category: headerText };
+                    const response = await axiosClient.post('prd/getProductByPriceAndCategory', productData);
+
+                    setMinPrice(values?.minPrice);
+                    setMaxPrice(values?.maxPrice);
+                    setIsPriceFilter(true)
+
+                    if (response.data) {
+                        setNoProductMessage(0);
+                        setProducts(response.data);
+                        setFilteredSearchProducts(response.data);
+                    } else {
+                        setNoProductMessage(1);
+                    }
+
+                    setApplyFilterLoading(false)  
+                    setSortPrice(null)                 
                 }
-                setApplyFilterLoading(false)
+
             } else {
 
                 setApplyFilterLoading(false)
@@ -275,13 +365,21 @@ function Shop() {
                     },
                 });
             }
+
           }else {
+
+            fetchProducts();
+
             setIsPriceFilter(false)
             setApplyFilterLoading(false)
-            fetchProducts();
+            setSortPrice(null)
+            setSelectedTab(0)    
+            setCurrentPage(1)        
           }
         } catch (error) {
             console.log(error);
+            setApplyFilterLoading(false)
+
         }
     };
 
@@ -325,6 +423,7 @@ function Shop() {
                                     <Tab
                                         key={index}
                                         disabled = {categoryChoosingLoading}
+                                        sx={{ cursor: categoryChoosingLoading ? 'not-allowed' : 'pointer' }}
                                         label={
                                         <Box display="flex" alignItems="center">
                                             {category.icon}
@@ -342,6 +441,7 @@ function Shop() {
                                 ))}
                             </Tabs>
                         </Grid>
+                        {/* FILTER MAN */}
                         <Grid item xs={12} sm={4} md={3}>
                         <Typography
                             component="div"
@@ -349,176 +449,217 @@ function Shop() {
                             data-aos="fade-right" 
                             data-aos-delay="300" 
                         >
-                        {headerText}
-                            </Typography>
-                            <TextField
-                              data-aos="fade-up" 
-                               data-aos-delay="400"
-                                fullWidth
-                                label="Search"
-                                variant="outlined"
-                                sx={{
-                                    "& input": {
-                                        fontFamily: 'Kanit'
-                                    },
-                                }}
-                                InputLabelProps={{ 
-                                    sx: {
-                                        fontFamily: 'Kanit'
-                                    }, 
-                                }}
-                                value={searchQuery}
-                                onChange={handleInputChange}
-                                onKeyPress={(e) => {
-                                    if (e.key === 'Enter') {
-                                        handleSearch();
-                                    }
-                                }}
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton onClick={handleSearch}>
-                                                <SearchIcon />
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                }}
-                                style={styles.searchBox}
-                            />
-                             <Formik
-                                initialValues={priceFilterInitialValues}
-                                validationSchema={priceFilterValidationSchema}
-                                onSubmit={(values, { setSubmitting }) => {
-                                    handleApplyPriceRange('find', values);
-                                    setSubmitting(false);
-                                }}
-                                >
-                                {({ values, handleChange, handleSubmit, isSubmitting, errors, touched, isValid }) => (
-                                    <Form onSubmit={handleSubmit}>
-                                    <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
-                                        <Field
-                                            data-aos="fade-up" 
-                                            data-aos-delay="500" 
-                                            as={TextField}
-                                            name="minPrice"
-                                            label="Min Price"
-                                            type="number"
-                                            variant="outlined"
-                                            fullWidth
-                                            value={values.minPrice}
-                                            onChange={handleChange}
-                                            error={touched.minPrice && !!errors.minPrice}
-                                            helperText={touched.minPrice && errors.minPrice && (
-                                                <FormHelperText sx={{ fontFamily: 'Kanit', color: 'red', fontSize: 11 }}>
-                                                  {errors.minPrice}
-                                                </FormHelperText>
-                                            )}
-                                            sx={{
-                                                "& input": { fontFamily: 'Kanit' },
-                                                "& label": { fontFamily: 'Kanit' }
-                                            }}
-                                        />
-                                        <Field
-                                            data-aos="fade-up" 
-                                            data-aos-delay="500" 
-                                            as={TextField}
-                                            name="maxPrice"
-                                            label="Max Price"
-                                            type="number"
-                                            variant="outlined"
-                                            fullWidth
-                                            value={values.maxPrice}
-                                            onChange={handleChange}
-                                            error={touched.maxPrice && !!errors.maxPrice}
-                                            helperText={touched.maxPrice && errors.maxPrice && (
-                                                <FormHelperText sx={{ fontFamily: 'Kanit', color: 'red', fontSize: 11 }}>
-                                                  {errors.maxPrice}
-                                                </FormHelperText>
-                                            )}
-                                            sx={{
-                                                "& input": { fontFamily: 'Kanit' },
-                                                "& label": { fontFamily: 'Kanit' }
-                                            }}
-                                            
-                                        />
-                                    </Box>
+                            {headerText}
+                        </Typography>
 
-                                    <Button 
-                                        // data-aos="fade-up" 
-                                        // data-aos-delay="500" 
-                                        variant="contained" fullWidth style={{ background: 'linear-gradient(to right, #414141  , #000000)' }} onClick={() => {
-                                         handleApplyPriceRange('find', values)
-                                        }}
-                                        disabled = {!isValid || applyFilterLoading || Object.values(values).some(value => value === '')}
-                                        sx={{ opacity: !isValid || Object.values(values).some(value => value === '') ? 0.7 : 1 }}
-                                    >
-                                        <Typography 
-                                            sx={{ 
-                                                fontFamily: 'Kanit', 
-                                                color: 'white', 
-                                                fontSize: { xs: 15, md: 20 }, 
-                                                p: 0.5,
-                                                visibility: applyFilterLoading ? 'hidden' : 'visible',
-                                           
-                                            }}
-                                        > APPLY
-                                        </Typography>
+                        <TextField
+                            data-aos="fade-up" 
+                            data-aos-delay="400"
+                            fullWidth
+                            label="Search"
+                            variant="outlined"
+                            sx={{
+                                "& input": {
+                                    fontFamily: 'Kanit'
+                            },
+                            }}
+                            InputLabelProps={{ 
+                                sx: {
+                                    fontFamily: 'Kanit'
+                            }, 
+                            }}
+                            value={searchQuery}
+                            onChange={handleInputChange}
+                            onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                                handleSearch();
+                            }
+                            }}
+                            InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                <IconButton onClick={handleSearch}>
+                                    <SearchIcon />
+                                </IconButton>
+                                </InputAdornment>
+                            ),
+                            }}
+                            style={styles.searchBox}
+                        />
+                        <FormControl
+                            data-aos="fade-up" 
+                            data-aos-delay="500"
+                            fullWidth
+                            sx={{
+                                mt: 2,
+                                mb: 2.5,
+                                "& .MuiInputBase-input": {
+                                    fontFamily: 'Kanit',
+                            },
+                            "& .MuiInputLabel-root": {
+                                fontFamily: 'Kanit',
+                            }
+                            }}
+                        >
+                            <InputLabel>Sort by Price</InputLabel>
+                            <Select
+                                label="Sort by Price"
+                                value={sortPrice}
+                                onChange={(e) => {
+                                    setSortPrice(e.target.value);
+                                    sortProducts(e.target.value);
+                                }}
+                            >
+                            <MenuItem value="desc" sx={{ fontFamily: 'Kanit', fontSize: {xs : 16, md: 20} }}>Highest to Lowest</MenuItem>
+                            <MenuItem value="asc" sx={{ fontFamily: 'Kanit', fontSize: {xs : 16, md: 20} }}>Lowest to Highest</MenuItem>
+                            </Select>
+                        </FormControl>
 
-                                        {applyFilterLoading && (
-                                            <CircularProgress
-                                                size={24}
-                                                color="inherit"
-                                                sx={{
-                                                    position: "absolute",
-                                                    top: "50%",
-                                                    left: "50%",
-                                                    marginTop: "-12px",
-                                                    marginLeft: "-12px",
-                                                }}
-                                            />
-                                        )}  
-                                    </Button>
-                                    <Button
-                                        // data-aos="fade-up" 
-                                        // data-aos-delay="500" 
-                                        fullWidth
-                                        type="button"  
-                                        variant="outlined"
-                                        sx={{
-                                            '&:hover': { borderColor: '#414a4c', backgroundColor: '#414a4c', color: 'white' },
-                                            '&:not(:hover)': { borderColor: '#3d4242', color: 'black' },
-                                            mt: 2,
-                                            visibility: isPriceFilter ? 'visible' : 'hidden'
-                                        }}
-                                        onClick={() => handleApplyPriceRange('fetch', values)} 
+                        <Typography
+                            component="div"
+                            sx={{ fontFamily: "Kanit", fontWeight: "bold", textAlign: { xs: "center", md: "left"}, color: "black", fontSize: { xs: 25, md: 30} }}
+                            data-aos="fade-right" 
+                            data-aos-delay="300" 
+                        >
+                            PRICE FILTER
+                        </Typography>
+
+                        <Formik
+                            initialValues={priceFilterInitialValues}
+                            validationSchema={priceFilterValidationSchema}
+                            onSubmit={(values, { setSubmitting }) => {
+                                handleApplyPriceRange('find', values);
+                                setSubmitting(false);
+                            }}
+                        >
+                            {({ values, handleChange, handleSubmit, isSubmitting, errors, touched, isValid }) => (
+                            <Form onSubmit={handleSubmit}>
+                                <Box sx={{ display: 'flex', gap: 3, mb: 2, mt: 2 }}>
+                                <Field
+                                    data-aos="fade-up" 
+                                    data-aos-delay="500" 
+                                    as={TextField}
+                                    name="minPrice"
+                                    label="Min Price"
+                                    type="number"
+                                    variant="outlined"
+                                    fullWidth
+                                    value={values.minPrice}
+                                    onChange={handleChange}
+                                    error={touched.minPrice && !!errors.minPrice}
+                                    helperText={touched.minPrice && errors.minPrice && (
+                                    <FormHelperText sx={{ fontFamily: 'Kanit', color: 'red', fontSize: 11 }}>
+                                        {errors.minPrice}
+                                    </FormHelperText>
+                                    )}
+                                    sx={{
+                                    "& input": { fontFamily: 'Kanit' },
+                                    "& label": { fontFamily: 'Kanit' }
+                                    }}
+                                />
+                                <Field
+                                    data-aos="fade-up" 
+                                    data-aos-delay="500" 
+                                    as={TextField}
+                                    name="maxPrice"
+                                    label="Max Price"
+                                    type="number"
+                                    variant="outlined"
+                                    fullWidth
+                                    value={values.maxPrice}
+                                    onChange={handleChange}
+                                    error={touched.maxPrice && !!errors.maxPrice}
+                                    helperText={touched.maxPrice && errors.maxPrice && (
+                                    <FormHelperText sx={{ fontFamily: 'Kanit', color: 'red', fontSize: 11 }}>
+                                        {errors.maxPrice}
+                                    </FormHelperText>
+                                    )}
+                                    sx={{
+                                    "& input": { fontFamily: 'Kanit' },
+                                    "& label": { fontFamily: 'Kanit' }
+                                    }}
+                                />
+                                </Box>
+
+                                <Button 
+                                    variant="contained"
+                                    fullWidth
+                                    style={{ background: 'linear-gradient(to right, #414141, #000000)' }}
+                                    onClick={() => {
+                                        handleApplyPriceRange('find', values);
+                                    }}
+                                    disabled={!isValid || applyFilterLoading || Object.values(values).some(value => value === '')}
+                                    sx={{ opacity: !isValid || Object.values(values).some(value => value === '') ? 0.7 : 1 }}
                                     >
-                                        <Typography sx={{ 
+                                    <Typography 
+                                        sx={{ 
                                             fontFamily: 'Kanit', 
+                                            color: 'white', 
                                             fontSize: { xs: 15, md: 20 }, 
-                                            p: 0.5, 
-                                            visibility: applyFilterLoading ? 'hidden' : isPriceFilter ? 'visible' : 'hidden'
-                                        }}>
-                                            GET ALL PRODUCTS
-                                        </Typography>
-
-                                        {applyFilterLoading && (
-                                            <CircularProgress
-                                                size={24}
-                                                color="inherit"
-                                                sx={{
-                                                    position: "absolute",
-                                                    top: "50%",
-                                                    left: "50%",
-                                                    marginTop: "-12px",
-                                                    marginLeft: "-12px",
-                                                }}
-                                            />
-                                        )}
-                                    </Button>
-                                    </Form>
+                                            p: 0.5,
+                                            visibility: applyFilterLoading ? 'hidden' : 'visible'
+                                        }}
+                                    >
+                                    APPLY
+                                </Typography>
+                                {applyFilterLoading && (
+                                    <CircularProgress
+                                    size={24}
+                                    color="inherit"
+                                    sx={{
+                                        position: "absolute",
+                                        top: "50%",
+                                        left: "50%",
+                                        marginTop: "-12px",
+                                        marginLeft: "-12px",
+                                        color: 'white'
+                                    }}
+                                    />
                                 )}
-                                </Formik>
+                                </Button>
+                                <Button
+                                    fullWidth
+                                    type="button"  
+                                    variant="outlined"
+                                    sx={{
+                                        '&:hover': { borderColor: '#414a4c', backgroundColor: '#414a4c', color: 'white' },
+                                        '&:not(:hover)': { borderColor: '#3d4242', color: 'black' },
+                                        mt: 2,
+                                        visibility: isPriceFilter ? 'visible' : 'hidden',
+                                        opacity: applyFilterLoading ? 0.7 : 1,
+
+                                    }}
+                                    onClick={() => handleApplyPriceRange('fetch', values)} 
+                                >
+                                <Typography 
+                                    sx={{ 
+                                        fontFamily: 'Kanit', 
+                                        fontSize: { xs: 15, md: 20 }, 
+                                        p: 0.5, 
+                                        visibility: applyFilterLoading ? 'hidden' : isPriceFilter ? 'visible' : 'hidden'
+                                    }}
+                                >
+                                    GET ALL PRODUCTS
+                                </Typography>
+                                {applyFilterLoading && (
+                                    <CircularProgress
+                                    size={24}
+                                    color="inherit"
+                                    sx={{
+                                        position: "absolute",
+                                        top: "50%",
+                                        left: "50%",
+                                        marginTop: "-12px",
+                                        marginLeft: "-12px",
+                                    }}
+                                    />
+                                )}
+                                </Button>
+                            </Form>
+                            )}
+                        </Formik>
                         </Grid>
+                        {/* PRODUCTS */}
                         <Grid item xs={12} sm={8} md={9}>
                             {noProductMessage ? (
                                 <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 15, md: 25 }, color: 'black' }}>No products found</Typography>

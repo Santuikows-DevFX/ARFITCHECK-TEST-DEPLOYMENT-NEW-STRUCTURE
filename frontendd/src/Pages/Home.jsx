@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useStateContext } from '../ContextAPI/ContextAPI';
 import axiosClient from '../axios-client';
 import { useCookies } from 'react-cookie';
-import { Typography, Pagination, Card, CardActionArea, CardContent, Box, Grid, CardMedia, IconButton, InputAdornment, TextField, FormHelperText, Button, Dialog, ImageList, ImageListItem } from '@mui/material';
+import { Typography, Pagination, Card, CardActionArea, CardContent, Box, Grid, CardMedia, Button, Dialog } from '@mui/material';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
@@ -14,7 +14,10 @@ import ProductDescription from './Customers/ProductDescription.jsx';
 import shopGraffiti from '../../public/assets/shopGraffiti1.png'
 import homeSliderImageOne from '../../public/assets/Announcement/Eventsv2.png'
 import homeSliderVideo from '../../public/assets/nigg/Ads.mp4'
-import categoriesTempPics from '../../public/assets/log.png'
+import tShirtCategoryImage from '../../public/assets/category_tshirt.png'
+import shortCategoryImage from '../../public/assets/category_short.png'
+import capCategoryImage from '../../public/assets/category_cap.png'
+import hoodieCategoryImage from '../../public/assets/category_hoodie.png'
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CheckroomIcon from '@mui/icons-material/Checkroom';
@@ -24,10 +27,11 @@ import bmicHighLightImage from '../../public/assets/bmicHomePageImage.png';
 import bmicHighLightImageOne from '../../public/assets/bmicHomePageImageTwo.png';
 import bmicHighLightImageTwo from '../../public/assets/bmicHomePage.png';
 import bmicComingSoonPrdImageSample from '../../public/assets/productComingSoonSample.png';
-import bmicCoverImage from '../../public/assets/bmicHomePageLogoImage.png'
+import bmicCoverImage from '../../public/assets/bmicHomePageLogoImage.png';
 
 import { off, onValue, ref } from 'firebase/database';
 import { db } from '../firebase.js';
+import Aos from 'aos';
 
 const comingSoonPrd = [
   { name: "asasa", image: bmicHighLightImage },
@@ -36,6 +40,11 @@ const comingSoonPrd = [
   { name: "asasa", image: bmicComingSoonPrdImageSample },
   { name: "asasa", image: comingSoongIMG },
 ];
+
+Aos.init({
+  duration: 600, 
+  easing: 'ease-out-back', 
+});
 
 const Home = () => {
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -51,6 +60,9 @@ const Home = () => {
 
   document.documentElement.style.setProperty('--primary', 'white');
   React.useEffect(() => {
+
+    Aos.init();
+
     const timeout = setTimeout(() => {
       setIsLoading(false);
     }, 2000);
@@ -155,9 +167,6 @@ const Home = () => {
       const timeDiff = getCurrentDate.getTime() - deliveryDate.getTime();
       const dayDiff = timeDiff / (1000 * 3600 * 24) // => 1 day = 1000 * 60 * 60 * 24
 
-      console.log(dayDiff);
-      
-
       //check natin if yung diff from curr date and updated date when delivered is est 1 day @ 8:30 something
       if (dayDiff > 1.55 && !isReceived) {
         handleAutomaticReceiveOrder({orderID, associatedOrderID: orderID})
@@ -178,10 +187,10 @@ const Home = () => {
   }
 
   const categories = [
-    { name: 'T-SHIRTS', value: 'T-Shirt' },
-    { name: 'SHORTS', value: 'Shorts' },
-    { name: 'CAPS', value: 'Caps' },
-    { name: 'HOODIES', value: 'Hoodies' },
+    { name: 'T-SHIRTS', value: 'T-Shirt', image: tShirtCategoryImage },
+    { name: 'SHORTS', value: 'Shorts', image: shortCategoryImage },
+    { name: 'CAPS', value: 'Caps', image: capCategoryImage },
+    { name: 'HOODIES', value: 'Hoodies', image: hoodieCategoryImage },
   ];
 
   const settings = {
@@ -252,6 +261,8 @@ const Home = () => {
   const renderProductSlides = () => {
     return displayProducts.slice(0, 5).map(product => (
       <Card
+        data-aos="fade-down" 
+        data-aos-delay="200"
         key={product.productID}
         sx={{ 
           width: { xs: '85%', sm: '80%', md: '90%' }, 
@@ -339,22 +350,30 @@ const Home = () => {
             <Box
               sx={{
                 position: 'absolute',
-                top: {xs: '60%', md: '38%'},
+                top: {xs: '65%', md: '38%'},
                 left: '10%',
                 transform: 'translateY(-50%)',
                 color: '#fff',
                 textAlign: 'left',
               }}
             >
-              <Typography sx={{fontFamily: 'Storm', fontSize: { xs: 40, md: 120 },textShadow: '4px 4px 4px rgba(0, 0, 0, 0.9)' }}>
+              <Typography 
+                data-aos="fade-down" 
+                data-aos-delay="500"
+                sx={{fontFamily: 'Storm', fontSize: { xs: 35, md: 120 },textShadow: '4px 4px 4px rgba(0, 0, 0, 0.9)' }}>
                 B.MIC CLOTHING
               </Typography>
               
-              <Typography sx={{ mb: {xs: 1, md: 2}, mt: {xs: -0.5, md: -5} ,fontFamily: 'Kanit', fontSize: { xs: 10, md: 35 },textShadow: '4px 4px 4px rgba(0, 0, 0, 0.6)' }}>
+              <Typography 
+                data-aos="fade-right" 
+                data-aos-delay="700"
+               sx={{ mb: {xs: 1, md: 2}, mt: {xs: -0.5, md: -5} ,fontFamily: 'Kanit', fontSize: { xs: 10, md: 35 },textShadow: '4px 4px 4px rgba(0, 0, 0, 0.6)' }}>
                 Get and Try our App
               </Typography>
               <a href="/tool" style={{ textDecoration: 'none' }}>
                 <Button
+                  data-aos="fade-up" 
+                  data-aos-delay="800"
                   sx={{
                     backgroundColor: "White",
                     "&:hover": {
@@ -395,8 +414,6 @@ const Home = () => {
     }
   };
   
-  
-
   return (
     <div>
       {isLoading ? (
@@ -433,6 +450,8 @@ const Home = () => {
             >
               <Grid item xs={12} sm={6} md={3}>
                 <Card 
+                  data-aos="fade-up" 
+                  data-aos-delay="100"
                   sx={{ 
                     p: 2, 
                     display: 'flex', 
@@ -463,6 +482,8 @@ const Home = () => {
 
               <Grid item xs={12} sm={6} md={3}>
                 <Card 
+                  data-aos="fade-up" 
+                  data-aos-delay="300"
                   sx={{ 
                     p: 2, 
                     display: 'flex', 
@@ -493,6 +514,8 @@ const Home = () => {
 
               <Grid item xs={12} sm={6} md={3}>
                 <Card 
+                  data-aos="fade-up" 
+                  data-aos-delay="500"
                   sx={{ 
                     p: 2, 
                     display: 'flex', 
@@ -523,6 +546,8 @@ const Home = () => {
 
               <Grid item xs={12} sm={6} md={3}>
                 <Card 
+                  data-aos="fade-up" 
+                  data-aos-delay="700"
                   sx={{ 
                     p: 2, 
                     display: 'flex', 
@@ -556,7 +581,10 @@ const Home = () => {
 
           {/* SLIDER OF THE PRODUCT */}
           <Box sx={{ background: 'linear-gradient(to right, #000000 , #434343)',pb: 3}}>
-            <Typography sx={{ fontFamily: "Kanit", fontSize: { xs: 20, sm: 25, md: 30 }, fontWeight: "bold", textAlign: "center", color: "white", py:{ xs: 1, sm: 2, md: 3 }}}>HAVE A GLIMPSE OF OUR PRODUCTS</Typography>
+            <Typography 
+              data-aos="fade-down" 
+              data-aos-delay="100"
+              sx={{ fontFamily: "Kanit", fontSize: { xs: 20, sm: 25, md: 30 }, fontWeight: "bold", textAlign: "center", color: "white", py:{ xs: 1, sm: 2, md: 3 }}}>HAVE A GLIMPSE OF OUR PRODUCTS</Typography>
             <Slider {...settings}>
                 {renderProductSlides().map((slide) => (
                   <Grid item xs={12} sm={6} md={4} key={slide.key}>
@@ -588,11 +616,13 @@ const Home = () => {
               sx={{
                 maxWidth: '1700px',
                 padding: { xs: 1, sm: 2 },
-                minHeight: '100%', // Ensures full height of the parent
+                minHeight: '100%',
               }}
             >
               <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: { xs: 3 } }}>
                 <Box
+                  data-aos="fade-right" 
+                  data-aos-delay="500"
                   component="img"
                   src={bmicCoverImage}
                   alt="Edited Image"
@@ -604,11 +634,13 @@ const Home = () => {
                   }}
                 />
               </Grid>
-              <Grid item xs={12} md={6} sx={{ mx: { xs: 2.5, md: 'auto' }, width: { xs: '80%', md: '100%' } }}>
+              <Grid item xs={12} md={6} sx={{ mx: { xs: 2.5, md: 'auto' }, width: { xs: '80%', md: '100%' } }} >
                 <Slider {...comingSoonSliderSettings}>
                   {comingSoonPrd.map((product, index) => (
                     <div key={index}>
                       <Card
+                        data-aos="fade-left" 
+                        data-aos-delay="700"
                         sx={{
                           borderRadius: '8px',
                           boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
@@ -635,6 +667,7 @@ const Home = () => {
               </Grid>
             </Grid>
           </Box>
+          
           {/* CATEGORIES */}
           <Box 
             sx={{ 
@@ -654,102 +687,98 @@ const Home = () => {
             >
               BROWSE BY CATEGORY
             </Typography>
-          <Grid container spacing={3} justifyContent="center" sx = {{pb: { xs: 5, sm: 3, md: 10}}}>
-          {categories.map((category, index) => (
-            <Grid item xs={12} sm={6} md={6} key={index}>
-              <Card 
-                sx={{ 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  position: 'relative',
-                  height: '100%', 
-                  boxShadow: 5, 
-                  borderRadius: 2, 
-                  mx: 4,
-                  transition: 'transform 0.3s, box-shadow 0.3s', 
-                  '&:hover': {
-                    transform: 'scale(1.05)',
-                    boxShadow: 6,
-                  }
-                }}
-              >
-                <CardMedia
-                  component="img"
-                  image={categoriesTempPics}
-                  alt="Category Image"
-                  sx={{
-                    height: {xs:100, sm: 150, md:200},
-                    objectFit: 'cover',
-                    transition: 'transform 0.3s, box-shadow 0.3s',
-                    position: 'relative',
-                    borderRadius: 'inherit', 
-                    '&:before': {
-                      content: '""',
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '50%', 
-                      background: 'linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent)',
-                      zIndex: 1,
-                    },
-                    '&:hover': {
-                      boxShadow: 10, 
-                    },
-                  }}
-                />
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    color: 'white',
-                    textAlign: 'center',
-                    width: '100%',
-                    zIndex: 2,
-                    
-                  }}
-                >
-                  <Typography 
-                    gutterBottom 
-                    variant="h6" 
-                    component="div" 
+            <Grid container spacing={3} justifyContent="center" sx={{ pb: { xs: 5, sm: 3, md: 10 } }}>
+              {categories.map((category, index) => (
+                <Grid item xs={12} sm={6} md={6} key={index}>
+                  <Card 
+                    data-aos="fade-up" 
+                    data-aos-delay="300"
                     sx={{ 
-                      fontFamily: "Kanit", 
-                      fontWeight: "bold", 
-                      fontSize: { xs: 16, sm: 20, md: 24 },
-                      lineHeight: 1.2,
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      position: 'relative',
+                      height: '100%', 
+                      boxShadow: 5, 
+                      borderRadius: 2, 
+                      mx: 4,
+                      transition: 'transform 0.3s, box-shadow 0.3s', 
+                      '&:hover': {
+                        transform: 'scale(1.05)',
+                        boxShadow: 6,
+                      }
                     }}
                   >
-                    {category.name}
-                  </Typography>
-                  <Button 
-                    onClick={() => {
-                        navigator(`/shop/${category.value}`)                      
-                    }}
-                    variant="outlined" 
-                    color="primary"
-                    sx={{
-                  
-                      color: 'white', 
-                      borderColor: 'white',             
-                    }}
-                  >
-                    <Typography
-                      sx={{ 
-                        fontFamily: "Kanit",  
-                        fontSize: { xs: 9, sm: 20, md: 20 },
-                    
-                      }}>
-                    SHOP NOW
-                    </Typography>
-                  </Button>
-                </Box>
-              </Card>
+                    <CardMedia
+                      component="img"
+                      image={category.image}
+                      alt={`${category.name} Image`}
+                      sx={{
+                        height: { xs: 100, sm: 150, md: 200 },
+                        objectFit: 'cover',
+                        transition: 'transform 0.3s ease',
+                        position: 'relative',
+                        borderRadius: 'inherit',
+                        '&:hover': {
+                          transform: 'scale(1.1)', 
+                        },
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        color: 'white',
+                        textAlign: 'center',
+                        width: '100%',
+                        zIndex: 2,
+                      }}
+                    >
+                      <Typography 
+                        gutterBottom 
+                        variant="h6" 
+                        component="div" 
+                        sx={{ 
+                          fontFamily: "Kanit", 
+                          fontWeight: "bold", 
+                          fontSize: { xs: 16, sm: 20, md: 24 },
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {category.name}
+                      </Typography>
+                      <Button 
+                        onClick={() => {
+                          navigator(`/shopViewOnly/${category.value}`)                      
+                        }}
+                        variant="outlined" 
+                        sx={{
+                          color: 'white', 
+                          borderColor: 'white',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            background: 'linear-gradient(to right, #E9E9E9, #F6F6F6)',
+                            color: 'black',
+                            borderColor: 'white',
+                          }
+                        }}
+                      >
+                        <Typography
+                          sx={{ 
+                            fontFamily: "Kanit",  
+                            fontWeight: 500,
+                            fontSize: { xs: 9, sm: 20, md: 20 },
+                          }}
+                        >
+                          SHOP NOW
+                        </Typography>
+                      </Button>
+                    </Box>
+                  </Card>
+                </Grid>
+              ))}
             </Grid>
-          ))}
-          </Grid>
           </Box>
           <Dialog open={modalOpen} onClose={handleCloseModal} fullWidth maxWidth="xl">
               {selectedProduct && (

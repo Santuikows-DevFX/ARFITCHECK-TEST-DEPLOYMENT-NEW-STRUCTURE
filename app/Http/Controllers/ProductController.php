@@ -228,6 +228,39 @@ class ProductController extends Controller
         return response()->json($productByPriceRange);
     }
 
+    public function getProductByPriceAndCategory(Request $request) 
+    {   
+        try{
+            $productByCateg = [];
+            $allProduct = [];
+            $category = strtolower($request->category);
+            if ($category === 't-shirts') {
+                $category = 'T-Shirt';
+            } else if ($category === 'hoodies') {
+                $category = 'Hoodies';
+            } else if ($category === 'shorts') {
+                $category = 'Shorts';
+            } else if ($category === 'caps') {
+                $category = 'Caps';
+            }
+            //fetch product by its category and return it -josh
+            foreach ($this->database->getReference('products')->getSnapshot()->getValue() as $productID => $productInfo) {
+    
+                if ($productInfo['productCategory'] === $category && $productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true && $productInfo['productPrice'] >= $request->minimumPrice && $productInfo['productPrice'] <= $request->maximumPrice ) {
+                    $productByCateg[] = [
+                        'productID' => $productID,
+                        'productInfo' => $productInfo
+                    ];
+                }
+            }
+    
+            return response()->json(count($productByCateg) > 0 ? $productByCateg : $allProduct);
+
+        }catch(\Exception $e) {
+            return response($e->getMessage());
+        }
+    }
+
     public function insertProduct(Request $request)
     {
         $productImageNames = [];

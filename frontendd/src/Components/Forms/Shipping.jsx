@@ -131,7 +131,7 @@ function Shipping() {
 
   return (
    <div>
-      <Box m={2} height="100vh">
+      <Box m={2}>
       <Typography sx={{ fontFamily: 'Kanit', fontSize:  { xs: 20, md: 40 }, fontWeight: 'bold', color: 'black', paddingY: '1vh' }}>
             Shipping Settings
           </Typography>
@@ -139,7 +139,7 @@ function Shipping() {
           <AccordionSummary expandIcon={<ExpandMoreIcon />} >
             <Typography sx={{ fontFamily: 'Kanit',fontSize: { xs: 20, md: 25 }, fontWeight: 'bold', color: 'black'}}>
               Shipping Details <br/>
-              <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 15 }, fontWeight: '300', color: 'black' }}>
+              <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 15 }, fontWeight: '300', color: 'black' }}>
                 Update your shipping details.
               </Typography>
             </Typography>
@@ -397,7 +397,7 @@ function Shipping() {
                     <Typography
                       sx={{
                         fontFamily: 'Kanit',
-                        fontSize: { xs: 18, md: 25 },
+                        fontSize: { xs: 12, md: 20 },
                         padding: 0.5,
                         visibility: loading ? 'hidden' : 'visible',
                       }}

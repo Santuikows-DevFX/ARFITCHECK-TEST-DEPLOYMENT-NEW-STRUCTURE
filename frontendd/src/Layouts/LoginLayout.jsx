@@ -15,6 +15,8 @@ const LoginLayout = () => {
     return <Navigate to= '/admin'/>
   }else if( localStorage.getItem('?sessiontoken') &&  cookie['?sessiontoken'] && cookie['?role'] === "user") {
     return <Navigate to= '/home'/>
+  }else if((!localStorage.getItem('?sessiontoken') &&  !cookie['?sessiontoken'] && !cookie['?role'] === "user")) {
+    return <Navigate to= '/homeViewOnly'/>
   }
 
   return (

@@ -538,7 +538,7 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
                         SHIPPING ADDRESS
                       </Typography>
                       <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', color: 'black' }}>
-                        {order.orderInfo.fullShippingAddress}
+                        {order.orderInfo?.fullShippingAddress}
                       </Typography>
                     </Grid>
                      {/* status */}
@@ -547,7 +547,7 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
                       Status
                     </Typography>
                     <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', color: order.orderInfo.orderStatus === 'Order Completed' ? '#27ae60' : '#e74c3c' }}>
-                      <b> {order.orderInfo.orderStatus}</b>
+                      <b> {order.orderInfo?.orderStatus === 'Order Completed' ? 'Order Delivered' : order.orderInfo?.orderStatus}</b>
                     </Typography>
                       {order.orderInfo.cancelReason === "None" && order.orderInfo.userCancelReason === "None" ? (
                           <>

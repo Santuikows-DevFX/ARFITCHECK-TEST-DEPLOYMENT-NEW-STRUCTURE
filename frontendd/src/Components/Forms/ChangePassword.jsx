@@ -19,10 +19,12 @@ import { useSnackbar } from 'notistack';
 
 const PasswordValidationSchema = Yup.object().shape({
   password: Yup.string()
-    .required('Password is required')
-    .min(8, 'Password must be at least 8 characters')
-    .matches(/^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+$/, 'Password can only contain alphanumeric characters and safe special characters')
-    .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must contain at least one special character'),
+  .required('Password is required')
+  .min(8, 'Password must be at least 8 characters')
+  .matches(/^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+$/, 'Password can only contain alphanumeric characters and safe special characters')
+  .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
+  .matches(/[0-9]/, 'Password must contain at least one number')
+  .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must contain at least one special character'),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('password'), null], 'Passwords must match')
     .required('Confirm Password is required'),
@@ -98,7 +100,8 @@ function ChangePassword() {
                 setRole(null)
                 setUserID(null)
 
-                navigator('/login')
+                navigator('/homeViewOnly', { replace: true })
+
               },
             });
 
@@ -153,7 +156,6 @@ function ChangePassword() {
                         InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } } }}
                         sx={{
                           '& input': { pt: { xs: 2, sm: 2, md: 3 } },
-                          backgroundColor: '#E0DFDF'
                         }}
                         inputProps={{ style: { fontSize: 16, fontFamily: 'Kanit' } }}
                         type={showPassword ? "text" : "password"}
@@ -190,7 +192,6 @@ function ChangePassword() {
                         InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } } }}
                         sx={{
                           '& input': { pt: { xs: 2, sm: 2, md: 3 } },
-                          backgroundColor: '#E0DFDF'
                         }}
                         inputProps={{ style: { fontSize: 16, fontFamily: 'Kanit' } }}
                         type={showNewPassword ? "text" : "password"}
@@ -227,7 +228,6 @@ function ChangePassword() {
                         InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } } }}
                         sx={{
                           '& input': { pt: { xs: 2, sm: 2, md: 3 } },
-                          backgroundColor: '#E0DFDF'
                         }}
                         inputProps={{ style: { fontSize: 16, fontFamily: 'Kanit' } }}
                         type={showConfirmPassword ? "text" : "password"}
@@ -273,7 +273,7 @@ function ChangePassword() {
                     <Typography
                       sx={{
                         fontFamily: 'Kanit',
-                        fontSize: { xs: 18, md: 25 },
+                        fontSize: { xs: 12, md: 20 },
                         padding: 0.5,
                         visibility: loading ? 'hidden' : 'visible',
                       }}

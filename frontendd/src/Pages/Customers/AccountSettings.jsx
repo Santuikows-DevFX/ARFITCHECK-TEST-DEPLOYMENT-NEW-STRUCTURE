@@ -38,7 +38,7 @@ function AccountSettings() {
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 20, md: 25 }, fontWeight: 'bold', color: 'black'}}>
                 Change Password <br/>
-                <Typography sx={{ fontFamily: 'Kanit', fontSize:  { xs: 10, md: 15 }, fontWeight: '300', color: 'black' }}>
+                <Typography sx={{ fontFamily: 'Kanit', fontSize:  { xs: 12, md: 15 }, fontWeight: '300', color: 'black' }}>
                   Update your password to keep your account secure.
                 </Typography>
               </Typography>
@@ -47,21 +47,20 @@ function AccountSettings() {
             <ChangePassword/>
             </AccordionDetails>
           </Accordion>
-          <Accordion sx={{ marginBottom: '1%', borderRadius: '10px',  boxShadow: '0px 6px 6px rgba(0, 0, 0, 0.4)', background: 'linear-gradient(to right, #D7E1EC  , #FFFFFF)'  }}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 20, md: 25 }, fontWeight: 'bold', color: 'black' }}>
-                Profile Information <br/>
-                <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 15 }, fontWeight: '300', color: 'black' }}>
-                  Configure your profile.
+            <Accordion sx={{ marginBottom: '1%', borderRadius: '10px',  boxShadow: '0px 6px 6px rgba(0, 0, 0, 0.4)', background: 'linear-gradient(to right, #D7E1EC  , #FFFFFF)'  }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 20, md: 25 }, fontWeight: 'bold', color: 'black' }}>
+                  Profile Information <br/>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 15 }, fontWeight: '300', color: 'black' }}>
+                    Configure your profile.
+                  </Typography>
                 </Typography>
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <ProfileInformation/>
-            </AccordionDetails>
-          </Accordion>
+              </AccordionSummary>
+              <AccordionDetails>
+                <ProfileInformation/>
+              </AccordionDetails>
+            </Accordion>
         </Box>
-      {/* <ToastContainer/> */}
        </div>
       )}
     </div>

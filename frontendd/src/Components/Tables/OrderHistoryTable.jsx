@@ -285,7 +285,7 @@ const OrderHistoryTable = () => {
             backgroundColor: '#196F3D',
             color: 'white',
             '&:hover': { backgroundColor: '#239B56' },
-            fontSize: { xs: 10, md: 16 },  
+            fontSize: { xs: 9, md: 16 },  
             padding: { xs: '0.3rem 0.6rem', md: '0.5rem 1rem' },  
             fontFamily: 'Kanit',
             fontWeight: 'bold',
@@ -293,7 +293,7 @@ const OrderHistoryTable = () => {
           startIcon={<DownloadIcon />}
           onClick={handleSaveAsExcel}
         >
-          Save as .CSV
+          .CSV
         </Button>
       </Box>
       <Box sx={{ padding: '1rem', backgroundColor: '#FFFFFF', boxShadow: '2px 5px 10px rgba(0,0,0,0.4)' }}>
@@ -665,12 +665,12 @@ const OrderHistoryTable = () => {
                         Status
                       </Typography>
                       <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', color: order.orderInfo?.orderStatus === 'Order Completed' ? '#27ae60' : '#e74c3c' }}>
-                        <b> {order.orderInfo?.orderStatus}</b>
+                       <b> {order.orderInfo?.orderStatus === 'Order Completed' ? 'Order Delivered' : order.orderInfo?.orderStatus}</b>
                       </Typography>
                         {order.orderInfo?.cancelReason === "None" && order.orderInfo?.userCancelReason === "None" ? (
                             <>
                               <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
-                                {order.orderInfo?.trackingNumber}
+                                Tracking #: {order.orderInfo?.trackingNumber}
                               </Typography>
                               <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
                                 Updated: <b>{order.orderInfo?.updateTimeStamp}</b>
@@ -716,7 +716,7 @@ const OrderHistoryTable = () => {
                             '&:not(:hover)': { backgroundColor: '#239B56', color: 'white' },
                           }}
                       >
-                        <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, padding: 0.5 }}>QUICK RATE</Typography>
+                        <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12  , md: 14}, padding: 0.5 }}>QUICK RATE</Typography>
                       </Button>
                       )}
                     </Grid>

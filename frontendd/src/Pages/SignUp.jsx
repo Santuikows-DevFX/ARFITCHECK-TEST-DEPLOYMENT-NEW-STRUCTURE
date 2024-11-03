@@ -9,9 +9,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import axiosClient from '../axios-client.js';
 import { useEffect, useState } from 'react';
 
-import { ToastContainer, toast} from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { Bounce } from 'react-toastify';
 import TermsAndConditions from './TermsAndConditions.jsx';
 
 import AOS from 'aos';
@@ -24,6 +21,8 @@ import phIcon from '../../public/assets/phIcon.png'
 import signUpGraffitiBG from '../../public/assets/signupGraffiti.png'
 import icon from '../../public/assets/Icon.png'
 import { useSnackbar } from 'notistack';
+import ResendCodeTimer from '../WIdgets/ResendCodeTimer.jsx';
+import AutoRedirectTimer from '../WIdgets/AutoRedirectTimer.jsx';
 
 const provinceOptions = [ 
   'Metro Manila'
@@ -95,6 +94,8 @@ function SignUp() {
     .required('Password is required')
     .min(8, 'Password must be at least 8 characters')
     .matches(/^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+$/, 'Password can only contain alphanumeric characters and safe special characters')
+    .matches(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .matches(/[0-9]/, 'Password must contain at least one number')
     .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must contain at least one special character'),
     confirmPassword: Yup.string()
     .oneOf([Yup.ref('password'), null], 'Passwords must match')
@@ -155,7 +156,6 @@ function SignUp() {
     const hiddenPart = phoneNumber.slice(-2);
     return visiblePart + censoredPart + hiddenPart;
   }
-
   useEffect(() => {
     AOS.init({
     });
@@ -813,15 +813,15 @@ function SignUp() {
                   {/* EULA */}
                   <Grid item xs={10} data-aos="fade-in" data-aos-delay="800">
                     <FormControlLabel
-                      control={<Checkbox checked={isEulaChecked} onChange={handleEulaCheck} />}
+                      control={<Checkbox checked={isEulaChecked} onChange={handleEulaCheck} sx={{ transform: 'scale(0.8)' }}/>}
                       label={
-                        <Typography sx={{ fontFamily: 'Inter', display: 'flex', alignItems: 'center', fontSize: { xs: 12, md: 20 } }}>
-                          I Agree with the&nbsp;
+                        <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: { xs: 12, md: 18 } }}>
+                          I've Read and Agree with the&nbsp;
                           <span style={{ color: "#1A5276" }}>
                             <b onClick={(event) => {
                               event.preventDefault(); 
                               handleButtonClick();
-                            }}>Terms and Conditions</b>
+                            }}>Terms and Conditions*</b>
                           </span>
                         </Typography>
 
@@ -834,10 +834,12 @@ function SignUp() {
                     <Button
                       type="button"  
                       variant="outlined"
+                      disabled={ isSignUp }
                       sx={{
                         width: '47%',
                         '&:hover': { borderColor: '#414a4c', backgroundColor: '#414a4c', color: 'white' },
                         '&:not(:hover)': { borderColor: '#3d4242', color: 'black' },
+                        opacity: isSignUp ? 0.7 : 1,
                       }}
                       onClick={handleBack} 
                     >
@@ -888,7 +890,7 @@ function SignUp() {
                   data-aos="fade-up"
                   data-aos-delay="200"
                 >
-                  <Box>
+                   <Box>
                     <Typography variant="h5" sx={{ fontFamily: 'Kanit', fontWeight: 'bold', marginBottom: 2,fontSize: { xs: 20, md: 30 } }}>
                       ACCOUNT VERIFICATION
                     </Typography>
@@ -903,7 +905,7 @@ function SignUp() {
                         <Button
                           variant="contained"
                           onClick={() => {
-                            navigator('/login');
+                            navigator('/login', { replace: true });        
                           }}
                           sx={{
                             width: '100%',
@@ -913,9 +915,10 @@ function SignUp() {
                             background: 'linear-gradient(to right, #414141, #000000)'
                           }}
                         >
-                          <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 18, md: 25 }, padding: 0.5, cursor: 'pointer' }}>BACK TO LOG-IN</Typography>
+                          <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 18, md: 20 }, padding: 0.5, cursor: 'pointer' }}>BACK TO LOG-IN</Typography>
                         </Button>
                           {/* <ResendCodeTimer email={values.email}/> */}
+                          <AutoRedirectTimer/>
                       </Box>
                     </Box>
                   </Box>

@@ -87,12 +87,12 @@ function Login() {
     try {
 
       axiosClient.post("/auth/loginUser", values).then(({ data }) => {
-        if (data.userInfo) {
+        if (data.token) {
 
           const expirationDate = new Date();
           expirationDate.setTime(expirationDate.getTime() + 24 * 60 * 60 * 1000); // this means that this cookie expires in 24 hours || 1 day
 
-          setUser(data.userInfo);
+          setUser(data.firstName);
           setToken(data.token);
           setUserID(data.userID);
           setRole(data.role);
@@ -156,7 +156,7 @@ function Login() {
           },
           onClose: () => {
             setSessionLogin(false)
-            navigator('/login')
+            navigator('/login', { replace: true } )
           }
         });
       }
@@ -293,7 +293,7 @@ function Login() {
                               <Typography
                                 sx={{
                                   fontFamily: "Kanit",
-                                  fontSize: { xs: 18, md: 25 },
+                                  fontSize: { xs: 18, md: 22 },
                                   padding: 0.5,
                                   visibility: sessionLogin ? "hidden" : "visible",
                                 }}
@@ -439,14 +439,14 @@ function Login() {
                                 },
                                 background:
                                   "linear-gradient(to right, #414141, #000000)",
-                                opacity: !isValid || isLogginIn || Object.values(values).some(value => value === '') ? 0.7 : 1,
+                                opacity: !isValid || isLogginIn || Object.values(values).some(value => value === '') ? 0.7 : 1, 
                               }}
                           
                             >
                               <Typography
                                 sx={{
                                   fontFamily: "Kanit",
-                                  fontSize: { xs: 18, md: 25 },
+                                  fontSize: { xs: 18, md: 22 },
                                   padding: 0.5,
                                   visibility: isLogginIn ? "hidden" : "visible",
                                 }}

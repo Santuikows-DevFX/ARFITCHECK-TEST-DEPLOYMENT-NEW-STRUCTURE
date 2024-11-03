@@ -5,10 +5,7 @@ import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { FilledButton } from '../UI/Buttons';
 import { useNavigate } from 'react-router-dom';
-import CustomizationOrderDetails from '../Tables/CustomizationOrderDetails';
-import CustsomizationOrderInfo from '../Tables/CustomizationOrderInfo';
-
-import successImage from '../../../public/assets/success.svg'
+import successImage from '../../../public/assets/success_edited.png';
 
 function CustomizationRequestSuccess({ onClose, timeStamp }) {
 
@@ -17,10 +14,6 @@ function CustomizationRequestSuccess({ onClose, timeStamp }) {
   });
 
   const navigate = useNavigate();
-
-  console.log(`Custom Prd Succs ${timeStamp}`);
-  
-
   return (
     <div>
       <Formik
@@ -33,121 +26,71 @@ function CustomizationRequestSuccess({ onClose, timeStamp }) {
       >
         {({ isSubmitting }) => (
           <Form>
-             <IconButton onClick={onClose }  sx={{ position: 'absolute', top: 0, right: 0 }}>
-                    <CloseIcon />
-              </IconButton>
+            <IconButton onClick={onClose} sx={{ position: 'absolute', top: 0, right: 0 }}>
+              <CloseIcon />
+            </IconButton>
             <Grid
-              item
-              xs={12}
-              sm={6}
-              sx={{ backgroundColor: '#F5F7F8', overflow: 'auto', padding: '2vh' }}
+              container
+              direction="column"
+              alignItems="center"
+              justifyContent="center"
+              sx={{
+                backgroundColor: '#F5F7F8',
+                padding: '2vh',
+                height: '100%',
+                textAlign: 'center',
+              }}
             >
-              <Grid item xs={6} style={{ backgroundColor: '#F5F7F8', overflow: 'auto' }}>
-                <Grid container spacing={0}>
-                    <Grid
-                      item
-                      xs={12}
-                      md={6}
-                      sx={{
-                        backgroundColor: '#F5F7F8',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: 'Kanit',
-                          fontSize: { xs: 20, sm: 40 },
-                          fontWeight: 'bold',
-                          color: 'BLACK',
-                          textAlign: 'center',
-                        }}
-                      >
-                      REQUEST INFO
-                      </Typography>
-                      <CustsomizationOrderInfo timeStamp={timeStamp}/>
-                      <Typography
-                        sx={{
-                          fontFamily: 'Kanit',
-                          fontSize: { xs: 20, sm: 40 },
-                          fontWeight: 'bold',
-                          color: 'BLACK',
-                          textAlign: 'center',
-                          pt: 2,
-                        }}
-                      >
-                        REQUEST DETAILS
-                      </Typography>
-                      <CustomizationOrderDetails timeStamp={timeStamp}/>
-                  </Grid>
-                  <Grid
-                    item
-                    xs={12}
-                    md={6}
-                    sx={{
-                      backgroundColor: '#F5F7F8',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      textAlign: 'center',
-                      padding: '2vh',
-                    }}
-                  >
-                    <img
-                      src={successImage}
-                      width="70%"
-                      maxWidth={600}
-                      height="auto"
-                      alt="Success"
-                    />
-                    <Typography
-                      sx={{
-                        fontFamily: 'Kanit',
-                        fontSize: { xs: 15, sm: 25 },
-                        fontWeight: 700,
-                        color: '#1E7F1C',
-                        paddingY: '1vh',
-                      }}
-                    >
-                      THANK YOU! <br /> Your request has been received! Remember to Always check your email for notifications.
-                    </Typography>
-                    <Button
-                      type="submit"
-                      fullWidth
-                      onClick={() => {
-                        navigate('/shop')
-                      }}
-                      variant="contained"
-                      sx={{
-                        backgroundColor: "White",
-                        "&:hover": {
-                          backgroundColor: "#414a4c",
-                          color: "white",
-                        },
-                        "&:not(:hover)": {
-                          backgroundColor: "#3d4242",
-                          color: "white",
-                        },
-                        background:
-                          "linear-gradient(to right, #414141, #000000)",
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: "Kanit",
-                          fontSize: { xs: 18, md: 25 },
-                          padding: 0.5,
-                        }}
-                      >
-                        BACK
-                      </Typography>
-                    </Button>
-                    </Grid>
-                </Grid>
-              </Grid>
+              <img
+                src={successImage}
+                alt="Success"
+                style={{
+                  width: '60%',
+                  maxWidth: '400px',
+                  marginBottom: '-10px'
+                }}
+              />
+              <Typography
+                sx={{
+                  fontFamily: 'Kanit',
+                  fontSize: { xs: 15, sm: 25 },
+                  color: '#1E7F1C',
+                  paddingY: { xs: '1vh', md: '0.6vh'},
+                }}
+              >
+                <b>THANK YOU!</b> <br /> <span style={{ fontWeight: 500 }}> Your order has been placed! Remember to always check your email for notifications.</span>
+              </Typography>
+              <Button
+                type="submit"
+                fullWidth
+                onClick={() => {
+                  navigate('/shop', { replace: true });
+                }}
+                variant="contained"
+                sx={{
+                  backgroundColor: 'white',
+                  "&:hover": {
+                    backgroundColor: '#414a4c',
+                    color: 'white',
+                  },
+                  "&:not(:hover)": {
+                    backgroundColor: '#3d4242',
+                    color: 'white',
+                  },
+                  background: 'linear-gradient(to right, #414141, #000000)',
+                  mt: { xs: 0.7, md: 1}
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontFamily: 'Kanit',
+                    fontSize: { xs: 14, md: 20 },
+                    padding: 0.5,
+                  }}
+                >
+                  SHOP AGAIN
+                </Typography>
+              </Button>
             </Grid>
           </Form>
         )}

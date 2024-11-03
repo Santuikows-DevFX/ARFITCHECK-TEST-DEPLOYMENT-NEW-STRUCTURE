@@ -94,7 +94,7 @@ function Users(props) {
         });
         
         setNotificationData(sortedData)
-  
+
         // Set notification count
         setNotifCount(sortedData.length);
       }
@@ -115,7 +115,8 @@ function Users(props) {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await axiosClient.patch(`/auth/updateAllNotifications/${cookie['?id']}`)
+      await axiosClient.post(`/auth/updateAllNotifications/${cookie['?id']}`)
+      setNotifCount(0)
       fetchNotificationData();
     } catch (error) { 
       console.log(error);
@@ -194,7 +195,7 @@ function Users(props) {
           setUserID(null)
           setRole(null)
   
-          navigator('/login')
+          navigator('/homeViewOnly', { replace: true })
         }
       });
   }
@@ -364,15 +365,6 @@ function Users(props) {
                 
                 <Divider sx={{ backgroundColor: 'black' }} />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1 }}>
-                  <Button
-                    size="small"
-                    startIcon={<MailIcon />}
-                    onClick={handleMarkAllAsRead}
-                    sx={{ fontSize: '0.65rem', color: 'gray' }}
-                    disabled={notificationData.length == 0 ? true : false}
-                  >
-                    Mark All as Read
-                  </Button>
                   <Button
                     size="small"
                     startIcon={<DeleteIcon />}

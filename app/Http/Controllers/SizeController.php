@@ -28,23 +28,28 @@ class SizeController extends Controller
 
             $clothingSizeData = [
 
-                // 'width' => $request->width,
-                // 'sleeves' => $request->sleeves,
-                // 'centiWidth' => $request->centiWidth,
-                // 'centiLength' => $request->centiLength,
-                // 'centiSleeves' => $request->centiSleeves,
-
                 'size' => $request->size,
+                'width' => $request->width,
+                'sleeves' => $request->sleeves,
                 'length' => $request->length,
-                'waist' => $request->waist,
-                'legHole' => $request->legHole,
+                'centiWidth' => $request->centiWidth,
                 'centiLength' => $request->centiLength,
-                'centiWaist' => $request->centiWaist,
-                'centiLegHole' => $request->centiLegHole,
+                'centiSleeves' => $request->centiSleeves,
                 'usSize' => $request->usSize,
                 'euSize' => $request->euSize,
                 'ukSize' => $request->ukSize,
                 'category' => $request->category
+
+                // 'size' => $request->size,
+                // 'length' => $request->length,
+                // 'waist' => $request->waist,
+                // 'legHole' => $request->legHole,
+                // 'centiLength' => $request->centiLength,
+                // 'centiWaist' => $request->centiWaist,
+                // 'centiLegHole' => $request->centiLegHole,
+                // 'usSize' => $request->usSize,
+                // 'euSize' => $request->euSize,
+                // 'ukSize' => $request->ukSize,
             ];
 
             $this->database->getReference('sizes')->push($clothingSizeData);
@@ -82,7 +87,7 @@ class SizeController extends Controller
     public function updateClothingSize(Request $request)
     {
         try {
-      
+
             $sizes = $this->database->getReference('sizes')->getSnapshot()->getValue();
             $sizeArrayReq = $request->all();
 
@@ -95,13 +100,12 @@ class SizeController extends Controller
                             // Check category and update accordingly
                             if ($sizeInfo['category'] == 'T-Shirt') {
                                 $clothingSizeUpdatedData = [
-                                    
+
                                     //for tshirt only
                                     'width' => $sizeDataReq['sizeInfo']['width'],
                                     'sleeves' => $sizeDataReq['sizeInfo']['sleeves'],
                                     'centiWidth' => $sizeDataReq['sizeInfo']['centiWidth'],
-                                    'centiSleeves' => $sizeDataReq['sizeInfo']['centiSleeves']
-                                    ,
+                                    'centiSleeves' => $sizeDataReq['sizeInfo']['centiSleeves'],
                                     'size' => $sizeDataReq['sizeInfo']['size'],
                                     'length' => $sizeDataReq['sizeInfo']['length'],
                                     'centiLength' => $sizeDataReq['sizeInfo']['centiLength'],
@@ -110,7 +114,6 @@ class SizeController extends Controller
                                     'ukSize' => $sizeDataReq['sizeInfo']['ukSize'],
                                     'category' => $sizeDataReq['sizeInfo']['category']
                                 ];
-
                             } else if ($sizeInfo['category'] == 'Shorts') {
 
                                 $clothingSizeUpdatedData = [
@@ -144,10 +147,8 @@ class SizeController extends Controller
 
             $message = 'Update Successfully!';
             return response()->json(compact('message'));
-
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()]);
         }
     }
 }
-

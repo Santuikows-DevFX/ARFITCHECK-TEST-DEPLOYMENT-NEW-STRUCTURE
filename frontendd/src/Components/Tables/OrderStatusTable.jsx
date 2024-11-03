@@ -694,7 +694,7 @@ const OrderStatusTable = () => {
                                 <Typography
                                   sx={{
                                     fontFamily: 'Kanit',
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     padding: 0.5,
                                     visibility: loading ? 'hidden' : 'visible',
                                   }}
@@ -731,7 +731,7 @@ const OrderStatusTable = () => {
                                 <Typography
                                   sx={{
                                     fontFamily: 'Kanit',
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     padding: 0.5,
                                     visibility: loading ? 'hidden' : 'visible',
                                   }}
@@ -772,7 +772,7 @@ const OrderStatusTable = () => {
                                   <Typography
                                     sx={{
                                       fontFamily: 'Kanit',
-                                      fontSize: 16,
+                                      fontSize: 14,
                                       padding: 0.5,
                                       visibility: loading ? 'hidden' : 'visible',
                                     }}
@@ -813,7 +813,7 @@ const OrderStatusTable = () => {
                                     <Typography
                                       sx={{
                                         fontFamily: 'Kanit',
-                                        fontSize: 16,
+                                        fontSize: 14,
                                         padding: 0.5,
                                         visibility: loading ? 'hidden' : 'visible',
                                       }}

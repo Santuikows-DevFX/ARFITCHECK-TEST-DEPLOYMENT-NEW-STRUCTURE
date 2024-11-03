@@ -32,7 +32,7 @@ Route::prefix('auth')->controller(DataController::class)->group(function () {
     Route::get('/getMyAddress/{uid}', 'getMyAddress');
     Route::get('/fetchMyNotifications/{uid}', 'getMyNotifications');
 
-    Route::patch('/updateAllNotifications/{uid}', 'updateAllNotifications');
+    Route::post('/updateAllNotifications/{uid}', 'updateAllNotifications');
     Route::delete('/deleteAllNotifications/{uid}', 'deleteAllNotifications');
 
     Route::post('/loginUser', 'loginUser');
@@ -52,13 +52,14 @@ Route::prefix('auth')->controller(DataController::class)->group(function () {
     //otp code routes
     Route::post('/updateVerificationCodeWhenExpired', 'updateVerificationCodeWhenExpired');
     Route::post('/resendVerificationCode', 'resendVerificationCode');
+    Route::post('/sendOTPCodeToEmail', 'sendOTPCodeToEmail');
 
     //admin data fetching and inserting
     Route::get('/fetchAdminInfo', 'getAllAdmins');
 
     //adming notification route
     Route::get('/fetchAdminNotifications/{adminID}', 'getAdminNotifications');
-    Route::patch('/updateAllAdminNotification/{adminID}', 'updateAllAdminNotification');
+    Route::post('/updateAllAdminNotification/{adminID}', 'updateAllAdminNotification');
     Route::delete('/deleteAllAdminNotification/{adminID}', 'deleteAllAdminNotification');
 
     Route::post('/addAdmin', 'addAdmin');
@@ -76,9 +77,11 @@ Route::prefix('prd')->controller(ProductController::class)->group(function () {
     Route::get('/getCriticalLevel', 'fetchCriticalLevelProducts');
     Route::get('/getCategoryCount', 'getCategoryCount');
 
+
     Route::post('/insertProducts', 'insertProduct');
     Route::post('/editProduct', 'editProduct');
     Route::post('/getProductByCategory', 'getProductByCategory');
+    Route::post('/getProductByPriceAndCategory', 'getProductByPriceAndCategory');
     Route::post('/getProductByPriceRange', 'getProductByPriceRange');
 
     //mobile routings

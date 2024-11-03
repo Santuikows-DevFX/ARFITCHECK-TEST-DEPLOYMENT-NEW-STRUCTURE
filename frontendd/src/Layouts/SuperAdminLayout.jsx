@@ -9,9 +9,9 @@ const SuperAdminLayout = () => {
 
   if(!cookie['?sessiontoken']){
     return <Navigate to= '/login'/>
-  }else if(localStorage.getItem('?sessiontoken') && cookie['?sessiontoken'] && cookie['?role'] == 'user') {
+  }else if(cookie['?sessiontoken'] && cookie['?role'] == 'user') {
     return <Navigate to= '/home'/>
-  }else if(localStorage.getItem('?sessiontoken') && cookie['?sessiontoken'] && cookie['?role'] == 'admin') {
+  }else if(cookie['?sessiontoken'] && cookie['?role'] == 'admin') {
     return <Navigate to= '/admin'/>
   }
 

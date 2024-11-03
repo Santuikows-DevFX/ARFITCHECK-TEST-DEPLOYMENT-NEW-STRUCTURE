@@ -11,15 +11,21 @@ const StyledTextFields = ({ field, meta, id, label, inputProps, errorText, type,
   return (
     <>
       <TextField
-        {...field} // Pass Formik's field props which includes onChange, onBlur, value, etc.
+        {...field}
         id={id}
         disabled={disabled}
         label={label}
         type={showPassword && type === 'password' ? 'text' : type}
         variant="filled"
         fullWidth
-        InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: 20 } }}
-        inputProps={{ style: { fontSize: 16, fontFamily: 'Kanit' }, ...inputProps }}
+        InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: { xs: 14, md: 20} } }}
+        inputProps={{ style: { fontSize: {xs: 14, md: 16}, fontFamily: 'Kanit' }, ...inputProps }}
+        sx={{
+          "& input": {
+            fontFamily: "Kanit",
+            fontSize: { xs: 14, md: 16}
+          },
+        }}
         error={meta.touched && Boolean(meta.error)}
         InputProps={type === 'password' && {
           endAdornment: (

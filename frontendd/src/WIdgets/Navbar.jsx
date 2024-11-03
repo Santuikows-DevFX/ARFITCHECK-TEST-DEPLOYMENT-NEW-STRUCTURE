@@ -17,11 +17,13 @@ function Navbar() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [cookie, removeCookie, remove, setCookie] = useCookies(['?sessiontoken', '?id']);
   const [showLogout, setShowLogout] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
   const { setToken, setUserID, setRole } = useStateContext();
   const [expanded, setExpanded] = React.useState(false);
   const [user, setUser] = React.useState([]);
   const { cartItemCount } = useCart();
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [drawerOpenViewOnly, setDrawerOpenViewOnly] = React.useState(false);
   
   const navigator = useNavigate();
 
@@ -31,17 +33,21 @@ function Navbar() {
 
   const checkID = async () => { 
     try {
-      const fetchCurrentUser = await axiosClient.get(`auth/getUser/${cookie['?id']}`);
-      if (fetchCurrentUser.data) {
-        setUser(fetchCurrentUser.data);
-      }
+
+      setLoading(true)
+
+      setTimeout(() => {
+        setLoading(false)
+      }, 1000)
+
     } catch (error) {
       console.log(error);
     }
 
     if (localStorage.getItem('?sessiontoken') == null || !cookie['?sessiontoken']) {
       setShowLogout(false);
-    } else {
+    }
+    else {
       setShowLogout(true);
     }
   };
@@ -55,6 +61,13 @@ function Navbar() {
       return;
     }
     setDrawerOpen(open);
+  };
+
+  const toggleDrawerViewOnly = (open) => (event) => {
+    if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+      return;
+    }
+    setDrawerOpenViewOnly(open);
   };
 
   const drawer = (
@@ -92,6 +105,51 @@ function Navbar() {
     </Box>
   );
 
+  const drawerViewOnly = (
+    <Box
+      sx={{ width: 250 }}
+      role="presentation"
+      onClick={toggleDrawerViewOnly(false)}
+      onKeyDown={toggleDrawerViewOnly(false)}
+    >
+      <List>
+        <ListItem button component={Link} to="/homeViewOnly">
+        <ListItemText 
+          primary="Home" 
+          primaryTypographyProps={{ 
+            sx: { fontFamily: 'Kanit', fontSize: '1rem' }
+          }} 
+  />
+        </ListItem>
+        <ListItem button component={Link} to="/shopViewOnly">
+          <ListItemText primary="Shop" primaryTypographyProps={{ 
+            sx: { fontFamily: 'Kanit', fontSize: '1rem' }
+          }} />
+        </ListItem>
+        <ListItem button component={Link} to="/toolViewOnly">
+          <ListItemText primary="ARFIT App" primaryTypographyProps={{ 
+            sx: { fontFamily: 'Kanit', fontSize: '1rem' }
+          }} />
+        </ListItem>
+        <ListItem button component={Link} to="/aboutViewOnly">
+          <ListItemText primary="About" primaryTypographyProps={{ 
+            sx: { fontFamily: 'Kanit', fontSize: '1rem' }
+          }} />
+        </ListItem>
+        <ListItem button component={Link} to="/login">
+          <ListItemText primary="Login" primaryTypographyProps={{ 
+            sx: { fontFamily: 'Kanit', fontSize: '1rem' }
+          }} />
+        </ListItem>
+        <ListItem button component={Link} to="/signup">
+          <ListItemText primary="SignUp" primaryTypographyProps={{ 
+            sx: { fontFamily: 'Kanit', fontSize: '1rem' }
+          }} />
+        </ListItem>
+      </List>
+    </Box>
+  );
+
   return (
     <div>
       {showLogout ? (
@@ -99,7 +157,7 @@ function Navbar() {
           <AppBar position="fixed" sx={{ backgroundColor: "#F4F4F4", color: "black" }}>
             <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Box>
-            <IconButton edge="start" color="inherit" aria-label="menu" onClick={toggleDrawer(true)}>
+                   <IconButton edge="start" color="inherit" aria-label="menu" onClick={toggleDrawer(true)}>
                   <MenuIcon />
                 </IconButton>
               <Box
@@ -162,8 +220,12 @@ function Navbar() {
                         <Typography sx={{ fontFamily: "Kanit", fontSize: 15 }}>Dashboard</Typography>
                       </Button>
                       <Button
+
                         color="inherit"
                         onClick={() => {
+
+                          setExpanded(false)
+
                           Swal.fire({
                             title: "Logout?",
                             text: "",
@@ -186,7 +248,7 @@ function Navbar() {
                               setRole(null)
                               setUserID(null)
 
-                              navigator('/login')
+                              navigator('/homeViewOnly', { replace: true })
 
                             }
                           });
@@ -199,12 +261,9 @@ function Navbar() {
                 </Box>
               </Box>
               <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
-          
                   <IconButton badgeContent={cartItemCount}  component={Link} to="/cart">
                       <ShoppingCartIcon   sx={{ backgroundColor: 'transparent', color: 'black' }}fontSize='small' />
                   </IconButton>
-        
-           
                   <IconButton onClick={handleMenuToggle}>
                   
                     <PersonIcon fontSize='medium' sx={{ backgroundColor: 'transparent', color: 'black' }} />
@@ -254,7 +313,7 @@ function Navbar() {
                             setRole(null)
                             setUserID(null)
 
-                            navigator('/login')
+                            navigator('/homeViewOnly', { replace: true })
 
                           }
                         });
@@ -276,10 +335,33 @@ function Navbar() {
           </Drawer>
         </Box>
       ) : (
-        <Box sx={{ flexGrow: 1 }}>
-          <AppBar position="fixed" sx={{ pl: { xs: 0, md: 5 }, pr: { xs: 2, md: 5 }, backgroundColor: "#F4F4F4", color: "black" }}>
-            <Toolbar>
-              <Typography component="div" sx={{ flexGrow: 1, fontFamily: 'Kanit' }}>
+        loading ? (
+          <Box sx={{ flexGrow: 1 }}>
+            <AppBar position="fixed" sx={{ pl: { xs: 0, md: 5 }, pr: { xs: 2, md: 5 }, backgroundColor: "#F4F4F4", color: "black" }}>
+              <Toolbar>
+                
+                <Typography component="div" sx={{ flexGrow: 1, fontFamily: 'Kanit' }}>
+                  <Box
+                    component="img"
+                    src={logo}
+                    alt="Logo"
+                    sx={{
+                      width: { xs: 80, sm: 100, md: 120 },
+                      height: { xs: 35, sm: 40, md: 50 },
+                    }}
+                  />
+                </Typography>
+              </Toolbar>
+            </AppBar>
+        </Box>
+        ) : (
+          <Box sx={{ flexGrow: 1 }}>
+            <AppBar position="fixed" sx={{ backgroundColor: "#F4F4F4", color: "black" }}>
+              <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                    <IconButton edge="start" color="inherit" aria-label="menu" onClick={toggleDrawerViewOnly(true)}>
+                    <MenuIcon />
+                  </IconButton>
                 <Box
                   component="img"
                   src={logo}
@@ -289,10 +371,38 @@ function Navbar() {
                     height: { xs: 35, sm: 40, md: 50 },
                   }}
                 />
-              </Typography>
-            </Toolbar>
-          </AppBar>
+                </Box>
+                <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
+                  <Button color="inherit" sx={{ paddingX: 4, paddingY: 2 }} component={Link} to="/homeViewOnly">
+                    <Typography sx={{ fontFamily: "Kanit", fontSize: { xs: 12, md: 20 } }}>Home</Typography>
+                  </Button>
+                  <Button color="inherit" sx={{ paddingX: 4, paddingY: 2 }} component={Link} to="/shopViewOnly">
+                    <Typography sx={{ fontFamily: "Kanit", fontSize: { xs: 12, md: 20 } }}>Shop</Typography>
+                  </Button>
+                  <Button color="inherit" sx={{ paddingX: 4, paddingY: 2 }} component={Link} to="/toolViewOnly">
+                    <Typography sx={{ fontFamily: "Kanit", fontSize: { xs: 12, md: 20 } }}>ARFIT App</Typography>
+                  </Button>
+                  <Button color="inherit" sx={{ paddingX: 4, paddingY: 2 }} component={Link} to="/aboutViewOnly">
+                    <Typography sx={{ fontFamily: "Kanit", fontSize: { xs: 12, md: 20 } }}>About</Typography>
+                  </Button>
+                  <Button color="inherit" sx={{ paddingX: 4, paddingY: 2 }} component={Link} to="/login">
+                    <Typography sx={{ fontFamily: "Kanit", fontSize: { xs: 12, md: 20 } }}>Login</Typography>
+                  </Button>
+                  <Button color="inherit" sx={{ paddingX: 4, paddingY: 2 }} component={Link} to="/signup">
+                    <Typography sx={{ fontFamily: "Kanit", fontSize: { xs: 12, md: 20 } }}>Signup</Typography>
+                  </Button>
+                </Box>
+              </Toolbar>
+            </AppBar>
+            <Drawer
+              anchor="left" 
+              open={drawerOpenViewOnly}
+              onClose={toggleDrawerViewOnly(false)}
+            >
+              {drawerViewOnly}
+            </Drawer>
         </Box>
+        )
       )}
     </div>
   );

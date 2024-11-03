@@ -28,7 +28,6 @@ class DataController extends Controller
     }
 
     //form login / signup functions
-
     public function loginUser(Request $request)
     {
         try {
@@ -43,7 +42,8 @@ class DataController extends Controller
                 foreach ($this->database->getReference('users')->getSnapshot()->getValue() as $userID => $userInfo) {
                     if ($request->email == $userInfo['email']) {
                         $role = $userInfo['role'];
-                        return response(compact('userInfo', 'token', 'userID', 'role'), 200);
+                        $firstName = $userInfo['firstName'];
+                        return response(compact('firstName', 'token', 'userID', 'role'), 200);
                         break;
                     }
                 }
@@ -75,7 +75,7 @@ class DataController extends Controller
 
                 foreach ($this->database->getReference('users')->getSnapshot()->getValue() as $userID => $userInfo) {
 
-                    if($request->mobilePhone === $userInfo['mobileNumber'] && $request->email === $userInfo['email']) {
+                    if ($request->mobilePhone === $userInfo['mobileNumber'] && $request->email === $userInfo['email']) {
                         $message = 'The email and number is both used, please try another email and mobile number.';
                         $isExisting = true;
                         break;
@@ -136,6 +136,7 @@ class DataController extends Controller
                             'password' => $userInfo['password'],
                             'profileImage' => $userInfo['profileImage'],
                             'mobileNumber' => $userInfo['mobileNumber'],
+                            'verificationCode' => '',
                             'isVerified' => true,
                             'role' => 'user'
 
@@ -207,7 +208,6 @@ class DataController extends Controller
         }
     }
 
-
     public function sendSMSCode($mobilePhone)
     {
         try {
@@ -228,6 +228,34 @@ class DataController extends Controller
         }
 
         return $smsCodeForMobile;
+    }
+
+    //alternative way if down yung SMS
+    public function sendOTPCodeToEmail(Request $request)
+    {
+        try {
+
+            foreach ($this->database->getReference('users')->getSnapshot()->getValue() as $userID => $userInfo) {
+
+                if ($request->email === $userInfo['email']) {
+
+                    $otpCodeForEmail = rand(100000, 999999);
+
+                    //send email otp to email of the user
+                    $this->sendEmailOTP($request->email, $otpCodeForEmail);
+
+                    //update yung info sa db
+                    $this->database->getReference('users/' . $userID . '/verificationCode')
+                        ->set($otpCodeForEmail);
+                }
+            }
+
+            $message = 'Code sent to '. $request->email;        
+            return response(compact('message'));     
+        } catch (\Exception $e) {
+            $errMessage = $e->getMessage();
+            return response(compact('errMessage'));
+        }
     }
 
     public function updateVerificationCodeWhenExpired(Request $request)
@@ -264,7 +292,8 @@ class DataController extends Controller
             $message = 'Code Resent Successfully!';
             return response(compact('message'));
         } catch (\Exception $e) {
-            return response($e->getMessage());
+            $message = $e->getMessage();
+            return response(compact('message'));
         }
     }
 
@@ -318,7 +347,12 @@ class DataController extends Controller
     public function getUserByID(Request $request)
     {
         $data = $this->database->getReference('users/' . $request->uid)->getValue();
-        return response()->json($data);
+        return response()->json([
+            'firstName' => $data['firstName'],
+            'lastName' => $data['lastName'],
+            'mobileNumber' => $data['mobileNumber'],
+            'email' => $data['email']
+        ]);
     }
 
     public function getMyAddress(Request $request)
@@ -340,7 +374,7 @@ class DataController extends Controller
             foreach ($this->database->getReference('notificationForUsers')->getSnapshot()->getValue() as $notificationID => $notificationInfo) {
                 if ($uid == $notificationInfo['uid']) {
 
-                    if ($notificationInfo['status'] == 'unread') {
+                    if ($notificationInfo['status'] === 'unread') {
                         //increase the notification count per loop
                         $notificationCount++;
                     }
@@ -429,32 +463,13 @@ class DataController extends Controller
                         }
 
                         if (!$numberExists) {
-                            $smsCode = $this->sendSMSCode($request->mobileNumber);
-
-                            $this->database->getReference('users/' . $userID)->update([
-                                'verificationCode' => $smsCode,
+                            $this->database->getReference('users/' . $request->uid)->update([
+                                'mobileNumber' => $request->mobileNumber
                             ]);
 
                             $message = 'VerifyPhone';
                         }
-                    } else if ($request->requestType == 'verifyNewPhone') {
 
-                        foreach ($this->database->getReference('users')->getSnapshot()->getValue() as $userID => $userInfo) {
-
-                            if ($request->email === $userInfo['email'] && $request->otpCode != $userInfo['verificationCode']) {
-                                $message = 'Incorrect OTP Code!';
-                            }
-
-                            if ($request->email === $userInfo['email'] && $request->otpCode === $userInfo['verificationCode']) {
-
-                                $this->database->getReference('users/' . $userID)->update([
-                                    'mobileNumber' => $request->mobileNumber
-                                ]);
-
-                                $message = "Updated Successfully!";
-                                break;
-                            }
-                        }
                     } else {
 
                         $this->database->getReference('users/' . $userID)->update([
@@ -529,7 +544,7 @@ class DataController extends Controller
                             'uid' => $userInfo['uid']
                         ]);
 
-                        
+
                         $message = "Password Updated Successfully!";
                     } else {
                         $message = "Incorrect Old Password";
@@ -614,7 +629,6 @@ class DataController extends Controller
             return response(compact('message'));
         }
     }
-
 
     public function getAllAdmins()
     {
@@ -818,5 +832,96 @@ class DataController extends Controller
             return response($e->getMessage());
         }
     }
-    
+
+    //user end as an alternative way for user if SMS is down
+    public function sendEmailOTP($email, $otpCode)
+    {
+        try {
+
+            $emailNotificationData = [
+                'subject' => 'ARFITCHECK Account Registration OTP Code',
+                'otpCode' => $otpCode,
+                'email' =>  $email,
+                'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
+            ];
+
+            Mail::send([], [], function ($message) use ($emailNotificationData) {
+                $htmlBody = '
+                <html>
+                    <head>
+                    <style>
+                        body {
+                        font-family: Arial, sans-serif;
+                        background-color: #f4f4f4;
+                        padding: 20px;
+                        }
+                        .container {
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #ffffff;
+                        padding: 20px;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                        }
+                        h1, h2, h3 {
+                        color: #333333;
+                        }
+                        p {
+                        color: #555555;
+                        line-height: 1.6;
+                        }
+                        .divider {
+                        border-top: 1px solid #dddddd;
+                        margin: 20px 0;
+                        }
+                        .order-id {
+                        font-weight: bold;
+                        }
+                        .footer {
+                        margin-top: 20px;
+                        text-align: center;
+                        color: #888888;
+                        font-size: 12px;
+                        }
+                        .logo {
+                        text-align: center;
+                        margin-bottom: 20px;
+                        }
+                        .logo img {
+                        max-width: 100px; /* Adjust the size of the image */
+                        }
+                    </style>
+                    </head>
+                    <body>
+                    <div class="container">
+                        <div class="logo">
+                        <img src="' . $emailNotificationData['url'] . '" alt="Logo" style="width: 200px; height: auto;">
+                        </div>
+                        
+                        <p>Your OTP Code is ' . $emailNotificationData['otpCode'] . ' NEVER share your code to anyone else including the BMIC Staff.</p>
+                        
+                        <div class="divider"></div>
+                         <p>
+                            <a href="https://www.facebook.com/bmic.clothing" target="_blank">Visit BMIC on Facebook</a>
+                        </p>
+                    <div class="footer">
+                        <p>&copy; ' . date('Y') . ' ARFITCHECK. All rights reserved.</p>
+                    </div>
+                    </body>
+                </html>
+                ';
+
+                $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+                $message->to($emailNotificationData['email'])
+                    ->subject($emailNotificationData['subject'])
+                    ->html($htmlBody);
+            });
+
+            return response()->json([
+                'message' => 'Email sent successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response($e->getMessage());
+        }
+    }
 }

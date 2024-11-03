@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { RadioGroup, Typography, Grid, Box, FormControlLabel, Radio, Button, MenuItem , Paper, Checkbox, Select, FormControl, InputLabel, FormHelperText, CircularProgress, Dialog, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import { RadioGroup, Typography, Grid, Box, FormControlLabel, Radio, Button, MenuItem , Paper, Checkbox, Select, FormControl, InputLabel, FormHelperText, CircularProgress, Dialog, Accordion, AccordionSummary, AccordionDetails, Autocomplete, TextField} from '@mui/material';
 import axiosClient from '../../../axios-client';
 import { Divider } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -22,8 +22,28 @@ import CustomizationRequestSuccess from '../../../Components/Dialogs/Customizati
 import { useCart } from '../../../ContextAPI/CartProvider';
 
 import shopGraffitiBG from '../../../../public/assets/shopGraffiti.png'
+import TermsAndConditions from '../../TermsAndConditions';
 
 const provinceOptions = ['Metro Manila'];
+
+const cityOptions = [
+  'Caloocan',
+  'Malabon',
+  'Navotas',
+  'Valenzuela',
+  'Quezon City',
+  'Marikina',
+  'Pasig',
+  'Taguig',
+  'Makati',
+  'Manila',
+  'Mandaluyong',
+  'San Juan',
+  'Pasay',
+  'Parañaque',
+  'Las Piñas',
+  'Muntinlupa',
+];
 
 // TODO: REVISE THE EULA AND TRY TO MAKE THE USER NOT COMEBACK IN THIS PAGE ONCE ORDERED
 
@@ -71,16 +91,18 @@ function CustomProductRequest() {
 
   //terms and condition stuff
   const [isEulaChecked, setEulaChecked] = useState(false)
+  const [isErrorWithTheNewShipping, setIsErrorWithTheNewShipping] = useState(false);
   const [termsAndConditionDialogOpen, setTermsnAndConditionDialog] = useState(false)
 
   const navigate = useNavigate()
 
   const { updateCartWhenCheckedOutSuccess } = useCart();
   
-
   const ShippingValidationSchema = Yup.object().shape({
-    recipientName: enableAllFields ? Yup.string().required('Recipient Name is required') : Yup.string(),
-    email: enableAllFields ? Yup.string().required('Email is required') : Yup.string(),
+    recipientName: enableAllFields ? 
+      Yup.string().required('Recipient Name is required')
+      .matches(/^[A-Za-z\s-]+$/, 'Recipient Name must contain only letters, spaces, or hyphens')
+      : Yup.string(),
     address: enableAllFields ? Yup.string().required('Address is required') : Yup.string(),
     province: enableAllFields ? Yup.string().required('Province is required') : Yup.string(),
     city: enableAllFields ? Yup.string().required('City is required') : Yup.string(),
@@ -92,6 +114,7 @@ function CustomProductRequest() {
     const base64Pattern = /^[A-Za-z0-9+/=]+$/;
     return base64Pattern.test(base64String) && base64String.length % 4 === 0;
   }
+
   const formik = useFormik({
     initialValues: {
       recipientName: '',
@@ -304,29 +327,6 @@ function CustomProductRequest() {
   
     }
   };
-  //converter function from base64 string url into file path so I can pass it in as request in the backend
-  // const convertBase64ToFile = (base64String, fileName) => {
-
-  //   try {
-
-  //     const byteString = atob(base64String);
-
-  //     const arrayBuffer = new ArrayBuffer(byteString.length);
-  //     const uintArray = new Uint8Array(arrayBuffer);
-
-  //     for (let i = 0; i < byteString.length; i++) {
-  //       uintArray[i] = byteString.charCodeAt(i);
-  //     }
-
-  //     const blob = new Blob([uintArray], { type: 'image/jpeg' }); 
-  //     return new File([blob], fileName, { type: 'image/jpeg' });
-
-  //   }catch(error) {
-  //     navigate('/urlErr')
-  //   }
-    
-  // };
-
 
   const fetchOrderDetails = async () => {
     try {
@@ -372,6 +372,27 @@ function CustomProductRequest() {
     }
   };
 
+  //served as a validation if the are some errors in the new shipping fields. I did this because the left section is not connected to the right section where the check box is located.
+  const handleCloseEULACheck = () => {
+    setEulaChecked(false)
+    setEnablePlaceOrder(false)
+    setIsErrorWithTheNewShipping(true)
+  }
+
+  const handleShipToOtherAddress = (event) => {
+
+    if (event.target.checked) {
+      setEnableAllFields(true)
+    }else {
+      setEnableAllFields(false)
+      setIsErrorWithTheNewShipping(false)
+    }
+
+    setEulaChecked(false)
+    setEnablePlaceOrder(false)
+
+  }
+
   const handleAgree = () => {
     setEulaChecked(true);
     setTermsnAndConditionDialog(false);
@@ -410,161 +431,196 @@ function CustomProductRequest() {
                   width: '98%',
                   margin: 'auto',
                   boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)'
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  mt: {xs: 1, md: 'auto'}
                 }}>
-                  <FormikProvider value={formik}>
-                    <Form>
-                      <Typography sx={{
-                        fontFamily: 'Kanit',
-                        fontSize: { xs:25, md: 30 },
-                        fontWeight: 'bold',
-                        color: 'black',
-                        paddingY: { xs:0, md: "1vh" },
-                        textAlign: "left"
-                      }}>
-                        {enableAllFields ? 'SHIPPING DETAILS' : 'BILLING DETAILS'}
-                      </Typography>
-                      <Divider sx={{ my: 2, backgroundColor: 'black' }} />
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                          <Field name="recipientName">
-                            {({ field, meta }) => (
-                              <StyledTextFields
-                                field={{
-                                  ...field,
-                                  value: !enableAllFields ? `${userDetails.firstName} ${userDetails.lastName}` : field.value
-                                }}
-                                meta={meta}
-                                id="recipientName"
-                                label="Recipient"
-                                disabled={!enableAllFields}
-                              />
-                            )}
-                          </Field>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Field name="email">
-                            {({ field, meta }) => (
-                              <StyledTextFields
-                                field={{
-                                  ...field,
-                                  value: !enableAllFields ? `${userDetails.email}` : field.value
-                                }}
-                                meta={meta}
-                                id="email"
-                                label="Email"
-                                disabled={!enableAllFields}
-                              />
-                            )}
-                          </Field>
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Field name="province">
-                            {({ field, meta }) => (
-                              <FormControl fullWidth variant="filled">
-                                <InputLabel htmlFor="province" sx={{ fontFamily: 'Kanit' }}>Province</InputLabel>
-                                <Select
-                                  {...field}
-                                  inputProps={{ id: 'province' }}
-                                  value={enableAllFields ? '' : 'Metro Manila'}
-                                  fullWidth
-                                  error={meta.touched && meta.error}
-                                  disabled={!enableAllFields}
-                                >
-                                  {provinceOptions.map((option) => (
-                                    <MenuItem key={option} value={option}>
-                                      <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, color: 'black' }}>
-                                        {option}
-                                      </Typography>
-                                    </MenuItem>
-                                  ))}
-                                </Select>
-                                {meta.touched && meta.error && (
-                                  <FormHelperText error>{meta.error}</FormHelperText>
-                                )}
-                              </FormControl>
-                            )}
-                          </Field>
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Field name="address">
-                            {({ field, meta }) => (
-                              <StyledTextFields
-                                field={{
-                                  ...field,
-                                  value: !enableAllFields ? `${shippingDetails.addressLine}` : field.value
-                                }}
-                                meta={meta}
-                                id="address"
-                                label="Address Line"
-                                disabled={!enableAllFields}
-                              />
-                            )}
-                          </Field>
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Field name="city">
-                            {({ field, meta }) => (
-                              <StyledTextFields
-                                field={{
-                                  ...field,
-                                  value: !enableAllFields ? `${shippingDetails.city}` : field.value
-                                }}
-                                meta={meta}
-                                id="city"
-                                label="City"
-                                disabled={!enableAllFields}
-                              />
-                            )}
-                          </Field>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Field name="postalCode">
-                            {({ field, meta }) => (
-                              <StyledTextFields
-                                field={{
-                                  ...field,
-                                  value: !enableAllFields ? `${shippingDetails.postalCode}` : field.value
-                                }}
-                                meta={meta}
-                                id="postalCode"
-                                label="Postal Code"
-                                disabled={!enableAllFields}
-                              />
-                            )}
-                          </Field>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Field name="orderNotes">
-                            {({ field, meta }) => (
-                              <StyledTextFields
-                                field={{ ...field }}
-                                meta={meta}
-                                id="orderNotes"
-                                label="Order Notes (optional)"
-                                multiline
-                                rows={4}
-                              />
-                            )}
-                          </Field>
-                        </Grid>
-                        <Grid item xs={12}>
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                checked={enableAllFields}
-                                onChange={(e) => setEnableAllFields(e.target.checked)}
-                                color="primary"
-                                size="small"
-                                sx={{ transform: 'scale(0.9)' }}
-                              />
-                            }
-                            label={<Typography sx = {{ fontFamily: 'Kanit', fontSize: {xs: 16 , md: 18} }}>Ship to different address?</Typography>}
-                          />
-                        </Grid>
+                <FormikProvider value={formik}>
+                  <Form>
+                    <Typography sx={{
+                      fontFamily: 'Kanit',
+                      fontSize: { xs:25, md: 30 },
+                      fontWeight: 'bold',
+                      color: 'black',
+                      paddingY: { xs:0, md: "1vh" },
+                      textAlign: "left"
+                    }}>
+                      {enableAllFields ? 'SHIPPING DETAILS' : 'BILLING DETAILS'}
+                    </Typography>
+                    <Divider sx={{ my: 2, backgroundColor: 'black' }} />
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <Field name="recipientName">
+                          {({ field, meta }) => (
+                            <StyledTextFields
+                              field={{
+                                ...field,
+                                value: !enableAllFields ? `${userDetails.firstName} ${userDetails.lastName}` : field.value
+                              }}
+                              meta={meta}
+                              handleCloseEULACheck={handleCloseEULACheck}
+                              id="recipientName"
+                              label="Recipient"
+                              disabled={!enableAllFields}
+                              fullWidth
+                            />
+                          )}
+                        </Field>
                       </Grid>
-                    </Form>
-                  </FormikProvider>
+                      <Grid item xs={12}>
+                        <Field name="province">
+                          {({ field, meta, form }) => (
+                            <FormControl fullWidth variant="filled">
+                              <Autocomplete
+                                {...field}
+                                id="province"
+                                options={provinceOptions}
+                                getOptionLabel={(option) => option}
+                                onChange={(event, value) => form.setFieldValue('province', value)}
+                                value={!enableAllFields ? `${shippingDetails.province}` : field.value}
+                                disabled={!enableAllFields}
+                                renderInput={(params) => (
+                                  <TextField
+                                    {...params}
+                                    label="Province"
+                                    variant="filled"
+                                    error={meta.touched && Boolean(meta.error)}
+                                    InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } } }}
+                                    sx={{
+                                      '& input': { pt: { xs: 2, sm: 2, md: 3 }, fontFamily: 'Kanit', fontSize: { xs: 12, md: 16 } },
+                                    }}
+                                    disabled={!enableAllFields}
+                                  />
+                                )}
+                                renderOption={(props, option) => (
+                                  <li {...props}>
+                                    <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } }}>
+                                      {option}
+                                    </Typography>
+                                  </li>
+                                )}
+                              />
+                              {meta.touched && meta.error && (
+                                <>
+                                  <FormHelperText sx={{ fontFamily: 'Kanit', fontSize: 14, color: 'red' }}>
+                                  {meta.error}
+                                  </FormHelperText>
+                                </>
+                              )}
+                            </FormControl>
+                          )}
+                        </Field>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Field name="address">
+                          {({ field, meta }) => (
+                            <StyledTextFields
+                              field={{
+                                ...field,
+                                value: !enableAllFields ? `${shippingDetails.addressLine}` : field.value
+                              }}
+                              meta={meta}
+                              handleCloseEULACheck={handleCloseEULACheck}
+                              id="address"
+                              label="Address Line"
+                              disabled={!enableAllFields}
+                            />
+                          )}
+                        </Field>
+                      </Grid>
+                      <Grid item xs={12}>
+                      <Field name="city">
+                          {({ field, meta, form }) => (
+                            <FormControl fullWidth variant="filled">
+                              <Autocomplete
+                                {...field}
+                                id="city"
+                                options={cityOptions}
+                                getOptionLabel={(option) => option}
+                                onChange={(event, value) => form.setFieldValue('city', value)}
+                                value={!enableAllFields ? `${shippingDetails.city}` : field.value}
+                                disabled={!enableAllFields}
+                                renderInput={(params) => (
+                                  <TextField
+                                    {...params}
+                                    label="City / Municipality"
+                                    variant="filled"
+                                    error={meta.touched && Boolean(meta.error)}
+                                    InputLabelProps={{ sx: { fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } } }}
+                                    sx={{
+                                      '& input': { pt: { xs: 2, sm: 2, md: 3 }, fontFamily: 'Kanit', fontSize: { xs: 12, md: 16 } },
+                                    }}
+                                    disabled={!enableAllFields}
+                                  />
+                                )}
+                                renderOption={(props, option) => (
+                                  <li {...props}>
+                                    <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 } }}>
+                                      {option}
+                                    </Typography>
+                                  </li>
+                                )}
+                              />
+                              {meta.touched && meta.error && (
+                                  <>
+                                    <FormHelperText sx={{ fontFamily: 'Kanit', fontSize: 14, color: 'red' }}>
+                                    {meta.error}
+                                    </FormHelperText>
+                                    {/* {meta.error && handleCloseEULACheck()} */}
+                                  </>
+                              )}
+                            </FormControl>
+                          )}
+                        </Field>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Field name="postalCode">
+                          {({ field, meta }) => (
+                            <StyledTextFields
+                              field={{
+                                ...field,
+                                value: !enableAllFields ? `${shippingDetails.postalCode}` : field.value
+                              }}
+                              meta={meta}
+                              handleCloseEULACheck={handleCloseEULACheck}
+                              id="postalCode"
+                              label="Postal Code"
+                              disabled={!enableAllFields}
+                            />
+                          )}
+                        </Field>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Field name="orderNotes">
+                          {({ field, meta }) => (
+                            <StyledTextFields
+                              field={{ ...field }}
+                              meta={meta}
+                              handleCloseEULACheck={handleCloseEULACheck}
+                              id="orderNotes"
+                              label="Order Notes (optional)"
+                              multiline
+                              rows={4}
+                            />
+                          )}
+                        </Field>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={enableAllFields}
+                              onChange = {handleShipToOtherAddress}
+                              color="primary"
+                              size="small"
+                              sx={{ transform: 'scale(0.9)' }}
+                            />
+                          }
+                          label={<Typography sx = {{ fontFamily: 'Kanit', fontSize: {xs: 16 , md: 18} }}>Ship to different address?</Typography>}
+                        />
+                      </Grid>
+                    </Grid>
+                  </Form>
+                </FormikProvider>
                 </Paper>
               </Box>
             </Grid>
@@ -787,70 +843,70 @@ function CustomProductRequest() {
                       </AccordionDetails>
                     </Accordion>
                     <FormControlLabel
-                                control={<Checkbox checked={isEulaChecked} onChange={handleEulaChecked} sx={{ 
-                                  transform: 'scale(0.8)' 
-                                }} />}
-                                label={
-                                  <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: 16 }}>
-                                    I Agree with the&nbsp; 
-                                    <span style={{ color: "#1A5276" }}>
-                                      <b onClick={(event) => {
-                                        event.preventDefault(); 
-                                        handleTermsAndCondiDialogOpen();
-                                      }}> Terms and Conditions</b>
-                                    </span>
-                                  </Typography>
-                                }
-                              sx={{ fontFamily: 'Kanit', fontSize: 16 }}
-                              />
-                              {/* Submit req button */}
-                              <Button
-                                fullWidth
-                                onClick={formik.handleSubmit}
-                                variant="contained"
-                                disabled={!enablePlaceOrder || submitLoading}
-                                sx={{
-                                  backgroundColor: 'White',
-                                  '&:hover': { backgroundColor: '#414a4c', color: 'white' },
-                                  '&:not(:hover)': { backgroundColor: '#3d4242', color: 'white' },
-                                  opacity: !enablePlaceOrder || submitLoading ? 0.7 : 1,
-                                  background: 'linear-gradient(to right, #414141, #000000)'
-                                }}
-                              >
-                                <Typography
-                                  sx={{
-                                    fontFamily: 'Kanit',
-                                    fontSize: { xs: 18, md: 25 },
-                                    padding: 0.5,
-                                    visibility: submitLoading ? 'hidden' : 'visible',
-                                  }}
-                                >
-                                  SUBMIT REQUEST
-                                </Typography>
-                                {submitLoading && (
-                                  <CircularProgress
-                                    size={24}
-                                    color="inherit"
-                                    sx={{
-                                      position: 'absolute',
-                                      top: '50%',
-                                      left: '50%',
-                                      marginTop: '-12px',
-                                      marginLeft: '-12px',
-                                    }}
-                                  />
-                                )}
-                              </Button>
-                          </Box>
-                        </Grid>
+                      control={<Checkbox checked={isEulaChecked} onChange={handleEulaChecked} sx={{ 
+                        transform: 'scale(0.8)' 
+                      }} />}
+                      label={
+                        <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: {xs: 12, md: 16} }}>
+                          I've Read and Agree with the&nbsp; 
+                          <span style={{ color: "#1A5276" }}>
+                            <b onClick={(event) => {
+                              event.preventDefault(); 
+                              handleTermsAndCondiDialogOpen();
+                            }}> Terms and Conditions*</b>
+                          </span>
+                        </Typography>
+                      }
+                    sx={{ fontFamily: 'Kanit', fontSize: 16 }}
+                    />
+                      {/* Submit req button */}
+                      <Button
+                        fullWidth
+                        onClick={formik.handleSubmit}
+                        variant="contained"
+                        disabled={!enablePlaceOrder || submitLoading}
+                        sx={{
+                          backgroundColor: 'White',
+                          '&:hover': { backgroundColor: '#414a4c', color: 'white' },
+                          '&:not(:hover)': { backgroundColor: '#3d4242', color: 'white' },
+                          opacity: !enablePlaceOrder || submitLoading ? 0.5 : 1,
+                          background: 'linear-gradient(to right, #414141, #000000)'
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontFamily: 'Kanit',
+                            fontSize: { xs: 18, md: 25 },
+                            padding: 0.5,
+                            visibility: submitLoading ? 'hidden' : 'visible',
+                          }}
+                        >
+                          SUBMIT REQUEST
+                        </Typography>
+                        {submitLoading && (
+                          <CircularProgress
+                            size={24}
+                            color="inherit"
+                            sx={{
+                              position: 'absolute',
+                              top: '50%',
+                              left: '50%',
+                              marginTop: '-12px',
+                              marginLeft: '-12px',
+                            }}
+                          />
+                        )}
+                      </Button>
+                  </Box>
+                </Grid>
             </Grid> 
           </Grid>
         <Footer/>
         {/* Dialogs */}
-        <CheckoutTermsAndConditions open={termsAndConditionDialogOpen} onClose={handleTermsAndCondiDialogClose} onAgree={handleAgree}/>
+        <TermsAndConditions open={termsAndConditionDialogOpen} onClose={handleTermsAndCondiDialogClose} onAgree={handleAgree}/>
         <ViewCustomProductDetails open={customProductDetailsDialog} onClose={handleCloseCustomProductDetails} customImage={customizedProductImageURL} smallQnt={smallQnt} mediumQnt={mediumQnt} largeQnt={largeQnt} extraLargeQnt={extraLargeQnt} doubleXLQnt={doubleXLQnt} tripleXLQnt={tripleXLQnt} />
         {/* jeon work */}
-        <Dialog open={dialoOpen} onClose={handleDialogClose} maxWidth="xl" fullWidth PaperProps={{ style: { maxHeight: '100vh' } }}>
+        <Dialog open={dialoOpen} onClose={handleDialogClose} maxWidth="md" fullWidth PaperProps={{ style: { maxHeight: '100vh' } }}>
           <div>
             <CustomizationRequestSuccess onClose={handleDialogClose} timeStamp={orderTimeStamp}/>
           </div>

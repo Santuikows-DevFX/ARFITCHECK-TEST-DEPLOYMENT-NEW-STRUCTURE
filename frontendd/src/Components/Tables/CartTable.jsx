@@ -181,19 +181,19 @@ const CartTable = () => {
         <div style={{ maxWidth: '1000px', width: '100%', padding: '20px' }}>
           <Typography
             align="center"
-            sx={{ fontFamily: 'Kanit',fontSize: { xs: 30, md: 50 }, fontWeight: 600, color: 'black', marginBottom: '20px' }}
+            sx={{ fontFamily: 'Kanit',fontSize: { xs: 30, md: 50 }, fontWeight: 600, color: 'black', mt: {xs: 8, md: 'auto'} }}
           >
             CART
           </Typography>
           <Typography
-                align="center"
-                sx={{
-                fontFamily: 'Kanit',
-                fontSize: { xs: 14, md: 18 },
-                fontWeight: 400,
-                color: 'black', 
-                marginBottom: '20px', 
-                }}
+            align="center"
+            sx={{
+              fontFamily: 'Kanit',
+              fontSize: { xs: 14, md: 18 },
+              fontWeight: 400,
+              color: 'black', 
+              marginBottom: '20px', 
+            }}
             >
                 Finalize your <b>order(s)</b> before proceeding to checkout.
             </Typography>
@@ -204,18 +204,18 @@ const CartTable = () => {
             <Card component={Paper}>
               <CardContent>
               <Grid container spacing={2} alignItems="center">
-                <Grid item xs={2} sm={2} md={2}>
+                 <Grid item xs={2} sm={2} md={2}>
                   <img
                     src={cartItem.productImage}
                     alt="Product"
                     style={{
-                      maxWidth: '100%',
-                      maxHeight: '200px', 
-                      width: 'auto',
-                      height: 'auto'
+                      width: '100%',        
+                      height: '100%',       
+                      aspectRatio: '1 / 1', 
+                      objectFit: 'cover',  
                     }}
                   />
-                </Grid>
+                 </Grid>
                 <Grid item xs={8} sm={8}>
                   <Typography
                     sx={{

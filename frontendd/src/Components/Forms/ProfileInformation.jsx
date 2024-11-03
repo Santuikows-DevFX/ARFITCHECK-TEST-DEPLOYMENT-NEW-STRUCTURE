@@ -51,10 +51,12 @@ function ProfileInformation() {
     setSelectedEmail(email);
     setSelectedPhone(phone)
   }
+
   const handleCloseVerifyPhoneModal = () => {
     setOpenVerifyPhoneModal(false)
     setLoading(false)
   }
+
   const handleUpdateInformation = (values) => {
     try {
 
@@ -87,8 +89,7 @@ function ProfileInformation() {
 
       }else if(values.mobileNum != userInfo?.mobileNumber?.slice(1)) {
           Swal.fire({
-            title: "Are you sure?",
-            text: "Updating your phone means you need to verify it again.",
+            title: "Update Phone Number?",
             icon: "warning",
             showCancelButton: true,
             cancelButtonText: 'Cancel',
@@ -120,11 +121,8 @@ function ProfileInformation() {
 
       axiosClient.post('auth/updateProfile', newPersonalInfo)
       .then(({data}) => {
-
         setTimeout(() => {
-
           if(data.message === 'Updated Successfully!') {
-
             enqueueSnackbar(`${data.message}`, { 
               variant: 'success',
               anchorOrigin: {
@@ -143,8 +141,24 @@ function ProfileInformation() {
             fetchUserInfo()
 
           }else if (data.message === 'VerifyPhone') {
-             setOpenVerifyPhoneModal(true);
-             handleOpenVerifyPhoneModal(values.eMail, values.mobileNum);
+            //  setOpenVerifyPhoneModal(true);
+            //  handleOpenVerifyPhoneModal(values.eMail, values.mobileNum);
+            enqueueSnackbar(`Updated Successfully`, { 
+              variant: 'success',
+              anchorOrigin: {
+                vertical: 'top',
+                horizontal: 'right'
+              },
+              autoHideDuration: 2300,
+              style: {
+                fontFamily: 'Kanit',
+                fontSize: '16px'
+              },
+              
+            });
+
+            setLoading(false); 
+            fetchUserInfo()
           }
           else if (data.message === 'Updated Successfully! Login with your new email') {
 
@@ -169,7 +183,7 @@ function ProfileInformation() {
                 setRole(null)
                 setUserID(null)
 
-                navigator('/login')
+                navigator('/homeViewOnly', { replace: true })
 
               },
               
@@ -341,7 +355,7 @@ function ProfileInformation() {
                   }}
                   disabled = {!isValid || isSubmitting || loading || (values.eMail === userInfo.email && values.mobileNum === parseInt(userInfo.mobileNumber?.slice(1)))}
                 >
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 18, md: 25 }, padding: 0.5, visibility: loading ? 'hidden' : 'visible' }}>UPDATE PROFILE INFORMATION</Typography>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 }, padding: 0.5, visibility: loading ? 'hidden' : 'visible' }}>UPDATE PROFILE INFORMATION</Typography>
                   {loading && (
                     <CircularProgress
                       size={24}

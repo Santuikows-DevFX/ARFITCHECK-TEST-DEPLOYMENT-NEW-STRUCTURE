@@ -651,7 +651,7 @@ const OrdersTable = () => {
                             '&:not(:hover)': { backgroundColor: '#860000', color: 'white' },
                           }}
                         >
-                          <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, padding: 0.5 }}>CANCEL</Typography>
+                          <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12, md: 14}, padding: 0.5 }}>CANCEL</Typography>
                         </Button>
                         
                       ) : (
@@ -671,7 +671,7 @@ const OrdersTable = () => {
                               opacity: !enableReceiveButton[order?.orderID] ? 0.6 : 1,
                             }}
                           >
-                            <Typography sx={{ fontFamily: 'Kanit', fontSize:{ xs: 14, md: 14 }, padding: 0.5 }}>RECEIVED</Typography>
+                            <Typography sx={{ fontFamily: 'Kanit', fontSize:{ xs: 12, md: 14 }, padding: 0.5 }}>RECEIVED</Typography>
                           </Button>
                         ))}
                   </Grid>
@@ -687,6 +687,7 @@ const OrdersTable = () => {
             page={currentPage}
             onChange={paginate}
             color="primary"
+            sx={{ display: 'flex', justifyContent: 'center', fontFamily: 'Kanit' }}
           />
         </Box>
       </Box>

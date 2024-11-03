@@ -310,7 +310,7 @@ const ProductInventoryTable = ({ products, fetchProducts }) => {
                   QUANTITY
                   <Tooltip  
                     title={
-                    <Typography sx={{ fontFamily: 'Poppins', fontSize: 14, fontWeight: 'medium' }}>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, fontWeight: 'medium' }}>
                       This shows the total quantity of the product, it will turn <span style={{ fontFamily: 'Kanit', fontWeight: 'bold', textDecoration: 'underline' }}>RED</span> if QNT is below the set critical level.
                     </Typography>
                   }>
@@ -347,7 +347,7 @@ const ProductInventoryTable = ({ products, fetchProducts }) => {
                   SOLD
                   <Tooltip  
                     title={
-                    <Typography sx={{ fontFamily: 'Poppins', fontSize: 14, fontWeight: 'medium' }}>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, fontWeight: 'medium' }}>
                       This shows the total number of purchases for this product.
                     </Typography>
                   }>
@@ -469,7 +469,7 @@ const ProductInventoryTable = ({ products, fetchProducts }) => {
                         }}
 
                       >
-                        <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, padding: 0.5 }}>
+                        <Typography sx={{ fontFamily: 'Kanit', fontSize: 14, padding: 0.5 }}>
                           {product.productInfo?.isCriticalLevel ? 'RESTOCK' : 'EDIT'}
                         </Typography>
                       </Button>

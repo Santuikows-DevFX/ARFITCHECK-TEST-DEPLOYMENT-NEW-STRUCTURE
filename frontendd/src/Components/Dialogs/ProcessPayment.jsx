@@ -152,36 +152,41 @@ const ProcessPayment = ({ open, onClose, requestData, fetchMyOrders, zIndex }) =
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" sx={{ borderRadius: '5px', '& .MuiDialog-paper': { borderRadius: '16px' } }} style={{ zIndex: zIndex }}>
-      <DialogTitle sx={{ background: 'linear-gradient(to left, #414141, #000000)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <Typography sx={{ fontFamily: 'Kanit', fontWeight: 'bold', fontSize: { xs: 20, md: 34 } }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" sx={{ zIndex, '& .MuiDialog-paper': { borderRadius: '16px' } }}>
+      <DialogTitle sx={{ background: 'linear-gradient(to left, #414141, #000000)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography sx={{ fontFamily: 'Kanit', fontWeight: 'bold', fontSize: { xs: 15, md: 34 } }}>
           PAYMENT PROCESSING
         </Typography>
         <Close onClick={onClose} sx={{ cursor: 'pointer' }} />
       </DialogTitle>
       <DialogContent>
-        <Grid item sx={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: '100%' }}>
-          <Box sx={{ m: "1.5%" }}>
-            <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 18, md: 32 }, mt: -2, fontWeight: 'bold'}}>
-                PAYMENT FOR REQUEST ID: {requestData?.orderID}
-            </Typography>
-            <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 20 }, color: 'black', mb: 1 }}>
-                <b>Selected Payment Method</b>: {requestData?.ewallet === 'gcash' ? 'G-Cash' : 'Paymaya'}
-            </Typography>
-            <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 20 }, color: 'black', mb: 1 }}>
-                <b>Amount to Pay</b>: ₱{(requestData?.amountToPay)?.toFixed(2)}
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, mb: 2 }}>
-              <Warning sx={{ color: '#f1c40f', fontSize: 30 }} />
-              <Typography sx={{ fontFamily: 'Inter', fontSize: { xs: 10, md: 16 }, ml: 1, fontWeight: 'bold' }}>
-                Payment processing will occur after your customization request was approved. If we don't receive payment within 2 days after approval, your request will be automatically cancelled.
+        <Grid container spacing={2} >
+          <Grid item xs={12} md={6}>
+            <Box>
+              <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 16, md: 20 }, mt: 1, fontWeight: 500, mb: {xs: 0.5, md: 1} }}>
+                Payment for: <b><b>{requestData?.orderID}</b></b>
               </Typography>
+              <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 16, md: 20 }, color: 'black', fontWeight: 500, mb: {xs: 0.5, md: 1} }}>
+                Selected Payment Method: <b>{requestData?.ewallet === 'gcash' ? 'G-Cash' : 'Paymaya'}</b>
+              </Typography>
+              <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 16, md: 20 }, color: 'black', fontWeight: 500, mb: {xs: 0.5, md: 1} }}>
+                Amount to Pay: <b>₱{(requestData?.amountToPay)?.toFixed(2)}</b>
+              </Typography>
+       
             </Box>
+          </Grid>
+          <Grid item xs={12} md={6}>
+          <Box sx={{ display: 'flex', alignItems: 'center' , py: 1}}>
+                <Warning sx={{ color: '#f1c40f', fontSize: { xs: 25, md: 30 } }} />
+                <Typography sx={{ fontFamily: 'Inter', fontSize: { xs: 10, md: 12 }, ml: 1, fontWeight: 600 }}>
+                  Payment processing will occur after your customization request was approved. If we don't receive payment within <b>2 days after</b> approval, your request will be automatically cancelled.
+                </Typography>
+              </Box>
             <Accordion>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 25, md: 30 }, fontWeight: 'bold', color: 'black' }}>
+                <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 18, md: 20 }, fontWeight: 'bold', color: 'black' }}>
                   PAYMENT METHOD <br />
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 }, fontWeight: '300', color: 'black' }}>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 15 }, fontWeight: '300', color: 'black' }}>
                     View all the available payment methods along with their respective QR codes
                   </Typography>
                 </Typography>
@@ -189,7 +194,7 @@ const ProcessPayment = ({ open, onClose, requestData, fetchMyOrders, zIndex }) =
               <AccordionDetails>
                 <RadioGroup value={paymentMethod} onChange={handlePaymentMethodChange}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography sx={{ fontFamily: 'Kanit' }}>G-cash</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 14, md: 18 } }}>G-cash</Typography>
                     <Box>
                       <IconButton>
                         <QrCodeScannerIcon onClick={handleGcashQRCodeOpen} />
@@ -198,7 +203,7 @@ const ProcessPayment = ({ open, onClose, requestData, fetchMyOrders, zIndex }) =
                     </Box>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography sx={{ fontFamily: 'Kanit' }}>Paymaya</Typography>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 14, md: 18 } }}>Paymaya</Typography>
                     <Box>
                       <IconButton>
                         <QrCodeScannerIcon onClick={handlePaymayaQRCodeOpen} />
@@ -211,7 +216,7 @@ const ProcessPayment = ({ open, onClose, requestData, fetchMyOrders, zIndex }) =
               {paymentMethod === 'gcash' && (
                 <Accordion>
                   <AccordionDetails>
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 25 }, color: 'gray', mb: 1 }}>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 15 }, color: 'gray', mb: 1 }}>
                       Please upload a screenshot or photo of your <b>Gcash</b> receipt as proof of payment.
                     </Typography>
                     <Box sx={{ mt: 2 }}>
@@ -231,11 +236,10 @@ const ProcessPayment = ({ open, onClose, requestData, fetchMyOrders, zIndex }) =
                   </AccordionDetails>
                 </Accordion>
               )}
-
               {paymentMethod === 'paymaya' && (
                 <Accordion>
                   <AccordionDetails>
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 25 }, color: 'gray', mb: 1 }}>
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 15 }, color: 'gray', mb: 1 }}>
                       Please upload a screenshot or photo of your <b>Paymaya</b> receipt as proof of payment.
                     </Typography>
                     <Box sx={{ mt: 2 }}>
@@ -257,63 +261,62 @@ const ProcessPayment = ({ open, onClose, requestData, fetchMyOrders, zIndex }) =
               )}
             </Accordion>
             <FormControlLabel
-              control={<Checkbox checked={isEulaChecked} onChange={handleEulaChecked} sx={{ transform: 'scale(0.8)' }} />}
+              control={<Checkbox checked={isEulaChecked} onChange={handleEulaChecked} sx={{ transform: 'scale(0.6)' }} />}
               label={
-                <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: 16 }}>
-                  I Agree with the&nbsp;     <span style={{ color: "#1A5276" }}>
+                <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: {xs: 10, md: 14} }}>
+                  I've Read and Agree with the&nbsp;     <span style={{ color: "#1A5276" }}>
                   <b onClick={(event) => {
                     event.preventDefault(); 
                     handleTermsAndCondiDialogOpen();
-                  }}> Terms and Conditions</b>
+                  }}> Terms and Conditions*</b>
                 </span>
                 </Typography>
               }
               sx={{ fontFamily: 'Kanit', fontSize: 16 }}
             />
-            <Button
-              fullWidth
-              variant="contained"
-              disabled={!enablePlaceOrder || submitLoading}
-              onClick={() => handleProcessPayment()}
-              sx={{
-                mt: 2,
-                '&:hover': { backgroundColor: '#414a4c', color: 'white' },
-                '&:not(:hover)': { backgroundColor: '#3d4242', color: 'white' },
-                opacity: enablePlaceOrder ? 1 : 0.5,
-                background: 'linear-gradient(to right, #414141, #000000)',
-              }}
-            >
-              <Typography
-                sx={{
-                  fontFamily: 'Kanit',
-                  fontSize: { xs: 18, md: 25 },
-                  padding: 0.5,
-                  visibility: submitLoading ? 'hidden' : 'visible',
-                }}
-              >
-                PROCEED PAYMENT
-              </Typography>
-              {submitLoading && (
-                <CircularProgress
-                    size={24}
-                    color="inherit"
-                    sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        marginTop: '-12px',
-                        marginLeft: '-12px',
-                    }}
-                />
-              )}
-            </Button>
-          </Box>
-          <GCash open={gCashDialogOpen} onClose={handleGcashQRCodeClose} />
-          <Paymaya open={paymayaDialogOpen} onClose={handlePaymayaQRCodeClose} />
-          <CheckoutTermsAndConditions open={termsAndConditionDialogOpen} onClose={handleTermsAndCondiDialogClose} onAgree={handleAgree}/>
-
+          </Grid>
         </Grid>
+        <Button
+          fullWidth
+          variant="contained"
+          disabled={!enablePlaceOrder || submitLoading}
+          onClick={() => handleProcessPayment()}
+          sx={{
+            mt: {xs: 1, md: 1.5},
+            '&:hover': { backgroundColor: '#414a4c', color: 'white' },
+            '&:not(:hover)': { backgroundColor: '#3d4242', color: 'white' },
+            opacity: enablePlaceOrder || submitLoading ? 1 : 0.5,
+            background: 'linear-gradient(to right, #414141, #000000)',
+          }}
+        >
+          <Typography
+            sx={{
+              fontFamily: 'Kanit',
+              fontSize: { xs: 14, md: 20 },
+              padding: 0.5,
+              visibility: submitLoading ? 'hidden' : 'visible',
+            }}
+          >
+            PAY
+          </Typography>
+          {submitLoading && (
+            <CircularProgress
+                size={24}
+                color="inherit"
+                sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    marginTop: '-12px',
+                    marginLeft: '-12px',
+                }}
+            />
+          )}
+        </Button>
       </DialogContent>
+      <GCash open={gCashDialogOpen} onClose={handleGcashQRCodeClose} />
+      <Paymaya open={paymayaDialogOpen} onClose={handlePaymayaQRCodeClose} />
+      <CheckoutTermsAndConditions open={termsAndConditionDialogOpen} onClose={handleTermsAndCondiDialogClose} onAgree={handleAgree}/>
     </Dialog>
   );
 };

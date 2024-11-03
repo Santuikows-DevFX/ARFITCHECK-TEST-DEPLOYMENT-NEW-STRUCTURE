@@ -115,7 +115,7 @@ function ProductInventory() {
         <Box m={2} sx={{ mt: 5 }}>
           <Grid container direction="column" spacing={2}>
             <Grid item container justifyContent="space-between" alignItems="center">
-              <Typography sx={{ fontFamily: 'Kanit', fontSize: 50, fontWeight: 'bold', color: 'black', paddingY: '1vh' }}>
+              <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 30, md: 50 }, fontWeight: 'bold', color: 'black', paddingY: '1vh' }}>
                 Product Inventory
               </Typography>
               <Grid container spacing={4} sx={{ width: "45%" }}>
@@ -144,7 +144,7 @@ function ProductInventory() {
                   startIcon={<AddIcon />}
 
                 >
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 18, md: 24.5 }, padding: 0.5 }}>Add Product</Typography>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 16 }, padding: 0.5 }}>Add Product</Typography>
                 </Button>
               </Grid>
               <Grid item xs={6}>
@@ -166,7 +166,7 @@ function ProductInventory() {
                   onClick={handleSaveAsExcel}
 
                 >
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 24.5, padding: 0.5 }}>Save as .CSV</Typography>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 16 }, padding: 0.5 }}> .CSV</Typography>
                 </Button>
               </Grid>
             </Grid>

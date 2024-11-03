@@ -86,6 +86,7 @@ function ProductRating({ product, onClose, open, orderID, fetchMyOrders }) {
                   <Rating
                     name="product-rating"
                     value={values.rating}
+                    disabled = {loading || isSubmitting}
                     onChange={(event, newValue) => setFieldValue('rating', newValue)}
                     emptyIcon={<StarBorderIcon style={{ color: 'black', fontSize: 50 }} />}
                     icon={<StarIcon style={{ color: 'black', fontSize: 50 }} />}

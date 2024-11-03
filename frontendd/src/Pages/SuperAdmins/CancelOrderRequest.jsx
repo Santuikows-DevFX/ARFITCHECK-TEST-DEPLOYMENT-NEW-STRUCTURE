@@ -22,7 +22,7 @@ function CancelOrderRequest() {
         <Box m={2} >
         <Grid container direction="column" spacing={2}>
           <Grid item container justifyContent="space-between" alignItems="center">
-            <Typography sx={{ fontFamily: 'Kanit', fontSize: 50, fontWeight: 'bold', color: 'black', paddingY: '1vh' }}>
+            <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 30, md: 50 }, fontWeight: 'bold', color: 'black', paddingY: '1vh' }}>
               Cancel Requests
             </Typography>
             <Grid container spacing={4} sx={{ width: "45%", justifyContent:'flex-end', alignItems: "center" }}>
