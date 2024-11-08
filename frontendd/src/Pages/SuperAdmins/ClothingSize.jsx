@@ -49,6 +49,39 @@ function ClothingSize() {
 
   //TODO: VALIDATE THE CHANGES IT MUST HAVE MIN AND MAX TO PREVENT UNREALISTIC CHANGES
   const handleSaveChanges = async () => {
+    const validateSizeData = (data) => {
+      for (const size of data) {
+        const { width, length, sleeves, waist, legHole } = size.sizeInfo;
+  
+        if (
+          (width && (width <= 0 || width > 50)) ||
+          (length && (length <= 0 || length > 50)) ||
+          (sleeves && (sleeves <= 0 || sleeves > 50)) ||
+          (waist && (waist <= 0 || waist > 50)) ||
+          (legHole && (legHole <= 0 || legHole > 50))
+        ) {
+          return false;
+        }
+      }
+      return true; 
+    };
+  
+    if (!validateSizeData(sizeData)) {
+      enqueueSnackbar('Invalid Input Value!.', { 
+        variant: 'error',
+        anchorOrigin: {
+          vertical: 'top',
+          horizontal: 'right'
+        },
+        autoHideDuration: 2000,
+        style: {
+          fontFamily: 'Kanit',
+          fontSize: '16px'
+        },
+      });
+      return;
+    }
+  
     try {
       setIsSaveLoading(true);
       await axiosClient.post('/size/updateClothingSize', sizeData)
@@ -64,16 +97,16 @@ function ClothingSize() {
               fontFamily: 'Kanit',
               fontSize: '16px'
             },
-            
           });
           setEditing(false);
           setIsSaveLoading(false);
         });
     } catch (error) {
       console.error(error);
+      setIsSaveLoading(false);
     }
   };
-
+  
   const handleEditProducts = () => {
     setEditing(true);
   };

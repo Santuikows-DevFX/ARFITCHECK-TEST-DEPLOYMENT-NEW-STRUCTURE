@@ -161,7 +161,7 @@ class ReportController extends Controller
 
             if ($orderDate->between($startOfLastWeek, $endOfLastWeek) && $weeklyRevenueInfo['orderStatus'] === 'Order Completed') {
 
-                if(!$weeklyRevenueInfo['isBulkyOrder']) { 
+                if (!$weeklyRevenueInfo['isBulkyOrder']) {
                     $lastWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
                     $pastSales += $weeklyRevenueInfo['amountToPay'];
                 }
@@ -169,7 +169,6 @@ class ReportController extends Controller
                 if ($orderID === $weeklyRevenueInfo['associatedOrderID'] && $weeklyRevenueInfo['isBulkyOrder'] === true) {
                     $lastWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
                     $pastSales += $weeklyRevenueInfo['amountToPay'];
-
                 }
             }
         }
@@ -184,7 +183,6 @@ class ReportController extends Controller
 
         return response()->json($weeklyRevenue);
     }
-
 
     public function montlyRevenue()
     {
@@ -237,8 +235,6 @@ class ReportController extends Controller
         $lastMonthFourthWeekStart = Carbon::parse($lastMonthThirdWeekEnd)->addDay()->toDateString();
         $lastMonthFourthWeekEnd = Carbon::parse($lastMonthFourthWeekStart)->endOfMonth()->toDateString();
 
-        $test = [];
-
         foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $monthlyRevenueInfo) {
             $orderDate = Carbon::parse($monthlyRevenueInfo['orderDate'])->toDateString();
 
@@ -253,11 +249,11 @@ class ReportController extends Controller
                     } elseif ($orderDate >= $currentMonthFourthWeekStart && $orderDate <= $currentMonthFourthWeekEnd) {
                         $currentMonthRevenueByWeek['Week 4'] += $monthlyRevenueInfo['amountToPay'];
                     }
-            
+
                     $currentMonthSales += $monthlyRevenueInfo['amountToPay'];
                 }
             }
-            
+
             if ($orderDate >= $lastStartOfMonth && $orderDate <= $lastEndOfMonth && $monthlyRevenueInfo['orderStatus'] === 'Order Completed') {
                 if (!$monthlyRevenueInfo['isBulkyOrder'] || ($orderID === $monthlyRevenueInfo['associatedOrderID'] && $monthlyRevenueInfo['isBulkyOrder'] === true)) {
                     if ($orderDate >= $lastMonthFirstWeekStart && $orderDate <= $lastMonthFirstWeekEnd) {
@@ -269,7 +265,7 @@ class ReportController extends Controller
                     } elseif ($orderDate >= $lastMonthFourthWeekStart && $orderDate <= $lastMonthFourthWeekEnd) {
                         $lastMonthRevenueByWeek['Week 4'] += $monthlyRevenueInfo['amountToPay'];
                     }
-            
+
                     $lastMonthSales += $monthlyRevenueInfo['amountToPay'];
                 }
             }
@@ -289,7 +285,6 @@ class ReportController extends Controller
     {
         $currentYearRevenue = [];
         $lastYearRevenue = [];
-
 
         $currentYearSales = 0;
         $currSalesWithEwallet = 0;
@@ -402,6 +397,221 @@ class ReportController extends Controller
         return response()->json($yearlyRevenue);
     }
 
+    //all revenue for reports purposes
+    public function fetchAllSalesReport()
+    {
+
+        try {
+
+            $currentWeekRevenue = [];
+            $currSales = 0;
+            $currSalesWithEwallet = 0;
+
+            $lastWeekRevenue = [];
+            $pastSales = 0;
+            $pastSalesWithEwallet = 0;
+
+            $startOfCurrentWeek = Carbon::now()->startOfWeek(Carbon::MONDAY);
+            $startOfLastWeek = Carbon::now()->subWeek()->startOfWeek(Carbon::MONDAY);
+
+            $endOfCurrentWeek = Carbon::now()->endOfWeek(Carbon::SUNDAY);
+            $endOfLastWeek = Carbon::now()->subWeek()->endOfWeek(Carbon::SUNDAY);
+
+            $dayOfWeek = null;
+
+            $weeklyRevenue = [];
+
+            foreach (range(0, 6) as $day) {
+                $currentWeekRevenue[Carbon::now()->startOfWeek(Carbon::MONDAY)->addDays($day)->dayName] = 0;
+                $lastWeekRevenue[Carbon::now()->subWeek()->startOfWeek(Carbon::MONDAY)->addDays($day)->dayName] = 0;
+            }
+
+            foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $weeklyRevenueInfo) {
+
+                $orderDate = Carbon::parse($weeklyRevenueInfo['orderDate']);
+                $dayOfWeek = $orderDate->dayName;
+
+                if ($orderDate->between($startOfCurrentWeek, $endOfCurrentWeek) && $weeklyRevenueInfo['orderStatus'] === 'Order Completed') {
+
+                    if (!$weeklyRevenueInfo['isBulkyOrder']) {
+                        $currentWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
+                        $currSalesWithEwallet += $weeklyRevenueInfo['amountToPay'];
+                    }
+
+                    if ($orderID === $weeklyRevenueInfo['associatedOrderID'] && $weeklyRevenueInfo['isBulkyOrder'] === true) {
+                        $currentWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
+                        $currSales += $weeklyRevenueInfo['amountToPay'];
+                    }
+                }
+
+                if ($orderDate->between($startOfLastWeek, $endOfLastWeek) && $weeklyRevenueInfo['orderStatus'] === 'Order Completed') {
+
+                    if (!$weeklyRevenueInfo['isBulkyOrder']) {
+                        $lastWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
+                        $pastSales += $weeklyRevenueInfo['amountToPay'];
+                    }
+
+                    if ($orderID === $weeklyRevenueInfo['associatedOrderID'] && $weeklyRevenueInfo['isBulkyOrder'] === true) {
+                        $lastWeekRevenue[$dayOfWeek] += $weeklyRevenueInfo['amountToPay'];
+                        $pastSales += $weeklyRevenueInfo['amountToPay'];
+                    }
+                }
+            }
+
+            //month
+            $currentMonthRevenueByWeek = [
+                'Week 1' => 0,
+                'Week 2' => 0,
+                'Week 3' => 0,
+                'Week 4' => 0,
+            ];
+
+            $lastMonthRevenueByWeek = [
+                'Week 1' => 0,
+                'Week 2' => 0,
+                'Week 3' => 0,
+                'Week 4' => 0,
+            ];
+
+            $currentMonthSales = 0;
+            $lastMonthSales = 0;
+
+            $currentStartOfMonth = Carbon::now()->startOfMonth()->toDateString();
+            $currentEndOfMonth = Carbon::now()->endOfMonth()->toDateString();
+
+            $currentMonthFirstWeekStart = Carbon::parse($currentStartOfMonth)->startOfWeek()->toDateString();
+            $currentMonthFirstWeekEnd = Carbon::parse($currentMonthFirstWeekStart)->endOfWeek()->toDateString();
+
+            $currentMonthSecondWeekStart = Carbon::parse($currentMonthFirstWeekEnd)->addDay()->toDateString();
+            $currentMonthSecondWeekEnd = Carbon::parse($currentMonthSecondWeekStart)->endOfWeek()->toDateString();
+
+            $currentMonthThirdWeekStart = Carbon::parse($currentMonthSecondWeekEnd)->addDay()->toDateString();
+            $currentMonthThirdWeekEnd = Carbon::parse($currentMonthThirdWeekStart)->endOfWeek()->toDateString();
+
+            $currentMonthFourthWeekStart = Carbon::parse($currentMonthThirdWeekEnd)->addDay()->toDateString();
+            $currentMonthFourthWeekEnd = Carbon::parse($currentMonthFourthWeekStart)->endOfMonth()->toDateString();
+
+            //---------------------
+
+            $lastStartOfMonth = Carbon::now()->subMonth()->startOfMonth()->toDateString();
+            $lastEndOfMonth = Carbon::now()->subMonth()->endOfMonth()->toDateString();
+
+            $lastMonthFirstWeekStart = Carbon::parse($lastStartOfMonth)->startOfWeek()->toDateString();
+            $lastMonthFirstWeekEnd = Carbon::parse($lastMonthFirstWeekStart)->endOfWeek()->toDateString();
+
+            $lastMonthSecondWeekStart = Carbon::parse($lastMonthFirstWeekEnd)->addDay()->toDateString();
+            $lastMonthSecondWeekEnd = Carbon::parse($lastMonthSecondWeekStart)->endOfWeek()->toDateString();
+
+            $lastMonthThirdWeekStart = Carbon::parse($lastMonthSecondWeekEnd)->addDay()->toDateString();
+            $lastMonthThirdWeekEnd = Carbon::parse($lastMonthThirdWeekStart)->endOfWeek()->toDateString();
+
+            $lastMonthFourthWeekStart = Carbon::parse($lastMonthThirdWeekEnd)->addDay()->toDateString();
+            $lastMonthFourthWeekEnd = Carbon::parse($lastMonthFourthWeekStart)->endOfMonth()->toDateString();
+
+            foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $monthlyRevenueInfo) {
+                $orderDate = Carbon::parse($monthlyRevenueInfo['orderDate'])->toDateString();
+
+                if ($orderDate >= $currentStartOfMonth && $orderDate <= $currentEndOfMonth && $monthlyRevenueInfo['orderStatus'] === 'Order Completed') {
+                    if (!$monthlyRevenueInfo['isBulkyOrder'] || ($orderID === $monthlyRevenueInfo['associatedOrderID'] && $monthlyRevenueInfo['isBulkyOrder'] === true)) {
+                        if ($orderDate >= $currentMonthFirstWeekStart && $orderDate <= $currentMonthFirstWeekEnd) {
+                            $currentMonthRevenueByWeek['Week 1'] += $monthlyRevenueInfo['amountToPay'];
+                        } elseif ($orderDate >= $currentMonthSecondWeekStart && $orderDate <= $currentMonthSecondWeekEnd) {
+                            $currentMonthRevenueByWeek['Week 2'] += $monthlyRevenueInfo['amountToPay'];
+                        } elseif ($orderDate >= $currentMonthThirdWeekStart && $orderDate <= $currentMonthThirdWeekEnd) {
+                            $currentMonthRevenueByWeek['Week 3'] += $monthlyRevenueInfo['amountToPay'];
+                        } elseif ($orderDate >= $currentMonthFourthWeekStart && $orderDate <= $currentMonthFourthWeekEnd) {
+                            $currentMonthRevenueByWeek['Week 4'] += $monthlyRevenueInfo['amountToPay'];
+                        }
+
+                        $currentMonthSales += $monthlyRevenueInfo['amountToPay'];
+                    }
+                }
+
+                if ($orderDate >= $lastStartOfMonth && $orderDate <= $lastEndOfMonth && $monthlyRevenueInfo['orderStatus'] === 'Order Completed') {
+                    if (!$monthlyRevenueInfo['isBulkyOrder'] || ($orderID === $monthlyRevenueInfo['associatedOrderID'] && $monthlyRevenueInfo['isBulkyOrder'] === true)) {
+                        if ($orderDate >= $lastMonthFirstWeekStart && $orderDate <= $lastMonthFirstWeekEnd) {
+                            $lastMonthRevenueByWeek['Week 1'] += $monthlyRevenueInfo['amountToPay'];
+                        } elseif ($orderDate >= $lastMonthSecondWeekStart && $orderDate <= $lastMonthSecondWeekEnd) {
+                            $lastMonthRevenueByWeek['Week 2'] += $monthlyRevenueInfo['amountToPay'];
+                        } elseif ($orderDate >= $lastMonthThirdWeekStart && $orderDate <= $lastMonthThirdWeekEnd) {
+                            $lastMonthRevenueByWeek['Week 3'] += $monthlyRevenueInfo['amountToPay'];
+                        } elseif ($orderDate >= $lastMonthFourthWeekStart && $orderDate <= $lastMonthFourthWeekEnd) {
+                            $lastMonthRevenueByWeek['Week 4'] += $monthlyRevenueInfo['amountToPay'];
+                        }
+
+                        $lastMonthSales += $monthlyRevenueInfo['amountToPay'];
+                    }
+                }
+            }
+
+            //year
+            $currentYearRevenue = [];
+            $lastYearRevenue = [];
+
+            $currentYearSales = 0;
+            $currSalesWithEwallet = 0;
+
+            $lastYearSales = 0;
+            $pastSalesWithEwallet = 0;
+
+            //we loop to create an array consiting of months from jan - dec where $month represents the month number and using carbon monthName we will
+            //be able to get the month name based on the number
+            foreach (range(1, 12) as $month) {
+                $currentYearRevenue[Carbon::create(null, $month)->monthName] = 0;
+                $lastYearRevenue[Carbon::create(null, $month)->monthName] = 0;
+            }
+
+            foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $yearlyRevenueInfo) {
+
+                //every loop we parse the order date from the db so we can get the specifc month name from the order date
+                $orderDate = Carbon::parse($yearlyRevenueInfo['orderDate']);
+                //the this will store the month name from the data being parsed from the db
+                $monthName = $orderDate->monthName;
+
+                if ($orderDate->year == Carbon::now()->year && $yearlyRevenueInfo['orderStatus'] === 'Order Completed') {
+
+                    //we add it to its corresponding month ex => $currentYearRevenue['September'] += $yearlyRevenueInfo['amountToPay'] where amount to pay is from db
+                    if (!$yearlyRevenueInfo['isBulkyOrder']) {
+                        $currentYearRevenue[$monthName] += $yearlyRevenueInfo['amountToPay'];
+                        $currentYearSales += $yearlyRevenueInfo['amountToPay'];
+                    }
+
+                    if ($orderID === $yearlyRevenueInfo['associatedOrderID'] && $yearlyRevenueInfo['isBulkyOrder'] === true) {
+                        $currentYearRevenue[$monthName] += $yearlyRevenueInfo['amountToPay'];
+                        $currentYearSales += $yearlyRevenueInfo['amountToPay'];
+                    }
+                }
+
+                if ($orderDate->year == Carbon::now()->subYear()->year && $yearlyRevenueInfo['orderStatus'] === 'Order Completed') {
+
+                    if (!$yearlyRevenueInfo['isBulkyOrder']) {
+                        $lastYearRevenue[$monthName] += $yearlyRevenueInfo['amountToPay'];
+                        $lastYearSales += $yearlyRevenueInfo['amountToPay'];
+                    }
+
+                    if ($orderID === $yearlyRevenueInfo['associatedOrderID'] && $yearlyRevenueInfo['isBulkyOrder'] === true) {
+                        $lastYearRevenue[$monthName] += $yearlyRevenueInfo['amountToPay'];
+                        $lastYearSales += $yearlyRevenueInfo['amountToPay'];
+                    }
+                }
+            }
+
+            return response()->json([
+                'weeklyCurrentRevenue' => $currSales,
+                'weeklyLastRevenue' => $pastSales,
+
+                'monthlyCurrentRevenue' => $currentMonthSales,
+                'monthlyLastRevenue' => $lastMonthSales,
+
+                'yearlyCurrentRevenue' => $currentYearSales,
+                'yearlyLastRevenue' => $lastYearSales
+
+            ]);
+        } catch (\Exception $e) {
+            return response($e->getMessage());
+        }
+    }
+
     //sales summary
     public function fetchSalesSummary()
     {
@@ -461,7 +671,7 @@ class ReportController extends Controller
 
                 if ($lastWeekRevenue > 0 && $currentWeekRevenue > 0) {
                     $weeklyPercentageDifference = (($currentWeekRevenue - $lastWeekRevenue) / $lastWeekRevenue) * 100;
-                }else if ($lastWeekRevenue == 0 && $currentWeekRevenue > 0) {
+                } else if ($lastWeekRevenue == 0 && $currentWeekRevenue > 0) {
                     $weeklyPercentageDifference = 100;
                 }
 
@@ -492,7 +702,7 @@ class ReportController extends Controller
 
                     if ($orderDate->between($currentStartOfMonth, $endOfCurrentMonth) && $monthlyRevenueInfo['orderStatus'] === 'Order Completed') {
 
-                        if(!$monthlyRevenueInfo['isBulkyOrder']) {
+                        if (!$monthlyRevenueInfo['isBulkyOrder']) {
                             $currentMonthRevenue += $monthlyRevenueInfo['amountToPay'];
                         }
 
@@ -502,7 +712,7 @@ class ReportController extends Controller
                     }
 
                     if ($orderDate->between($startOfLastMonth, $endOfLastMonth) && $monthlyRevenueInfo['orderStatus'] === 'Order Completed') {
-                        if(!$monthlyRevenueInfo['isBulkyOrder']) {
+                        if (!$monthlyRevenueInfo['isBulkyOrder']) {
                             $lastMonthRevenue += $monthlyRevenueInfo['amountToPay'];
                         }
 
@@ -514,7 +724,7 @@ class ReportController extends Controller
 
                 if ($lastMonthRevenue > 0 && $currentMonthRevenue > 0) {
                     $monthlyPercentageDifference = (($currentMonthRevenue - $lastMonthRevenue) / $lastMonthRevenue)  * 100;
-                }else if ($lastMonthRevenue == 0 && $currentMonthRevenue > 0) {
+                } else if ($lastMonthRevenue == 0 && $currentMonthRevenue > 0) {
                     $monthlyPercentageDifference = 100;
                 }
 
@@ -540,7 +750,7 @@ class ReportController extends Controller
 
                     if ($orderDate->year === Carbon::now()->year && $yearlyRevenueInfo['orderStatus'] === 'Order Completed') {
 
-                        if(!$yearlyRevenueInfo['isBulkyOrder']) {
+                        if (!$yearlyRevenueInfo['isBulkyOrder']) {
                             $currentYearRevenue += $yearlyRevenueInfo['amountToPay'];
                         }
 
@@ -551,7 +761,7 @@ class ReportController extends Controller
 
                     if ($orderDate->year === Carbon::now()->subYear()->year && $yearlyRevenueInfo['orderStatus'] === 'Order Completed') {
 
-                        if(!$yearlyRevenueInfo['isBulkyOrder']) {
+                        if (!$yearlyRevenueInfo['isBulkyOrder']) {
                             $lastYearRevenue += $yearlyRevenueInfo['amountToPay'];
                         }
 

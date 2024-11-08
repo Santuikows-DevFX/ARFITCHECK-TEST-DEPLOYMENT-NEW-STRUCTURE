@@ -10,17 +10,6 @@ use App\Http\Controllers\SizeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
-
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
@@ -105,7 +94,6 @@ Route::prefix('order')->controller(OrderController::class)->group(function () {
     Route::get('/fetchCancelRequestOrdersByDate/{dataSortRequest}', 'fetchCancelRequestOrdersByDate');
 
     // ---
-
     Route::post('/rejectCancelRequest', 'rejectCancelOrderRequest');
     Route::post('/cancelOrderRequest', 'cancelOrderRequest');
 
@@ -140,6 +128,7 @@ Route::prefix('cart')->controller(CartController::class)->group(function () {
 Route::prefix('rprt')->controller(ReportController::class)->group(function () {
 
     Route::get('/fetchSalesSummary', 'fetchSalesSummary');
+    Route::get('/fetchAllSalesReport', 'fetchAllSalesReport');
     Route::post('/calculateAnalyticsReports', 'calculateAnalyticsReports');
 });
 
@@ -165,6 +154,7 @@ Route::prefix('custom')->controller(CustomRequestController::class)->group(funct
     //admin
     Route::get('/fetchCustomizationRequest', 'fetchCustomizationRequest');
     Route::get('/fetchCustomizationRequestByDate/{dataSortRequest}', 'fetchCustomizationRequestByDate');
+    Route::get('/fetchMyCustomizationRequestByDate/{uid}/{dateSortRequest}', 'fetchMyCustomizationRequestByDate');
     Route::get('/fetchCustomizationCancelRequests', 'fetchCustomizationCancelRequests');
 
     Route::post('/updateRequest', 'updateRequestStatus');

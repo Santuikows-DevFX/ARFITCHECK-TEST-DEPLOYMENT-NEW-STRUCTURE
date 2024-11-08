@@ -4,7 +4,6 @@ import {
   Paper,
   Grid,
   Button,
-  IconButton,
   Input,
   CircularProgress,
   Card,
@@ -14,14 +13,10 @@ import {
   MenuItem,
   InputBase
 } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useCookies } from 'react-cookie';
 import axiosClient from '../../axios-client';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { Bounce } from 'react-toastify';
 import { useCart } from '../../ContextAPI/CartProvider';
 
 import Navbar from '../../Widgets/Navbar';
@@ -30,12 +25,13 @@ import Footer from '../Footer';
 import cartGraffitiBG from '../../../public/assets/cartGraffiti.png'
 import { useSnackbar } from 'notistack';
 
-
 const SingleProductCartTable = () => {
+
     const [cart, setCart] = useState([]);
     const [cookie] = useCookies(['?id', '?role']);
     const [loading, setLoading] = useState(false);
     const [maxQnt, setMaxQnt] = useState({});
+    const [newSize, setNewSize] = useState('');
   
     const { removeFromCart } = useCart();
     const navigator = useNavigate();
@@ -50,86 +46,134 @@ const SingleProductCartTable = () => {
     const fetchCartItems = async () => {
       try {
         const response = await axiosClient.get(`prd/fetchProductByID/${productID}`);
-  
+    
         if (response.data) {
-         
           const productData = response.data.map((item) => ({
             ...item,
-            productQuantity: 1, 
-            productSize: 'S', 
+            productQuantity: 1,
+            productSize: 'S',
           }));
-  
+    
           setCart(productData);
-  
-          // Prepare maxQnt object with productName as key and maximumQuantity as value
+    
           const maxQuantityObj = {};
           productData.forEach((cartItem) => {
-            maxQuantityObj[cartItem.productName] = cartItem.maximumQuantity;
+            let maxQuantity = 0;
+    
+            switch (cartItem.productSize) {
+              case 'S':
+                maxQuantity = cartItem.smallQuantity;
+                break;
+              case 'M':
+                maxQuantity = cartItem.mediumQuantity;
+                break;
+              case 'L':
+                maxQuantity = cartItem.largeQuantity;
+                break;
+              case 'XL':
+                maxQuantity = cartItem.extraLargeQuantity;
+                break;
+              case '2XL':
+                  maxQuantity = cartItem.doubleXLQuantity;
+                 break;  
+              case '3XL':
+                  maxQuantity = cartItem.tripleXLQuantity;
+                  break;
+              default:
+                maxQuantity = cartItem.maximumQuantity;             }
+    
+            maxQuantityObj[cartItem.productName] = maxQuantity;
           });
+    
           setMaxQnt(maxQuantityObj);
         }
       } catch (error) {
         console.log(error);
       }
     };
-  
-    const handleRemoveFromCart = async (productName, productSize) => {
-      try {
-        const valueToRemove = {
-          uid: cookie['?id'],
-          productName: productName,
-        };
-        await axiosClient.post('cart/removeFromCart', valueToRemove);
-  
-        const newCartItemData = cart.filter(
-          (cartItem) =>
-            cartItem.productName !== productName || cartItem.productSize !== productSize
-        );
-        setCart(newCartItemData);
-  
-        enqueueSnackbar(`Item Removed`, { 
-          variant: 'success',
-          anchorOrigin: {
-            vertical: 'top',
-            horizontal: 'right'
-          },
-          autoHideDuration: 1800,
-          style: {
-            fontFamily: 'Kanit',
-            fontSize: '16px'
-          },
-          
-        })
-  
-        removeFromCart(productName, productSize);
-      } catch (error) {
-        console.log(error);
-      }
-    };
 
     const handleSizeChange = (productName, newSize) => {
-        const updatedCart = cart.map((item) => {
-            if (item.productName === productName) {
-                return { ...item, productSize: newSize };
-            }
-            return item;
-        });
-        setCart(updatedCart);
+      const updatedCart = cart.map((item) => {
+        if (item.productName === productName) {
+          let maxQuantity = 0;
+          switch (newSize) {
+            case 'S':
+              maxQuantity = item.smallQuantity;
+              break;
+            case 'M':
+              maxQuantity = item.mediumQuantity;
+              break;
+            case 'L':
+              maxQuantity = item.largeQuantity;
+              break;
+            case 'XL':
+              maxQuantity = item.extraLargeQuantity;
+              break;
+            case '2XL':
+              maxQuantity = item.doubleXLQuantity;
+              break;
+            case '3XL':
+              maxQuantity = item.tripleXLQuantity;
+              break;
+            default:
+              maxQuantity = item.maximumQuantity;
+          }
+    
+          const newQuantity = item.productQuantity > maxQuantity ? maxQuantity : item.productQuantity;
+    
+          return {
+            ...item,
+            productSize: newSize,
+            productQuantity: newQuantity, 
+          };
+        }
+        return item;
+      });
+    
+      setCart(updatedCart);
+    
+      const maxQuantityObj = {};
+      updatedCart.forEach((cartItem) => {
+        let maxQuantity = 0;
+        switch (cartItem.productSize) {
+          case 'S':
+            maxQuantity = cartItem.smallQuantity;
+            break;
+          case 'M':
+            maxQuantity = cartItem.mediumQuantity;
+            break;
+          case 'L':
+            maxQuantity = cartItem.largeQuantity;
+            break;
+          case 'XL':
+            maxQuantity = cartItem.extraLargeQuantity;
+            break;
+          case '2XL':
+            maxQuantity = cartItem.doubleXLQuantity;
+            break;
+          case '3XL':
+            maxQuantity = cartItem.tripleXLQuantity;
+            break;
+          default:
+            maxQuantity = cartItem.maximumQuantity;
+        }
+        maxQuantityObj[cartItem.productName] = maxQuantity;
+      });
+    
+      setMaxQnt(maxQuantityObj);
     };
-  
     const handleQuantityChange = (productName, newQuantity) => {
       const quantity = parseInt(newQuantity, 10);
-  
-      // Get the maximum quantity allowed for the product
+
       const maxQuantityAllowed = maxQnt[productName];
-  
+
       if (quantity > maxQuantityAllowed) {
         newQuantity = maxQuantityAllowed;
       } else if (!quantity || isNaN(quantity)) {
         newQuantity = 1;
       }
   
-      const updatedCart = cart.map((item) => {
+      const updatedCart = cart.map(item => {
         if (item.productName === productName) {
           return { ...item, productQuantity: newQuantity };
         }
@@ -142,7 +186,6 @@ const SingleProductCartTable = () => {
     const handleCheckout = async () => {
       try {
         setLoading(true);
-        // console.log(cart[0].productSize)
         navigator(`/singleProductCheckout/${productID}/${cart[0].productQuantity}/${cart[0].productSize}`);
       } catch (error) {
         console.log(error);
@@ -211,7 +254,7 @@ const SingleProductCartTable = () => {
                           <Grid item xs={8} sm={8}>
                             <Typography
                               sx={{
-                                fontFamily: 'Inter',
+                                fontFamily: 'Kanit',
                                 fontSize: { xs: 14, sm: 16, md: 18 },
                                 fontWeight: 500,
                                 color: 'black',
@@ -221,7 +264,7 @@ const SingleProductCartTable = () => {
                             </Typography>
                             <Typography
                               sx={{
-                                fontFamily: 'Inter',
+                                fontFamily: 'Kanit',
                                 fontSize: { xs: 12, sm: 14, md: 16 },
                                 color: 'black',
                               }}
@@ -236,7 +279,7 @@ const SingleProductCartTable = () => {
                                 input={
                                     <InputBase
                                         sx={{
-                                            fontFamily: 'Inter',
+                                            fontFamily: 'Kanit',
                                             fontSize: { xs: 14, sm: 16, md: 18 },
                                             border: 'none',
                                             '&:focus': { border: 'none' },
@@ -291,6 +334,26 @@ const SingleProductCartTable = () => {
                                 >
                                     Extra Large
                                 </MenuItem>
+                                <MenuItem
+                                    value="2XL"
+                                    sx={{
+                                        fontFamily: 'Kanit',
+                                        fontSize: { xs: 12, sm: 14 }, 
+                                    }}
+                                    disabled={cartItem.doubleXLQuantity === 0}
+                                >
+                                    Double XL
+                                </MenuItem>
+                                <MenuItem
+                                    value="3XL"
+                                    sx={{
+                                        fontFamily: 'Kanit',
+                                        fontSize: { xs: 12, sm: 14 }, 
+                                    }}
+                                    disabled={cartItem.tripleXLQuantity === 0}
+                                >
+                                    Triple XL
+x                                </MenuItem>
                             </Select>
 
                             </FormControl>
@@ -338,7 +401,7 @@ const SingleProductCartTable = () => {
                     <CardContent>
                       <Typography
                         sx={{
-                          fontFamily: 'Inter',
+                          fontFamily: 'Kanit',
                           fontSize: { xs: 12, sm: 15, md: 16 },
                           fontWeight: 500,
                           color: 'black',
@@ -352,7 +415,7 @@ const SingleProductCartTable = () => {
               )}
             </Grid>
             <Typography
-            sx={{ fontFamily: 'Inter', fontSize: 20, fontWeight: 500, color: 'black', textAlign: { xs: 'center', md: 'end' }, marginTop: '20px', marginBottom: '20px' }}
+            sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 500, color: 'black', textAlign: { xs: 'center', md: 'end' }, marginTop: '20px', marginBottom: '20px' }}
              >
             <b> Subtotal: ₱{subtotal.toFixed(2)}</b>
              </Typography>
@@ -373,7 +436,7 @@ const SingleProductCartTable = () => {
                   '&:not(:hover)': { borderColor: '#3d4242', color: 'black' },
                 }}
               >
-                <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 18, md: 25 }, padding: 0.5 }}>Continue Shopping</Typography>
+                <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 13, md: 20 }, padding: 0.5 }}>Continue Shopping</Typography>
               </Button>
             </Grid>
             <Grid item>
@@ -396,7 +459,7 @@ const SingleProductCartTable = () => {
                   <Typography
                     sx={{
                       fontFamily: 'Kanit',
-                      fontSize: { xs: 18, md: 25 },
+                      fontSize: { xs: 13, md: 20 },
                       padding: 0.5,
                       visibility: loading ? 'hidden' : 'visible',
                     }}
@@ -430,7 +493,7 @@ const SingleProductCartTable = () => {
                     opacity: 0.5,
                   }}
                 >
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 18, md: 25 }, padding: 0.5 }}>Proceed to Checkout</Typography>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 13, md: 20 }, padding: 0.5 }}>Proceed to Checkout</Typography>
                 </Button>
               )}
             </Grid>

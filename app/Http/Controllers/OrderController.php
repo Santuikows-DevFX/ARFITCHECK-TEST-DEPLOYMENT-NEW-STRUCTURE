@@ -62,7 +62,7 @@ class OrderController extends Controller
     $ordersByDate = [];
     if ($this->database->getReference('orders')->getSnapshot()->exists()) {
       foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $orderInfo) {
-        if ($request->uid == $orderInfo['uid'] && Carbon::parse($request->dateSortRequest)->toDateString() == $orderInfo['orderDate'] && $orderInfo['orderStatus'] != 'Order Completed' && $orderInfo['orderStatus'] != 'Order Cancelled') {
+        if ($request->uid == $orderInfo['uid'] && Carbon::parse($request->dateSortRequest)->toDateString() == $orderInfo['orderDate'] && $orderInfo['orderStatus'] != 'Order Completed' && $orderInfo['orderStatus'] != 'Order Cancelled' && $orderInfo['orderStatus'] != 'Request Cancelled' && $orderInfo['orderStatus'] != 'Request Rejected') {
           $ordersByDate[] = [
             'orderID' => $orderID,
             'orderInfo' => $orderInfo
@@ -363,31 +363,45 @@ class OrderController extends Controller
 
   public function fetchCancelRequestOrdersByDate($dataSortRequest)
   {
-    try{
-
-      $orderData = [];
-      if ($this->database->getReference('orders')->getSnapshot()->exists()) {
-        foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $orderInfo) {
-          if (Carbon::parse($dataSortRequest)->isSameDay(Carbon::parse($orderInfo['orderDate']))) {
-            if ($orderInfo['orderStatus'] === 'Cancellation Requested') {
-              $orderData[] = [
-                'orderID' => $orderID,
-                'orderInfo' => $orderInfo,
-              ];
-            }
+      try {
+          $orderData = [];
+          
+          if ($this->database->getReference('orders')->getSnapshot()->exists()) {
+              foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $orderInfo) {
+                  if (Carbon::parse($dataSortRequest)->isSameDay(Carbon::parse($orderInfo['orderDate']))) {
+                      if ($orderInfo['orderStatus'] === 'Cancellation Requested') {
+                          $orderData[] = [
+                              'orderID' => $orderID,
+                              'orderInfo' => $orderInfo,
+                          ];
+                      }
+                  }
+              }
           }
-        }
+  
+          if ($this->database->getReference('customizedRequest')->getSnapshot()->exists()) {
+              foreach ($this->database->getReference('customizedRequest')->getSnapshot()->getValue() as $customID => $customInfo) {
+                  if (Carbon::parse($dataSortRequest)->isSameDay(Carbon::parse($customInfo['orderDate']))) {
+                      if ($customInfo['orderStatus'] === 'Cancellation Requested') {
+                          $orderData[] = [
+                              'orderID' => $customID,
+                              'orderInfo' => $customInfo,
+                          ];
+                      }
+                  }
+              }
+          }
+  
+          $message = "No Cancellation Requests Found!";
+          if (count($orderData) == 0) {
+              return response(compact('message'));
+          }
+  
+          return response()->json($orderData);
+  
+      } catch (\Exception $e) {
+          return response($e->getMessage());
       }
-      $message = "No Cancellation Requests Found!";
-      if (count($orderData) == 0) {
-        return response(compact('message'));
-      }
-
-      return response()->json($orderData);
-
-    }catch(\Exception $e) {
-      return response($e->getMessage());
-    }
   }
 
   //----------------------------------------------------
@@ -545,7 +559,6 @@ class OrderController extends Controller
     $firstName =  $this->database->getReference('users/' . $request->uid . '/firstName')->getSnapshot()->getValue();
     $lastName = $this->database->getReference('users/' . $request->uid . '/lastName')->getSnapshot()->getValue();
 
-    // Upload receipt image if payment method is ewallet
     if ($request->paymentMethod === 'ewallet') {
       $receiptImageFile = $request->file('receiptFile');
       $receiptImageName = 'receipts/' . $receiptImageFile->getClientOriginalName();

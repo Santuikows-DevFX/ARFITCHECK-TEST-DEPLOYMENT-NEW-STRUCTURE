@@ -66,6 +66,12 @@ const OrdersTable = () => {
     };
   }, [])
 
+  useEffect(() => {
+
+    setCurrentPage(1)
+
+  }, [sortAmount, orderIDSearchQuery, selectStatus])
+
   const checkIfOrderDelivered = (orderDateDelivery, orderID, isNotified) => {
     try {
 
@@ -210,6 +216,9 @@ const OrdersTable = () => {
   const handleChangeDate = async (dateValue) => {
     try {
       const formattedDate = dayjs(dateValue).format('YYYY-MM-DD');
+
+      setCurrentPage(1)
+
       const { data } = await axiosClient.get(`/order/fetchMyOrderByDate/${cookie['?id']}/${formattedDate}`);
       if (data) {
         setOrders(data.message ? [] : mergeOrders(data));
@@ -221,12 +230,14 @@ const OrdersTable = () => {
 
   const sortedOrders = [...orders].sort((a, b) => {
     if (sortAmount) {
+      setCurrentPage(1)
       return sortAmount === 'asc'
         ? a.orderInfo.amountToPay - b.orderInfo.amountToPay
         : b.orderInfo.amountToPay - a.orderInfo.amountToPay;
     }
     if (sortStatus) {
-      const statuses = ['Waiting for Confirmation', 'Order Confirmed', 'Preparing Order to Ship', 'Parcel out for delivery'];
+      setCurrentPage(1)
+      const statuses = ['Waiting for Confirmation', 'Order Confirmed', 'Preparing Order to Ship', 'Parcel out for delivery', 'Cancellation Requested'];
       return sortStatus === 'asc'
         ? statuses.indexOf(a.orderInfo.orderStatus) - statuses.indexOf(b.orderInfo.orderStatus)
         : statuses.indexOf(b.orderInfo.orderStatus) - statuses.indexOf(a.orderInfo.orderStatus);
@@ -467,6 +478,9 @@ const OrdersTable = () => {
                   </MenuItem>
                   <MenuItem value="Parcel out for delivery">
                     <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Parcel out for delivery</Typography>
+                  </MenuItem>
+                  <MenuItem value="Cancellation Requested">
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Cancellation Requested</Typography>
                   </MenuItem>
                 </Select>
               </FormControl>

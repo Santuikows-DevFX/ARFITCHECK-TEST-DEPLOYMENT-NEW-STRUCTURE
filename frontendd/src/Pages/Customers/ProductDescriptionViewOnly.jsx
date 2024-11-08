@@ -150,7 +150,7 @@ function ProductDescriptionViewOnly({ product, onClose }) {
           }else {
 
             setAddToCartLoading(true)
-            navigator('/login');
+            navigator('/login' , { replace: true });
           }
         }catch(error) {
             console.log(error);

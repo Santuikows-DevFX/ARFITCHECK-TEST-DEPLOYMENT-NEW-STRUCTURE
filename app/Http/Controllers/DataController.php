@@ -35,7 +35,7 @@ class DataController extends Controller
             $user = $this->auth->signInWithEmailAndPassword($request->email, $request->password);
             $userData = $this->auth->getUser($user->firebaseUserId());
             if ($userData->emailVerified) {
-                //get the fcking token
+                //get the token
                 $token = $user->idToken();
 
                 //check if existing
@@ -127,6 +127,7 @@ class DataController extends Controller
 
                         $token = $user->idToken();
                         $role = $userInfo['role'];
+                        $firstName = $userInfo['firstName'];
                         $this->database->getReference('users/' . $userID)->update([
 
                             'uid' => $userInfo['uid'],
@@ -143,7 +144,7 @@ class DataController extends Controller
                         ]);
 
                         $message = "Goods";
-                        return response(compact('userInfo', 'token', 'userID', 'role', 'message'));
+                        return response(compact('firstName', 'token', 'userID', 'role', 'message'));
 
                         break;
                     }
@@ -250,8 +251,8 @@ class DataController extends Controller
                 }
             }
 
-            $message = 'Code sent to '. $request->email;        
-            return response(compact('message'));     
+            $message = 'Code sent to ' . $request->email;
+            return response(compact('message'));
         } catch (\Exception $e) {
             $errMessage = $e->getMessage();
             return response(compact('errMessage'));
@@ -469,7 +470,6 @@ class DataController extends Controller
 
                             $message = 'VerifyPhone';
                         }
-
                     } else {
 
                         $this->database->getReference('users/' . $userID)->update([
@@ -598,30 +598,45 @@ class DataController extends Controller
     public function addAdmin(Request $request)
     {
         try {
+
             $adminDefaultIconURL = "https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Icon.png?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=O%2F1tLuD5AGzq%2BS1CK%2FHeRl6zvfdo%2FNskPPkp0SDbbsG6toQc%2BHKul%2BuJoCHHB5xbGuo5fupDinpsezfVZL2P3GJimQhe%2BCTjr%2FV3IMYHcV1iB8TApFzsU63WxSOS3%2FPfJtx%2BooYye4TQPm6K0atkVcmo4GQUX%2FobbaxhZr4SENeJ4r8%2Bs5hjkHzgQ2Nc%2Fkt96wAzPU4ulBwT%2BYNofrYopIKAu%2BbGxX38%2FMj3I3lE6R1QLwVjcrKikJQ3QA%2B6ysdNSfFRZUjxW%2B7e3JjxIcJJc4gOthBMekUjhuluf8Zen6ZFY8EulSSCWrylVKFZ6G6TijjXedD2RMdAPl7pU2LErQ%3D%3D";
 
-            $admin = $this->auth->createUserWithEmailAndPassword($request->email, $request->password);
-            $this->auth->sendEmailVerificationLink($request->email);
+            $adminData = [];
+            $isExisting = false;
 
-            $adminData = [
+            foreach ($this->database->getReference('users')->getSnapshot()->getValue() as $userID => $userInfo) {
 
-                'firstName' => $request->firstName,
-                'lastName' => $request->lastName,
-                'addedDate' => Carbon::now()->toDateString(),
-                'email' => $request->email,
-                'password' => bcrypt($request->password),
-                'mobileNumber' => $request->mobileNumber,
-                'profileImage' => $adminDefaultIconURL,
-                'role' => 'admin',
-                'uid' => $admin->uid
-            ];
+                if ($request->mobileNumber === $userInfo['mobileNumber']) {
+                    $isExisting = true;
+                    $message = 'Mobile Number is already in use!';
+                    break;
+                }
+            }
 
-            $this->database->getReference('users')->push($adminData);
+            if (!$isExisting) {
+                $admin = $this->auth->createUserWithEmailAndPassword($request->email, $request->password);
+                $this->auth->sendEmailVerificationLink($request->email);
 
-            //send email notification to the admin that you have added
-            $this->sendEmailForTheAdminBeingAdded($request->email, $request->firstName, $request->password);
+                $adminData = [
 
-            $message = 'Admin Added Successfully!';
+                    'firstName' => $request->firstName,
+                    'lastName' => $request->lastName,
+                    'addedDate' => Carbon::now()->toDateString(),
+                    'email' => $request->email,
+                    'password' => bcrypt($request->password),
+                    'mobileNumber' => $request->mobileNumber,
+                    'profileImage' => $adminDefaultIconURL,
+                    'role' => 'admin',
+                    'uid' => $admin->uid
+                ];
+
+                $this->database->getReference('users')->push($adminData);
+
+                //send email notification to the admin that you have added
+                $this->sendEmailForTheAdminBeingAdded($request->email, $request->firstName, $request->password);
+
+                $message = 'Admin Added Successfully!';
+            }
 
             return response(compact('message'));
         } catch (\Exception $e) {

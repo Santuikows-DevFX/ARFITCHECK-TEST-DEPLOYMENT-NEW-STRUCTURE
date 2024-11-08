@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   TableContainer,
   Table,
@@ -57,6 +57,11 @@ const ProductInventoryTable = ({ products, fetchProducts }) => {
     },
   }));
 
+  useEffect(() => {
+
+    setCurrentPage(1)
+
+  }, [sortAmount, sortCategory, searchQuery])
 
   const handleProductConfig = (product, productID) => {
     setIsDialogOpen(true);
@@ -121,53 +126,6 @@ const ProductInventoryTable = ({ products, fetchProducts }) => {
     <Box sx={{ padding: '1rem', backgroundColor: '#FFFFFF', boxShadow: '2px 5px 10px rgba(0,0,0,0.4)' }}>
       <Box sx={{ flexGrow: 1, padding: '1rem' }}>
         <Grid container spacing={2} alignItems="center">
-          {/* Sort Amount */}
-          <Grid item xs={12} sm={3} md={2}>
-            <FormControl fullWidth>
-              <Select
-                value={sortAmount}
-                onChange={(e) => setSortAmount(e.target.value)}
-                displayEmpty
-                sx={{
-                  fontFamily: 'Kanit',
-                  fontSize: 21,
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderTop: 'none',
-                    borderLeft: 'none',
-                    borderRight: 'none',
-                    borderBottomColor: 'black',
-                    borderRadius: 0,
-                    borderBottom: '1.5px solid black',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderTop: 'none',
-                    borderLeft: 'none',
-                    borderRight: 'none',
-                    borderBottomColor: 'black',
-                    borderRadius: 0,
-                    borderBottom: '1.5px solid black',
-                  },
-                }}
-              >
-                <MenuItem value="" disabled>
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
-                    Sort by Price
-                  </Typography>
-                </MenuItem>
-                <MenuItem value="asc">
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
-                    Lowest To Highest
-                  </Typography>
-                </MenuItem>
-                <MenuItem value="desc">
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>
-                    Highest To Lowest
-                  </Typography>
-                </MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
           {/* Sort Category */}
           <Grid item xs={12} sm={3} md={2}>
             <FormControl fullWidth>

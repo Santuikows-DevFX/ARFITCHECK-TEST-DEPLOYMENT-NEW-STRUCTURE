@@ -2,21 +2,18 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import { AppBar, Box, CssBaseline, Divider, Drawer, IconButton, List, ListItem, ListItemButton, Button, ListItemIcon, ListItemText,Badge, Toolbar,MenuItem, Menu, Typography, Popover} from '@mui/material';
 
-//Components
 import MyOrders from './MyOrders';
 import OrderHistory from './OrderHistory';
 import AccountSettings from './AccountSettings';
 import ShippingDetails from './ShippingDetails';
 import Footer from '../../Components/Footer';
 
-//Backend 
 import { useNavigate } from 'react-router-dom';
 
 import Swal from 'sweetalert2';
 import { useCookies } from 'react-cookie';
 import axiosClient from '../../axios-client';
 
-//Icons
 import {
   Shop as Shop2Icon,
   Build as BuildIcon,
@@ -161,6 +158,7 @@ function Users(props) {
     setSelectedItem(text);
     handleDrawerClose();
   };
+
   const iconMapping = {
     'My Orders': <Shop2Icon />,
     'Customization Request': <BuildIcon/>,
@@ -168,7 +166,6 @@ function Users(props) {
     'Shipping Settings': <LocalShippingIcon />,
     'Account Settings': <ManageAccountsIcon />,
   };
-
 
   const handleLogout = () => {
 
@@ -199,6 +196,7 @@ function Users(props) {
         }
       });
   }
+  
   const drawer = (
     <div>
        <Typography  sx={{ fontSize: 30,fontWeight: 'bold' , fontFamily: 'Kanit', letterSpacing: '0.1rem',textAlign: 'center', color: "white", py: 1 }}>
@@ -245,7 +243,6 @@ function Users(props) {
     </div>
   );
 
-  // Remove this const when copying and pasting into your project.
   const container = window !== undefined ? () => window().document.body : undefined;
 
   const renderContent = () => {
@@ -413,7 +410,7 @@ function Users(props) {
 
                   <MenuItem onClick={handleLogout}>
                     <LogoutIcon sx={{ mr: 1, fontsize: { xs: 10, sm: 10, md: 10 } }} />
-                    <Typography sx = {{fontFamily: "Kanit"}}> Logout</Typography>
+                    <Typography sx = {{fontFamily: "Kanit", fontSize: { xs: 18, md: 20}}}> Logout</Typography>
                   </MenuItem>
                 </Menu>
         </Toolbar>

@@ -58,6 +58,12 @@ const OrderHistoryTable = () => {
     };
   }, [])
 
+  useEffect(() => {
+
+    setCurrentPage(1)
+
+  }, [sortAmount, orderIDSearchQuery, selectStatus])
+
   const fetchMyOrders = async () => {
     try {
       const myOrderResponse = await axiosClient.get(`order/fetchCompletedOrder/${cookie['?id']}`);
@@ -143,6 +149,7 @@ const OrderHistoryTable = () => {
   const handleChangeDate = async (dateValue) => {
     try {
       const formattedDate = dayjs(dateValue).format('YYYY-MM-DD');
+      setCurrentPage(1)
     
       let filteredOrders = [];
   
@@ -219,23 +226,22 @@ const OrderHistoryTable = () => {
   const handleSaveAsExcel = () => {
     try {
 
-      const fields = ['Order Date', 'Product', 'Quantity', 'Size', 'Amount', 'Payment Method', 'Shipping Address', 'Status'];
+      const fields = ['Order ID', 'Order Date', 'Product', 'Quantity', 'Size', 'Amount', 'Payment Method', 'Shipping Address', 'Status'];
 
-      const csvRows = completedOrders.map(order => {
+      const csvRows = orders.map(order => {
 
-        const orderDate = order.orderInfo.orderDate;
-        const orderedProducts = order.orderInfo.productName.split(', ').join(' | ');
-        const orderedQuantity = order.orderInfo.productQuantity.split(', ').join(' | ');
-        const orderedSize = order.orderInfo.productSize.split(', ').join(' | ');
-        const orderedAmount = order.orderInfo.amountToPay.toFixed(2);
-        const paymentMethod = order.orderInfo.paymentMethod === 'cash' ? 'Cash' : 'E-Wallet';
-        const fullShippingAddress = `"${order.orderInfo.fullShippingAddress}"`;
-        const orderStatus = order.orderInfo.orderStatus;
+        const orderID = `"${order?.orderID.replace(/-/g, '')}"`;
+        const orderDate = order.orderInfo?.orderDate;
+        const orderedProducts = order.orderInfo?.productName.split(', ').join(' | ');
+        const orderedQuantity = order.orderInfo?.productQuantity.split(', ').join(' | ');
+        const orderedSize = order.orderInfo?.productSize.split(', ').join(' | ');
+        const orderedAmount = order.orderInfo?.amountToPay.toFixed(2);
+        const paymentMethod = order.orderInfo?.paymentMethod === 'cash' ? 'Cash' : 'E-Wallet';
+        const fullShippingAddress = `"${order.orderInfo?.fullShippingAddress}"`;
+        const orderStatus = order.orderInfo?.orderStatus;
         
-        return [orderDate, orderedProducts, orderedQuantity, orderedSize, orderedAmount, paymentMethod, fullShippingAddress, orderStatus].join(',');
+        return [orderID, orderDate, orderedProducts, orderedQuantity, orderedSize, orderedAmount, paymentMethod, fullShippingAddress, orderStatus].join(',');
       });
-
-      
 
       //what this does is it joins the headers and the rows data together
       const csvContent = [fields.join(','), ...csvRows].join('\n'); 
@@ -491,7 +497,7 @@ const OrderHistoryTable = () => {
               </FormControl>
             </Grid>
 
-            {/* payment method */}
+            {/* search */}
             <Grid item xs={6} sm={6} md={3}>
               <FormControl fullWidth>
               <TextField

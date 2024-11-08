@@ -9,13 +9,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import axiosClient from '../../axios-client';
 import Swal from 'sweetalert2';
-import {toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { Bounce } from 'react-toastify';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import dayjs from 'dayjs';
 import { useSnackbar } from "notistack";
-
+import BadgeIcon from '@mui/icons-material/Badge';
 
 function Staffs() {
   const [isLoading, setIsLoading] = useState(true);
@@ -182,7 +179,7 @@ function Staffs() {
                   }}
                   startIcon={<AddIcon />}
                 >
-                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 18, md: 24.5 }, padding: 0.5 }}>Add Admin</Typography>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 18, md: 20 }, padding: 0.5 }}>Add Admin</Typography>
                 </Button>
               </Box>
             </Grid>
@@ -231,6 +228,18 @@ function Staffs() {
                           <Typography sx={{ fontSize: { xs: 14, sm: 15, md: 18 }, color: 'gray', marginY: 1,  fontFamily: 'Kanit' }}>
                             <SupervisorAccountIcon sx={{ fontSize: { xs: 16, sm: 18, md: 20 }, mr: 1, color: 'black' }} /> Admin
                           </Typography>
+                          <Typography 
+                            sx={{ 
+                              fontSize: { xs: 14, sm: 15, md: 18 }, 
+                              color: 'gray', 
+                              marginY: 1,  
+                              fontFamily: 'Kanit' 
+                            }}
+                          >
+                            <BadgeIcon sx={{ fontSize: { xs: 16, sm: 18, md: 20 }, mr: 1, color: 'black' }} /> 
+                            {admin?.adminID}
+                          </Typography>
+
                           <Typography sx={{ fontSize: { xs: 14, sm: 15, md: 18 }, color: 'gray', wordBreak: 'break-word', fontFamily: 'Kanit' }}>
                             <EmailIcon sx={{ fontSize: { xs: 16, sm: 18, md: 20 }, mr: 1, color: 'black', }} /> {admin.adminInfo.email}
                           </Typography>
@@ -259,7 +268,7 @@ function Staffs() {
             ) : (
               <Typography
                 sx={{
-                  fontFamily: 'Inter',
+                  fontFamily: 'Kanit',
                   fontSize: { xs: 14, sm: 16, md: 20 },
                   fontWeight: 'medium',
                   color: 'gray',

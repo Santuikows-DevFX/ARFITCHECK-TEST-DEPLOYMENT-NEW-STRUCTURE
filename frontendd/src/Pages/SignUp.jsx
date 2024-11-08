@@ -21,7 +21,6 @@ import phIcon from '../../public/assets/phIcon.png'
 import signUpGraffitiBG from '../../public/assets/signupGraffiti.png'
 import icon from '../../public/assets/Icon.png'
 import { useSnackbar } from 'notistack';
-import ResendCodeTimer from '../WIdgets/ResendCodeTimer.jsx';
 import AutoRedirectTimer from '../WIdgets/AutoRedirectTimer.jsx';
 
 const provinceOptions = [ 
@@ -253,7 +252,8 @@ function SignUp() {
               setCookie('?sessiontoken', data.token, { path: '/', expires: expirationDate });
               setCookie('?id', data.userID, { path: '/', expires: expirationDate });
               setCookie('?role', data.role, { path: '/', expires: expirationDate });
-              
+              setCookie("?fn", data.firstName, { path: "/", expires: expirationDate });
+
            }else {
               setSignUp(false)
 
@@ -813,7 +813,7 @@ function SignUp() {
                   {/* EULA */}
                   <Grid item xs={10} data-aos="fade-in" data-aos-delay="800">
                     <FormControlLabel
-                      control={<Checkbox checked={isEulaChecked} onChange={handleEulaCheck} sx={{ transform: 'scale(0.8)' }}/>}
+                      control={<Checkbox  disabled = {isSignUp} checked={isEulaChecked} onChange={handleEulaCheck} sx={{ transform: 'scale(0.8)' }}/>}
                       label={
                         <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: { xs: 12, md: 18 } }}>
                           I've Read and Agree with the&nbsp;

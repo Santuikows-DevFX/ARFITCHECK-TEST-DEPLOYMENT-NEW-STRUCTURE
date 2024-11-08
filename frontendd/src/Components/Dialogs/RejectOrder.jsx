@@ -1,13 +1,10 @@
 import React from 'react';
-import { Grid, Avatar, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, MenuItem, Select, FormControl, InputLabel, Divider, TextField } from '@mui/material';
+import { Grid, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, MenuItem, Select, FormControl, InputLabel, TextField } from '@mui/material';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import Swal from 'sweetalert2';
 import axiosClient from '../../axios-client';
 
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { Bounce } from 'react-toastify';
 import { Close } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 
@@ -22,7 +19,6 @@ const cancellationReasons = [
 const rejectionReasons = [
   'Design Contains Inappropriate Graphics or Text',
   'Overly Complex Design',
-  'Poor Image Quality',
   'Offensive or Prohibited Content',
   'Customization Request is Incomplete or Unclear',
 ];
@@ -172,7 +168,6 @@ const RejectOrder = ({ open, onClose, reqData, zIndex, fetchOrders }) => {
             )}
           </Formik>
         </DialogContent>
-        <ToastContainer/>
       </Dialog>
     </div>
   );

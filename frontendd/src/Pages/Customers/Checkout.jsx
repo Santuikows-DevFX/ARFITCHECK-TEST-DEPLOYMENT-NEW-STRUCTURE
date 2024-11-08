@@ -316,7 +316,7 @@ function Checkout() {
     setEulaChecked(false)
     setEnablePlaceOrder(false)
     setIsErrorWithTheNewShipping(true)
-  }
+  };
 
   const handleShipToOtherAddress = (event) => {
 
@@ -330,11 +330,15 @@ function Checkout() {
     setEulaChecked(false)
     setEnablePlaceOrder(false)
 
-  }
+  };
 
   const handleAgree = () => {
-    setEulaChecked(true);
     setTermsnAndConditionDialog(false);
+   
+    if(paymentMethod != '') {
+      setEulaChecked(true);
+      setEnablePlaceOrder(true);
+    }
   };
 
   //terms and condition dialog
@@ -676,6 +680,7 @@ function Checkout() {
                           value="cash"
                           name="radio-buttons"
                           inputProps={{ 'aria-label': 'cash' }}
+                          disabled = {submitLoading}
                         />
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -688,6 +693,7 @@ function Checkout() {
                           value="gcash"
                           name="radio-buttons"
                           inputProps={{ 'aria-label': 'gcash' }}
+                          disabled = {submitLoading}
                       /></Box>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -700,6 +706,7 @@ function Checkout() {
                           value="paymaya"
                           name="radio-buttons"
                           inputProps={{ 'aria-label': 'paymaya' }}
+                          disabled = {submitLoading}
                       /></Box>
                   </Box>
                   </RadioGroup>
@@ -757,7 +764,7 @@ function Checkout() {
                   sx={{ 
                     transform: 'scale(0.8)' 
                   }} 
-                  disabled = {isErrorWithTheNewShipping}
+                  disabled = {isErrorWithTheNewShipping || submitLoading}
                 />}
                 label={
                   <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: {xs: 12, md: 16} }}>

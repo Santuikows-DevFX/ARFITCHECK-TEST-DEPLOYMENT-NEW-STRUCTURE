@@ -6,13 +6,15 @@ import AddTaskIcon from '@mui/icons-material/AddTask';
 import BuildIcon from '@mui/icons-material/Build';
 import PreLoader from '../../Components/PreLoader';
 import axiosClient from '../../axios-client';
-import CancelScheduleSendIcon from '@mui/icons-material/CancelScheduleSend';
-import GroupIcon from '@mui/icons-material/Group';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
-import CancelIcon from '@mui/icons-material/Cancel';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { off, onValue, ref } from 'firebase/database';
 import { db } from '../../firebase';
+import DownloadIcon from '@mui/icons-material/Download';
+import dayjs from 'dayjs';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 function AnalyticsAndReports() {
 
@@ -23,13 +25,23 @@ function AnalyticsAndReports() {
     pendingOrders: 0,
     completedOrders: 0,
     totalProducts: 0,
-    cancelledOrders: 0
+    cancelledOrder: 0
   });
 
   const [salesSummary, setSalesSummary] = useState({
     weeklySummary: 0,
     monthlySummary: 0,
     yearlySummary: 0
+  });
+
+  //for generating reports purposes
+  const [allSalesReports, setAllSalesReport] = useState({
+    weeeklyCurrentRevenue: 0,
+    weeklyLastRevenue: 0,
+    monthlyCurrentRevenue: 0,
+    monthlyLastRevenue: 0,
+    yearlyCurrentRevenue: 0,
+    yearlyLastRevenue: 0
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -98,7 +110,6 @@ function AnalyticsAndReports() {
     };
   }, [sortOption]);
   
-
   const handleFetchReportsData = async (option) => {
     try {
 
@@ -121,8 +132,6 @@ function AnalyticsAndReports() {
       }
 
       const fetchSalesReportData = await axiosClient.post(`/rprt/calculateAnalyticsReports`, { dataSort: option });
-      // const reportResponse = await axiosClient.get('order/getReportsData');
-      // const salesSummaryResponse = await axiosClient.get('rprt/fetchSalesSummary');
       
       const getDataSets = dataSets[option];
 
@@ -149,8 +158,7 @@ function AnalyticsAndReports() {
         }else {
           labelMapper = monthsForYear
         }
-        // console.log(fetchSalesReportData.data)
-        
+
         //line graph data
         setCurrData(labelMapper.map(day => fetchSalesReportData.data.currentRevenue[day] || 0));
         setPrevData(labelMapper.map(day => fetchSalesReportData.data.pastRevenue[day] || 0))
@@ -170,11 +178,13 @@ function AnalyticsAndReports() {
 
       const reportResponse = await axiosClient.get('order/getReportsData');
       const salesSummaryResponse = await axiosClient.get('rprt/fetchSalesSummary');
+      const allSalesSummaryResponse = await axiosClient.get('rprt/fetchAllSalesReport');
 
-      if(salesSummaryResponse.data && reportResponse.data) {
+      if(salesSummaryResponse.data && reportResponse.data && allSalesSummaryResponse.data) {
         //reports data => cards on top, while sales summary is yung parang % difference
         setReportsData(reportResponse.data);
-        setSalesSummary(salesSummaryResponse.data)
+        setSalesSummary(salesSummaryResponse.data);
+        setAllSalesReport(allSalesSummaryResponse.data);
       }
 
     }catch(error) {
@@ -183,7 +193,186 @@ function AnalyticsAndReports() {
     }
   }
 
-  //TODO: ADD DAILY SA CHOICES FOR SALES CHART, IF POSSIBLE MAGAWA YUNG SA SIGN UP NA KAPAG BINACK OR HINDI KINONTINUE YUNG VERIFICATION MAWAWALA YUNG SINIGN UP. ADD HOODIES SIZE CHART & SIZE TABLE && MACHINE LEARNING IMPROVEMENT
+  const handleSaveAsPDF = () => {
+    try {
+      const dateToday = dayjs().format('YYYY-MM-DD');
+  
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+  
+      //Define the total width for the section
+      const boxWidth = pageWidth - 20; //Total width for the title section
+      const halfBoxWidth = boxWidth / 2;//Width for each half in the Date row
+      const boxHeight = 10; //Height for each row
+  
+      const titleStartX = 10;
+      const titleStartY = 15;
+      doc.rect(titleStartX, titleStartY, boxWidth, boxHeight);
+      doc.setFont('Kanit', 'bold');
+      doc.setFontSize(20);
+      doc.text('B.MIC CLOTHES', pageWidth / 2, titleStartY + boxHeight / 2 + 3, { align: 'center' });
+  
+      const subtitleStartY = titleStartY + boxHeight;
+      doc.rect(titleStartX, subtitleStartY, boxWidth, boxHeight);
+      doc.setFontSize(16);
+      doc.text('ANALYTICS AND REPORTS', pageWidth / 2, subtitleStartY + boxHeight / 2 + 3, { align: 'center' });
+  
+      const dateRowStartY = subtitleStartY + boxHeight;
+  
+      doc.rect(titleStartX, dateRowStartY, halfBoxWidth, boxHeight);
+      doc.setFontSize(12);
+      doc.setFont('Kanit', 'normal');
+      doc.text(`DATE: ${dateToday}`, titleStartX + 5, dateRowStartY + boxHeight / 2 + 3);
+  
+      doc.rect(titleStartX + halfBoxWidth, dateRowStartY, halfBoxWidth, boxHeight);
+      doc.text('Additional:', titleStartX + halfBoxWidth + 5, dateRowStartY + boxHeight / 2 + 3);
+  
+      const dividerY = dateRowStartY + boxHeight;
+      doc.line(10, dividerY, pageWidth - 10, dividerY);
+  
+      const headers = [
+        ['Report Type', 'Cancelled Orders', 'Pending Orders', 'Completed Orders', 'Customized Requests', 'Total Products', 'Current Revenue', 'Previous Revenue']
+      ];
+  
+      const data = [
+        [
+          'Overall Reports Data',
+          reportsData.cancelledOrder,
+          reportsData.pendingOrders,
+          reportsData.customizedOrders,
+          reportsData.cancelledOrder,
+          reportsData.totalProducts,
+          '-', 
+          '-' 
+        ]
+      ];
+      const timeFrames = ['Weekly', 'Monthly', 'Yearly'];
+      timeFrames.forEach((timeFrame) => {
+        let currentRevenue, previousRevenue;
+  
+        if (timeFrame === 'Weekly') {
+          currentRevenue = currData.reduce((acc, val) => acc + val, 0);
+          previousRevenue = prevData.reduce((acc, val) => acc + val, 0);
+        } else if (timeFrame === 'Monthly') {
+          currentRevenue = allSalesReports.monthlyCurrentRevenue;
+          previousRevenue = allSalesReports.monthlyLastRevenue;
+        } else if (timeFrame === 'Yearly') {
+          currentRevenue = allSalesReports.yearlyCurrentRevenue;
+          previousRevenue = allSalesReports.yearlyLastRevenue;
+        }
+  
+        data.push([
+          timeFrame,
+          '', '', '', '', '',
+          currentRevenue,
+          previousRevenue
+        ]);
+      });
+  
+      doc.autoTable({
+        head: headers,
+        body: data,
+        startY: dividerY + 5, 
+        theme: 'grid',
+        styles: {
+          font: 'Kanit',
+          fontSize: 10,
+          halign: 'center',
+          valign: 'middle'
+        },
+        headStyles: { fillColor: [41, 128, 185] }, 
+        alternateRowStyles: { fillColor: [220, 234, 246] }
+      });
+  
+      const tableEndY = doc.lastAutoTable.finalY; 
+  
+      const tableDividerY = tableEndY + 10; 
+      doc.line(10, tableDividerY, pageWidth - 10, tableDividerY);
+  
+      doc.save(`${dateToday}_analytics_report.pdf`);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleSaveAsExcel = () => {
+    try {
+      const headers = [
+        'Report Type',
+        'Cancelled Orders',
+        'Pending Orders',
+        'Completed Orders',
+        'Customized Requests',
+        'Total Products',
+        'Current Revenue',
+        'Previous Revenue',
+      ];
+  
+      const data = [
+        ['Generated Analytical Reports'],
+        [''], 
+        headers,
+        [
+          'Overall Reports Data',
+          reportsData.cancelledOrder,
+          reportsData.pendingOrders,
+          reportsData.completedOrders,
+          reportsData.customizedOrders,
+          reportsData.totalProducts,
+          '', 
+          '', 
+        ],
+        [''], 
+      ];
+  
+      const timeFrames = ['Weekly', 'Monthly', 'Yearly'];
+      timeFrames.forEach((timeFrame) => {
+        let currentRevenue, previousRevenue;
+  
+        if (timeFrame === 'Weekly') {
+          currentRevenue = currData.reduce((acc, val) => acc + val, 0);
+          previousRevenue = prevData.reduce((acc, val) => acc + val, 0);
+        } else if (timeFrame === 'Monthly') {
+          currentRevenue = allSalesReports.monthlyCurrentRevenue;
+          previousRevenue = allSalesReports.monthlyLastRevenue;
+        } else if (timeFrame === 'Yearly') {
+          currentRevenue = allSalesReports.yearlyCurrentRevenue;
+          previousRevenue = allSalesReports.yearlyLastRevenue;
+        }
+  
+        data.push([
+          timeFrame,
+          '', '', '', '', '', 
+          currentRevenue,
+          previousRevenue,
+        ]);
+      });
+  
+      const ws = XLSX.utils.aoa_to_sheet(data);
+  
+      ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }, 
+      ];
+  
+      Object.keys(ws).forEach((cell) => {
+        if (ws[cell] && cell.startsWith('A')) { 
+          ws[cell].s = {
+            font: { name: 'Kanit', sz: 12, bold: true },
+            fill: { fgColor: { rgb: 'D9EAD3' } },
+            alignment: { horizontal: 'center', vertical: 'center' },
+          };
+        }
+      });
+  
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Analytics Report');
+  
+      const dateToday = dayjs().format('YYYY-MM-DD');
+      XLSX.writeFile(wb, `${dateToday}_analytics_report.xlsx`);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div>
@@ -196,9 +385,57 @@ function AnalyticsAndReports() {
               <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 30, md: 50 }, fontWeight: 'bold', color: 'black', paddingY: '1vh' }}>
                 Analytics and Reports
               </Typography>
+              <Grid container spacing={4} sx={{ width: "45%" }}>
+              <Grid item xs={6}>
+              <Button
+                  disabled = {reportsLoading}
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{
+                    color: 'white',
+                    '&:not(:hover)': { backgroundColor: reportsLoading ? '#414a4c' : '#196F3D', color: 'white' },
+                    '&:hover': { backgroundColor: '#239B56' },
+                    fontSize: { xs: 10, md: 16 },  
+                    padding: { xs: '0.3rem 0.6rem', md: '0.5rem 1rem' },  
+                    fontFamily: 'Kanit',
+                    fontWeight: 'bold',
+                    opacity: reportsLoading ? 0.7 : 1
+                  }}
+                  startIcon={<DownloadIcon />}
+                  onClick={handleSaveAsExcel}
+
+                >
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 16 }, padding: 0.5 }}> .CSV</Typography>
+                </Button>
+              </Grid>
+              <Grid item xs={6}>
+                <Button
+                  disabled = {reportsLoading}
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{
+                    color: 'white',
+                    '&:not(:hover)': { backgroundColor: reportsLoading ? '#414a4c' : '#b7950b', color: 'white' },
+                    '&:hover': { backgroundColor: '#d4ac0d' },
+                    fontSize: { xs: 10, md: 16 },  
+                    padding: { xs: '0.3rem 0.6rem', md: '0.5rem 1rem' },  
+                    fontFamily: 'Kanit',
+                    fontWeight: 'bold',
+                    opacity: reportsLoading ? 0.7 : 1
+                  }}
+                  startIcon={<DownloadIcon />}
+                  onClick={handleSaveAsPDF}
+
+                >
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 16 }, padding: 0.5 }}> .PDF</Typography>
+                </Button>
+              </Grid>
+            </Grid>
             </Grid>
             <Grid item>
-              <Divider sx={{ borderTopWidth: 2, mb: 2.5 }} />
+              <Divider sx={{ borderTopWidth: 2, mb : 3 }}/>
             </Grid>
           </Grid>
           <Grid container spacing={3}>
@@ -404,21 +641,6 @@ function AnalyticsAndReports() {
                     </Box>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                    {/* <BarChart
-                      xAxis={[{ data: ['Sales'], scaleType: 'band'}]}
-                      series={[
-                        {
-                          data: pastRevenue,
-                          color: '#3498db',
-                        },
-                        {
-                          data: currentRevenue,
-                          color: '#e74c3c',
-                        },
-                      ]}
-                      height={500}
-                      width={880}
-                    /> */}
                      <LineChart
                         width={1200}
                         height={500}

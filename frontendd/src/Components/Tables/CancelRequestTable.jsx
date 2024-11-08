@@ -47,6 +47,12 @@ const CancelRequestTable = () => {
     };
   }, []);
 
+  useEffect(() => {
+
+    setCurrentPage(1)
+
+  }, [sortAmount, orderIDSearchQuery, selectStatus])
+
   const fetchOrders = async () => {
     try {
       const orderResponse = await axiosClient.get('order/fetchCancelRequestOrders');
@@ -183,6 +189,7 @@ const CancelRequestTable = () => {
       const formattedDate = dayjs(dateValue).format('YYYY-MM-DD');
     
       let filteredOrders = [];
+      setCurrentPage(1)
   
       const sortedDataByDate = await axiosClient.get(`/order/fetchCancelRequestOrdersByDate/${formattedDate}`);
       filteredOrders = sortedDataByDate.data;

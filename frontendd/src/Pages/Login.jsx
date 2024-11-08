@@ -104,7 +104,7 @@ function Login() {
           
           setCookie("?id", data.userID, { path: "/", expires: expirationDate });
           setCookie("?role", data.role, { path: "/", expires: expirationDate });
-          setCookie("?fn", data.userInfo.firstName, { path: "/", expires: expirationDate });
+          setCookie("?fn", data.firstName, { path: "/", expires: expirationDate });
 
         } else {
 
@@ -491,7 +491,7 @@ function Login() {
                         </>
                       )}
 
-                      {/* signup if dont have an account yet  */}
+                      {/* signup if user dont have an account yet  */}
                       <Grid
                         item
                         xs={10}

@@ -61,7 +61,6 @@ function ProductDescription({ product, onClose }) {
         }
     }, [smallQuantity, mediumQuantity, largeQuantity, extraLargeQuantity, doubleXLQuantity, tripleXLQuantity]);
 
-
     const CartValidationSchema = Yup.object().shape({
         quantity: Yup.number()
         .min(1, 'Quantity cannot be less than 1')
@@ -103,6 +102,7 @@ function ProductDescription({ product, onClose }) {
         setModalOpen(true);
 
     };
+
     const insertCart = async (values) => {
 
         const cartValue = { 
@@ -114,9 +114,7 @@ function ProductDescription({ product, onClose }) {
             productPrice: product?.productPrice,
             productQuantity: values.quantity,
             maximumQuantity: sizeStock,
-
             uid: cookie['?id']
-      
         }
         try {
 
@@ -136,7 +134,7 @@ function ProductDescription({ product, onClose }) {
             
             });
 
-          }else if(values.quantity >= productQuantity) {
+          }else if(values.quantity > productQuantity) {
 
             enqueueSnackbar(`Quantity is too large compared to stock`, { 
                 variant: 'error',
@@ -158,7 +156,7 @@ function ProductDescription({ product, onClose }) {
 
             if ((!localStorage.getItem('?sessiontoken'))) {
 
-                navigator('/login');
+                navigator('/login', { replace: true });
 
             }else {
                 await axiosClient.post('cart/insertCartItems', cartValue)
@@ -195,6 +193,8 @@ function ProductDescription({ product, onClose }) {
                                 fontSize: '16px'
                             },
                         });
+                        setAddToCartLoading(false)
+
                     }
                 })
             }
@@ -328,15 +328,15 @@ function ProductDescription({ product, onClose }) {
                                                 type="submit"
                                                 fullWidth
                                                 variant="contained"
-                                                disabled={isSubmitting || !isValid}
+                                                disabled={isSubmitting || !isValid || addToCartLoading}
                                                 sx={{
                                                     backgroundColor: 'white',
                                                     '&:hover': { backgroundColor: '#414a4c', color: 'white' },
                                                     '&:not(:hover)': { backgroundColor: '#3d4242', color: 'white' },
                                                     mb: 3,
                                                     mt: 2,
-                                                    opacity: (isSubmitting || !isValid) ? 0.5 : 1,
-                                                    cursor: (isSubmitting || !isValid) ? 'not-allowed' : 'pointer',
+                                                    opacity: (isSubmitting || !isValid || addToCartLoading) ? 0.5 : 1,
+                                                    cursor: (isSubmitting || !isValid || addToCartLoading) ? 'not-allowed' : 'pointer',
                                                     background: 'linear-gradient(to right, #414141  , #000000)'
                                                 }}
                                             >

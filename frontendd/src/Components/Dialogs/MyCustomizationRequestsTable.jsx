@@ -65,6 +65,12 @@ const MyCustomizationRequestsTable = () => {
     };
   }, [])
 
+  useEffect(() => {
+
+    setCurrentPage(1)
+
+  }, [sortAmount, orderIDSearchQuery, selectStatus])
+  
   const fetchMyOrders = async () => {
     try {
       const myCustomizationResponse = await axiosClient.get(`custom/fetchMyCustomizationRequests/${cookie['?id']}`);
@@ -161,7 +167,10 @@ const MyCustomizationRequestsTable = () => {
   const handleChangeDate = async (dateValue) => {
     try {
       const formattedDate = dayjs(dateValue).format('YYYY-MM-DD');
-      const { data } = await axiosClient.get(`/order/fetchMyOrderByDate/${cookie['?id']}/${formattedDate}`);
+
+      setCurrentPage(1)
+
+      const { data } = await axiosClient.get(`/custom/fetchMyCustomizationRequestByDate/${cookie['?id']}/${formattedDate}`);
       if (data) {
         setOrders(data.message ? [] : mergeOrders(data));
       }
@@ -177,7 +186,7 @@ const MyCustomizationRequestsTable = () => {
         : b.orderInfo.amountToPay - a.orderInfo.amountToPay;
     }
     if (sortStatus) {
-      const statuses = ['Waiting for Confirmation', 'Order Confirmed', 'Preparing Order to Ship', 'Parcel out for delivery'];
+      const statuses = ['Waiting for Approval', 'Request Approved', 'Preparing Request to Ship'];
       return sortStatus === 'asc'
         ? statuses.indexOf(a.orderInfo.orderStatus) - statuses.indexOf(b.orderInfo.orderStatus)
         : statuses.indexOf(b.orderInfo.orderStatus) - statuses.indexOf(a.orderInfo.orderStatus);
@@ -403,20 +412,17 @@ const MyCustomizationRequestsTable = () => {
                     },
                   }}
                 >
-                  <MenuItem value="All">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>All Status</Typography>
+                <MenuItem value="All">
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>All Status</Typography>
                   </MenuItem>
-                  <MenuItem value="Waiting for Confirmation">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Waiting for Confirmation</Typography>
+                  <MenuItem value="Waiting for Approval">
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Waiting for Approval</Typography>
                   </MenuItem>
-                  <MenuItem value="Order Confirmed">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Order Confirmed</Typography>
+                  <MenuItem value="Request Approved">
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Request Approved</Typography>
                   </MenuItem>
-                  <MenuItem value="Preparing Order to Ship">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Preparing Order to Ship</Typography>
-                  </MenuItem>
-                  <MenuItem value="Parcel out for delivery">
-                    <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 14, md: 20}, fontWeight: 'medium', color: 'black' }}>Parcel out for delivery</Typography>
+                  <MenuItem value="Preparing Request to Ship">
+                    <Typography sx={{ fontFamily: 'Kanit', fontSize: 20, fontWeight: 'medium', color: 'black' }}>Preparing Request to Ship</Typography>
                   </MenuItem>
                 </Select>
               </FormControl>

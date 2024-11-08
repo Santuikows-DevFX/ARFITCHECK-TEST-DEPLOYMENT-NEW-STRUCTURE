@@ -1,7 +1,6 @@
 import React from 'react'
 import { useCookies } from 'react-cookie'
 import { Navigate, Outlet } from 'react-router-dom'
-import { ToastContainer } from 'react-toastify'
 import { useStateContext } from '../ContextAPI/ContextAPI'
 
 const UserLayout = () => {
@@ -22,7 +21,6 @@ const UserLayout = () => {
   return (
     <div>
         <Outlet/>
-        <ToastContainer/>
     </div>
   )
 }

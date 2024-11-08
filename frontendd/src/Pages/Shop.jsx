@@ -56,7 +56,6 @@ const styles = {
     }
 };
 
-
 function Shop() {
 
     document.documentElement.style.setProperty('--primary', 'black');
@@ -98,6 +97,7 @@ function Shop() {
         AOS.init();
 
         category === undefined ? fetchProducts() : fetchProductsByChosenCateg();
+        setCurrentPage(1);
         
     }, [category]);
 
@@ -105,7 +105,10 @@ function Shop() {
         if (sortPrice) {
             sortProducts(sortPrice);
         }
-    }, [sortPrice]);
+
+        setCurrentPage(1);
+
+    }, [sortPrice, searchQuery]);
 
     const categories = [
         { name: 'All', icon: <img src={allIcon} alt='icon' style={{ width: '35px', height: '35px' }}/>, count: categoryCount.totalProduct},
@@ -284,6 +287,7 @@ function Shop() {
     const handleApplyPriceRange = async (type, values) => {
 
         setApplyFilterLoading(true)
+        setCurrentPage(1)
 
         try {
           if (type === 'find') {
@@ -639,7 +643,7 @@ function Shop() {
                                         visibility: applyFilterLoading ? 'hidden' : isPriceFilter ? 'visible' : 'hidden'
                                     }}
                                 >
-                                    GET ALL PRODUCTS
+                                    RESET FILTER
                                 </Typography>
                                 {applyFilterLoading && (
                                     <CircularProgress

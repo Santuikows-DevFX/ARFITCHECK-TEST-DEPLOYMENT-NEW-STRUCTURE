@@ -1,8 +1,6 @@
 import React from 'react'
-import { Box, Typography, Divider, Grid, Avatar, IconButton } from '@mui/material';
-import { ExcelButton} from '../../Components/UI/Buttons';
+import { Box, Typography, Divider, Grid } from '@mui/material';
 import PreLoader from '../../Components/PreLoader';
-import OrderStatusTable from '../../Components/Tables/OrderStatusTable';
 import CancelRequestTable from '../../Components/Tables/CancelRequestTable';
 
 function CancelOrderRequest() {
@@ -27,7 +25,6 @@ function CancelOrderRequest() {
             </Typography>
             <Grid container spacing={4} sx={{ width: "45%", justifyContent:'flex-end', alignItems: "center" }}>
             <Grid item xs={6}>
-            {/* <ExcelButton fullWidth>Download as Excel</ExcelButton> */}
             </Grid>
           </Grid>
           </Grid>

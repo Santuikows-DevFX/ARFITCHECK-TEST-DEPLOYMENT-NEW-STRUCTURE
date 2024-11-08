@@ -217,7 +217,7 @@ function Navbar() {
                       sx={{ backgroundColor: '#F4F4F4', p: 1, borderRadius: 1 }}
                     >
                       <Button color="inherit" component={Link} to="/profile">
-                        <Typography sx={{ fontFamily: "Kanit", fontSize: 15 }}>Dashboard</Typography>
+                        <Typography sx={{ fontFamily: "Kanit", fontSize: {xs: 12, md: 15 } }}>Dashboard</Typography>
                       </Button>
                       <Button
 
@@ -254,7 +254,7 @@ function Navbar() {
                           });
                         }}
                       >
-                        <Typography sx={{ fontFamily: "Kanit", fontSize: 15 }}>Logout</Typography>
+                        <Typography sx={{ fontFamily: "Kanit", fontSize: {xs: 12, md: 15 } }}>Logout</Typography>
                       </Button>
                     </Stack>
                   </Collapse>
@@ -287,7 +287,7 @@ function Navbar() {
                     sx={{ backgroundColor: '#F4F4F4', p: 1, borderRadius: 1 }}
                   >
                     <Button color="inherit" component={Link} to="/profile">
-                      <Typography sx={{ fontFamily: "Kanit", fontSize: 15 }}>Dashboard</Typography>
+                      <Typography sx={{ fontFamily: "Kanit", fontSize: {xs: 12, md: 15 }}}>Dashboard</Typography>
                     </Button>
                     <Button
                       color="inherit"
@@ -319,7 +319,7 @@ function Navbar() {
                         });
                       }}
                     >
-                      <Typography sx={{ fontFamily: "Kanit", fontSize: 15 }}>Logout</Typography>
+                      <Typography sx={{ fontFamily: "Kanit", fontSize: {xs: 12, md: 15 } }}>Logout</Typography>
                     </Button>
                   </Stack>
                 </Collapse>

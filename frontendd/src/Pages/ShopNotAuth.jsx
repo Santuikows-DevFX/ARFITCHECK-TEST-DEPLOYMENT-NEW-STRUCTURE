@@ -97,16 +97,18 @@ function ShopNotAuth() {
     useEffect(() => {
 
         AOS.init();
-
         category === undefined ? fetchProducts() : fetchProductsByChosenCateg();
-        
+        setCurrentPage(1)
+
     }, [category]);
 
     useEffect(() => {
         if (sortPrice) {
             sortProducts(sortPrice);
         }
-    }, [sortPrice]);
+
+        setCurrentPage(1)
+    }, [sortPrice, searchQuery]);
 
     const categories = [
         { name: 'All', icon: <img src={allIcon} alt='icon' style={{ width: '35px', height: '35px' }}/>, count: categoryCount.totalProduct},
@@ -285,6 +287,7 @@ function ShopNotAuth() {
     const handleApplyPriceRange = async (type, values) => {
 
         setApplyFilterLoading(true)
+        setCurrentPage(1)
 
         try {
           if (type === 'find') {
@@ -639,7 +642,7 @@ function ShopNotAuth() {
                                         visibility: applyFilterLoading ? 'hidden' : isPriceFilter ? 'visible' : 'hidden'
                                     }}
                                 >
-                                    GET ALL PRODUCTS
+                                    RESET FILTER
                                 </Typography>
                                 {applyFilterLoading && (
                                     <CircularProgress

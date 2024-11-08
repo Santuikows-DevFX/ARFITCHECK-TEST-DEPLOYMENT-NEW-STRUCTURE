@@ -172,6 +172,27 @@ class CustomRequestController extends Controller
         }
     }
 
+    public function fetchMyCustomizationRequestByDate(Request $request)
+    {
+      $ordersByDate = [];
+      if ($this->database->getReference('customizedRequest')->getSnapshot()->exists()) {
+        foreach ($this->database->getReference('customizedRequest')->getSnapshot()->getValue() as $orderID => $orderInfo) {
+          if ($request->uid == $orderInfo['uid'] && Carbon::parse($request->dateSortRequest)->toDateString() == $orderInfo['orderDate'] && $orderInfo['orderStatus'] != 'Order Completed' && $orderInfo['orderStatus'] != 'Request Cancelled' && $orderInfo['orderStatus'] != 'Request Rejected' && $orderInfo['orderStatus'] != 'Order Cancelled') {
+            $ordersByDate[] = [
+              'orderID' => $orderID,
+              'orderInfo' => $orderInfo
+            ];
+          }
+        }
+      }
+      $message = "No Customization Request Found!";
+      if (count($ordersByDate) == 0) {
+        return response(compact('message'));
+      }
+  
+      return response()->json($ordersByDate);
+    }
+
     //admin side fetching
     public function fetchCustomizationRequest()
     {
@@ -245,7 +266,7 @@ class CustomRequestController extends Controller
             return response($e->getMessage());
         }
     }
-
+    
     //if custom
     public function cancelCustomizationRequest(Request $request)
     {

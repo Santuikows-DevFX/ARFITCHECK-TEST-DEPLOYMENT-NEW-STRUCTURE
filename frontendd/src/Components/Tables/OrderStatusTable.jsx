@@ -52,6 +52,12 @@ const OrderStatusTable = () => {
     };
   }, []);
 
+  useEffect(() => {
+
+    setCurrentPage(1)
+
+  }, [sortAmount, orderIDSearchQuery, selectStatus])
+
   const checkIfOrderDelivered = (orderDateDelivery, orderID) => {
     try {
 
@@ -256,6 +262,8 @@ const OrderStatusTable = () => {
   const handleChangeDate = async (dateValue) => {
     try {
       const formattedDate = dayjs(dateValue).format('YYYY-MM-DD');
+
+      setCurrentPage(1)
     
       let filteredOrders = [];
   

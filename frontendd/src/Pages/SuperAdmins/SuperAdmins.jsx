@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AppBar,
   Box,
@@ -113,6 +113,11 @@ const SuperAdmin = (props) => {
       setMobileOpen(!mobileOpen);
     }
   };
+
+  React.useEffect(() => {
+    fetchCustomizationRequest();
+  }, []);
+
   //notification hook
   React.useEffect(() => {
     const dbRef = ref(db, 'notificationForAdmins');
@@ -121,6 +126,7 @@ const SuperAdmin = (props) => {
       if (snapshot.exists()) {
         fetchNotificationData();
         fetchAndHandleNotifyOutForDeliveryOrders();
+        fetchCustomizationRequest()
       } else {
         console.log("No data available");
       }
@@ -142,6 +148,7 @@ const SuperAdmin = (props) => {
   const handleDrawerTransitionEnd = () => {
     setIsClosing(false);
   };
+
   const iconMapping = {
     'Order Status': <AssignmentLateIcon/>,
     'Analytics And Reports': <InsightsIcon />,
@@ -156,33 +163,34 @@ const SuperAdmin = (props) => {
     'Inventory': <InventoryIcon />,
   };
 
- const fetchNotificationData = async () => {
+  const fetchNotificationData = async () => {
 
-    try {
+      try {
 
-      const notificationResponse = await axiosClient.get(`/auth/fetchAdminNotifications/${cookie['?id']}`);
-      if(notificationResponse.data) {
+        const notificationResponse = await axiosClient.get(`/auth/fetchAdminNotifications/${cookie['?id']}`);
+        if(notificationResponse.data) {
 
-        const sortedData = notificationResponse.data.sort((a, b) => {
-          const dateA = new Date(`${a.notificationDate} ${a.notificationTime}`);
-          const dateB = new Date(`${b.notificationDate} ${b.notificationTime}`);
-          return dateB - dateA; 
-        });
+          const sortedData = notificationResponse.data.sort((a, b) => {
+            const dateA = new Date(`${a.notificationDate} ${a.notificationTime}`);
+            const dateB = new Date(`${b.notificationDate} ${b.notificationTime}`);
+            return dateB - dateA; 
+          });
+          
+          setNotificationData(sortedData)
+
+          setNotifCount(notificationResponse.data.length);
+        }
         
-        setNotificationData(sortedData)
-
-        setNotifCount(notificationResponse.data.length);
+      } catch (error) {
+        console.log(error);
       }
-      
-    } catch (error) {
-      console.log(error);
-    }
- }
+  }
 
   const fetchAndHandleNotifyOutForDeliveryOrders = async () => {
     try {
 
       const orderOutForDeliveryResponse = await axiosClient.get('/order/fetchOutForDeliveryOrders');
+
       if(orderOutForDeliveryResponse.data) {
 
         //VARIABLES
@@ -197,10 +205,11 @@ const SuperAdmin = (props) => {
           const estHoursOfDelivery = orders.orderInfo?.estimatedTimeOfDelivery * 60 * 60 * 1000
 
           const timePassedSinceUpdate = currTime - updateTimeStamp;
+
           //CHECK IF THE CURRENT DATE AND THE ORDER DELIVERY DATE IS THE SAME, THIS WILL SERVE AS AN AUTOMATION THAT WILL NOTIFY THE USER IMMEDIATELY.
           if(orderDeliveryDate.toDateString() === currDate.toDateString() && timePassedSinceUpdate > estHoursOfDelivery) {
             notifyUsersIfDelivered();
-          }else if (orderDeliveryDate.toDateString() !== currDate.toDateString() && timePassedSinceUpdate > estHoursOfDelivery) {
+          }else if (orderDeliveryDate.toDateString() !== currDate.toDateString() || timePassedSinceUpdate > estHoursOfDelivery) {
             //CHECK IF THE TIME PASSED IS GREATER THAN THE EST HOURS OF DELIVERY, MEANING THE ORDER IS DELIVERED
             notifyUsersIfDelivered();
           }
@@ -210,6 +219,52 @@ const SuperAdmin = (props) => {
       }
 
     }catch(error) {
+      console.log(error);
+    }
+  };
+
+  const fetchCustomizationRequest = async () => {
+    try {
+
+      const customizedRequestResponse = await axiosClient.get(`/custom/fetchCustomizationRequest`)
+      if (customizedRequestResponse.data) {
+        customizedRequestResponse.data.map((customizedRequest) => {
+          //we need to check the status first if its still on Request Approved and the isPaid is still false
+          if (customizedRequest.orderInfo?.orderStatus === 'Request Approved' && !customizedRequest.orderInfo?.isPaid) {
+            checkIfCustomRequestPassedThePaymentDate(customizedRequest.orderInfo?.approvedDate, customizedRequest?.orderID, customizedRequest.orderInfo?.isPaid);
+          }     
+        })     
+      }
+
+    }catch(error) {
+      console.log(error);
+    }
+  }
+
+  const checkIfCustomRequestPassedThePaymentDate = (approvedDate, requestID, isPaid) => {
+    try {
+
+      //yung araw na inupdate ni admin yung request as approved
+      const approveDate = new Date(approvedDate)
+      const currDate = new Date();
+
+      const timeDiff = currDate.getTime() - approveDate.getTime();
+      const dayDiff = timeDiff / (1000 * 3600 * 24);
+
+      //check if the day diff is > 2 which means lagpas na siya sa 2 day policy natin
+      if (dayDiff >= 2 && !isPaid) {
+        handleAutomaticCancelCustomRequests({orderID: requestID, orderType: 'Cancel', cancelReason: 'User didn\'t pay in time'})
+      } 
+
+    }catch(error) {
+      console.log(error);
+    }
+  }
+  
+  const handleAutomaticCancelCustomRequests = (requestData) => {
+    try {
+      axiosClient.post('/custom/updateRequest', requestData)
+    } catch (error) {
       console.log(error);
     }
   }
@@ -223,7 +278,7 @@ const SuperAdmin = (props) => {
       console.log(error);
       
     }
-  }
+  };
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -385,7 +440,6 @@ const SuperAdmin = (props) => {
         }
       });
   }
-
 
   //notification panel
   const handleNotificationOpen = (event) => {

@@ -426,7 +426,7 @@ const Home = () => {
             <Pagination count={2} page={currentPage} onChange={handlePageChange} />
           </Box>
 
-          {/* PAMPA IMPRESS LANG */}
+          {/* MALUPET NA OFFER NILA */}
           <Box 
             sx={{ 
               backgroundImage: `url(${shopGraffiti})`, 
@@ -750,7 +750,7 @@ const Home = () => {
                       </Typography>
                       <Button 
                         onClick={() => {
-                          navigator(`/shopViewOnly/${category.value}`)                      
+                          navigator(`/shop/${category.value}`)                      
                         }}
                         variant="outlined" 
                         sx={{

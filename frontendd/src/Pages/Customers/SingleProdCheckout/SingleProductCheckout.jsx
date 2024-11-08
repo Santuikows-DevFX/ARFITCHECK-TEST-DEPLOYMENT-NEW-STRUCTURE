@@ -315,8 +315,12 @@ function SingleProductCheckout() {
   };
 
   const handleAgree = () => {
-    setEulaChecked(true);
     setTermsnAndConditionDialog(false);
+   
+    if(paymentMethod != '') {
+      setEulaChecked(true);
+      setEnablePlaceOrder(true);
+    }
   };
 
    //served as a validation if the are some errors in the new shipping fields. I did this because the left section is not connected to the right section where the check box is located.
@@ -677,6 +681,7 @@ function SingleProductCheckout() {
                               value="cash"
                               name="radio-buttons"
                               inputProps={{ 'aria-label': 'cash' }}
+                              disabled = {submitLoading}
                             />
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -689,6 +694,7 @@ function SingleProductCheckout() {
                           value="gcash"
                           name="radio-buttons"
                           inputProps={{ 'aria-label': 'gcash' }}
+                          disabled = {submitLoading}
                       /></Box>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -701,6 +707,7 @@ function SingleProductCheckout() {
                           value="paymaya"
                           name="radio-buttons"
                           inputProps={{ 'aria-label': 'paymaya' }}
+                          disabled = {submitLoading}
                       /></Box>
                   </Box>
                   </RadioGroup>
@@ -758,7 +765,7 @@ function SingleProductCheckout() {
                   sx={{ 
                     transform: 'scale(0.8)' 
                   }} 
-                  disabled = {isErrorWithTheNewShipping}
+                  disabled = {isErrorWithTheNewShipping || submitLoading}
                 />}
                 label={
                   <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: {xs: 12, md: 16} }}>

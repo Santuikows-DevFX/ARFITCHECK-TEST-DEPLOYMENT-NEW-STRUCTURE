@@ -394,8 +394,12 @@ function CustomProductRequest() {
   }
 
   const handleAgree = () => {
-    setEulaChecked(true);
     setTermsnAndConditionDialog(false);
+   
+    if(paymentMethod != '') {
+      setEulaChecked(true);
+      setEnablePlaceOrder(true);
+    }
   };
 
   //tersm and condition dialog
@@ -828,6 +832,7 @@ function CustomProductRequest() {
                                 value="gcash"
                                 name="radio-buttons"
                                 inputProps={{ 'aria-label': 'gcash' }}
+                                disabled = {submitLoading}
                             /></Box>
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -837,15 +842,21 @@ function CustomProductRequest() {
                                 value="paymaya"
                                 name="radio-buttons"
                                 inputProps={{ 'aria-label': 'paymaya' }}
+                                disabled = {submitLoading}
                             /></Box>
                         </Box>
                         </RadioGroup>
                       </AccordionDetails>
                     </Accordion>
                     <FormControlLabel
-                      control={<Checkbox checked={isEulaChecked} onChange={handleEulaChecked} sx={{ 
-                        transform: 'scale(0.8)' 
-                      }} />}
+                      control=
+                      {
+                        <Checkbox checked={isEulaChecked} onChange={handleEulaChecked} 
+                        sx={{ 
+                          transform: 'scale(0.8)' 
+                        }} 
+                        disabled = {isErrorWithTheNewShipping || submitLoading}
+                      />}
                       label={
                         <Typography sx={{ fontFamily: 'Kanit', display: 'flex', alignItems: 'center', fontSize: {xs: 12, md: 16} }}>
                           I've Read and Agree with the&nbsp; 

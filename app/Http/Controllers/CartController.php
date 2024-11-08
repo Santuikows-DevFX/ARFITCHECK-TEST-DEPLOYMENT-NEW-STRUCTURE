@@ -29,7 +29,7 @@ class CartController extends Controller
 
             $cartItems = [];
             //select all the cart items based on the id shit
-            if($this->database->getReference('cart')->getSnapshot()->hasChildren() && $this->database->getReference('cart')->getSnapshot()->exists()) {
+            if ($this->database->getReference('cart')->getSnapshot()->hasChildren() && $this->database->getReference('cart')->getSnapshot()->exists()) {
                 foreach ($this->database->getReference('cart')->getSnapshot()->getValue() as $cartProductInfo) {
 
                     if ($cartProductInfo['uid'] == $request->uid) {
@@ -37,11 +37,10 @@ class CartController extends Controller
                     }
                 }
                 return response()->json($cartItems);
-            }else {
+            } else {
 
                 $message = "No Cart Items";
                 return response(compact('message'));
-
             }
         } catch (\Exception $e) {
 
@@ -53,73 +52,79 @@ class CartController extends Controller
 
     public function insertCartItems(Request $request)
     {
-        if ($this->database->getReference('cart')->getSnapshot()->exists() && $this->database->getReference('cart')->getSnapshot()->hasChildren()) {
+        $productTotalPrice = $request->productQuantity * $request->productPrice;
 
-            foreach ($this->database->getReference('cart')->getSnapshot()->getValue() as $cartInfo) {
-                if ($request->productName == $cartInfo['productName'] && $request->uid == $cartInfo['uid']) {
-                    $message = "Product is already in the cart ";
-                    return response(compact('message'));
-                } else {
+        $cartProductData = [
+            'productImage' => $request->productImage,
+            'productName' => $request->productName,
+            'productCategory' => $request->productCategory,
+            'productSize' => $request->productSize,
+            'productPrice' => $request->productPrice,
+            'productQuantity' => $request->productQuantity,
+            'productTotalPrice' => $productTotalPrice,
+            'maximumQuantity' => $request->maximumQuantity,
+            'uid' => $request->uid
+        ];
 
-                    $productTotalPrice = $request->productQuantity * $request->productPrice;
-                    $cartProductData = [
-                        'productImage' => $request->productImage,
-                        'productName' => $request->productName,
-                        'productCategory' => $request->productCategory,
-                        'productSize' => $request->productSize,
-                        'productPrice' => $request->productPrice,
-                        'productQuantity' => $request->productQuantity,
-                        'productTotalPrice' => $productTotalPrice,
-                        'maximumQuantity' => $request->maximumQuantity,
-                        'uid' => $request->uid
-                    ];
+        $cartRef = $this->database->getReference('cart');
 
-                    $this->database->getReference('cart')->push($cartProductData);
+        if ($cartRef->getSnapshot()->exists() && $cartRef->getSnapshot()->hasChildren()) {
+            foreach ($cartRef->getSnapshot()->getValue() as $key => $cartInfo) {
+                if (
+                    $request->productName == $cartInfo['productName'] &&
+                    $request->productSize == $cartInfo['productSize'] &&
+                    $request->uid == $cartInfo['uid']
+                ) {
+                    $newQuantity = $cartInfo['productQuantity'] + $request->productQuantity;
+
+                    if ($newQuantity > $cartInfo['maximumQuantity']) {
+                        $message = "You cannot add more of this product. Maximum quantity reached!";
+                        return response(compact('message'));
+                    }
+
+                    $newTotalPrice = $newQuantity * $request->productPrice;
+
+                    $cartRef->getChild($key)->update([
+                        'productQuantity' => $newQuantity,
+                        'productTotalPrice' => $newTotalPrice
+                    ]);
+
                     $message = "Added to Cart!";
                     return response(compact('message'));
-                    break;
                 }
             }
-        } else {
-            $productTotalPrice = $request->productQuantity * $request->productPrice;
-            $cartProductData = [
-                'productImage' => $request->productImage,
-                'productName' => $request->productName,
-                'productCategory' => $request->productCategory,
-                'productSize' => $request->productSize,
-                'productPrice' => $request->productPrice,
-                'productQuantity' => $request->productQuantity,
-                'productTotalPrice' => $productTotalPrice,
-                'maximumQuantity' => $request->maximumQuantity,
-                'uid' => $request->uid
-            ];
-
-            $this->database->getReference('cart')->push($cartProductData);
-            $message = "Added to Cart!";
-
-            return response(compact('message'));
         }
+
+        $cartRef->push($cartProductData);
+        $message = "Added to Cart!";
+        return response(compact('message'));
     }
 
     public function removeFromCart(Request $request)
     {
         foreach ($this->database->getReference('cart')->getSnapshot()->getValue() as $cartID => $cartInfo) {
-            if ($request->productName == $cartInfo['productName'] && $request->uid == $cartInfo['uid']) {
-
-                //remove the fcking data that is equal to that specific cart ID fck firebase bro
+            if (
+                $request->productName == $cartInfo['productName'] &&
+                (
+                    $cartInfo['productCategory'] === 'Caps' || $request->productSize == $cartInfo['productSize']
+                ) &&
+                $request->uid == $cartInfo['uid']
+            ) {
                 $this->database->getReference('cart/' . $cartID)->remove();
                 $message = "Product Removed from Cart";
-
                 return response(compact('message'));
-                break;
             }
         }
+
+        $message = "Product not found in cart";
+        return response(compact('message'));
     }
 
-    public function updateCart(Request $request) {
-        
-        foreach($this->database->getReference('cart')->getSnapshot()->getValue() as $cartID => $cartInfo) {
-            if($request->uid === $cartInfo['uid'] && $request->productName === $cartInfo['productName']) {
+    public function updateCart(Request $request)
+    {
+
+        foreach ($this->database->getReference('cart')->getSnapshot()->getValue() as $cartID => $cartInfo) {
+            if ($request->uid === $cartInfo['uid'] && $request->productName === $cartInfo['productName']) {
 
                 $this->database->getReference('cart/' . $cartID . '/productQuantity')->set($request->newQuantity);
                 $newProductTotalPrice = $request->newQuantity * $cartInfo['productPrice'];

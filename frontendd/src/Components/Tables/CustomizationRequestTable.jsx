@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  TableContainer, Table, TableHead, TableRow, TableCell, TableBody,
   Typography, Paper, Box, Button, CircularProgress, Grid, Pagination, FormControl, Select, MenuItem,
   TextField,
   Tooltip
@@ -20,8 +19,6 @@ import { off, onValue, ref } from 'firebase/database';
 import { db } from '../../firebase';
 
 const CustomizationRequestTable = () => {
-
-  //TODO: MODIFY THE EULA FOR MAKING SURE THAT THE USER PAID WITHIN 2 DAYS AFTER THE APPROVAL OR IT WILL BE AUTOMATICALLY CANCELLED.
 
   const [orders, setOrders] = useState([]);
 
@@ -60,6 +57,12 @@ const CustomizationRequestTable = () => {
       listener();
     };
   }, []);
+
+  useEffect(() => {
+
+    setCurrentPage(1)
+
+  }, [sortAmount, orderIDSearchQuery, selectStatus])
 
   const fetchOrders = async () => {
     try {
@@ -262,6 +265,7 @@ const CustomizationRequestTable = () => {
       const formattedDate = dayjs(dateValue).format('YYYY-MM-DD');
     
       let filteredOrders = [];
+      setCurrentPage(1)
   
       const sortedDataByDate = await axiosClient.get(`/custom/fetchCustomizationRequestByDate/${formattedDate}`);
       filteredOrders = sortedDataByDate.data;

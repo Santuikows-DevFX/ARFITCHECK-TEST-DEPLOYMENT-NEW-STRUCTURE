@@ -5,6 +5,7 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Navbar from '../Widgets/Navbar.jsx';
 import cpImage from '../../public/assets/cp.png'
+import cpUpdatedImage from '../../public/assets/cp_updated.png'
 import downloadGraffitiBG from '../../public/assets/dlGraffiti.png'
 import { useSnackbar } from 'notistack';
 
@@ -108,10 +109,10 @@ function Tool() {
             style={{ 
               objectFit: "contain", 
               width: '100%', 
-              maxHeight: 600
+              maxHeight: 700
             }}
-            src={cpImage}
-            alt="An external image"
+            src={cpUpdatedImage}
+            alt="Download App Image"
           />
         </Grid>
         <Grid 
@@ -154,7 +155,7 @@ function Tool() {
                     "linear-gradient(to right, #414141, #000000)",
                   opacity: downloadLoading? 0.7 : 1,
                 }}
-                onClick={() => handleTemporaryDownload()}
+                onClick={() => handleDownload()}
             
               >
                 <Typography

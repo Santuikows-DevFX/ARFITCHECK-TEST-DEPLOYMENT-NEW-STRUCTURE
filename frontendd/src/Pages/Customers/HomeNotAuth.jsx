@@ -31,6 +31,7 @@ import bmicComingSoonPrdImageSample from '../../../public/assets/productComingSo
 import bmicCoverImage from '../../../public/assets/bmicHomePageLogoImage.png'
 import Aos from 'aos';
 import { useSnackbar } from 'notistack';
+import ProductDescriptionViewOnly from './ProductDescriptionViewOnly.jsx';
 
 const comingSoonPrd = [
   { name: "asasa", image: bmicHighLightImage },
@@ -70,7 +71,7 @@ const HomeNotAuth = () => {
         variant: 'warning',
         anchorOrigin: {
           vertical: 'top',
-          horizontal: 'right'
+          horizontal: 'left'
         },
         autoHideDuration: 3200,
         style: {
@@ -690,7 +691,7 @@ const HomeNotAuth = () => {
           </Box>
           <Dialog open={modalOpen} onClose={handleCloseModal} fullWidth maxWidth="xl">
               {selectedProduct && (
-                  <ProductDescription product={selectedProduct} onClose={handleCloseModal} />
+                  <ProductDescriptionViewOnly product={selectedProduct} onClose={handleCloseModal} />
               )}
           </Dialog>
           <Footer />

@@ -13,7 +13,6 @@ import {
   Tooltip
 } from '@mui/material';
 import 'react-toastify/dist/ReactToastify.css';
-import DownloadIcon from '@mui/icons-material/Download';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -24,7 +23,7 @@ import { useCookies } from 'react-cookie';
 const TransactionHistoryTable = ({ mergedProductOrders }) => {
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [completedOrders, setCompletedOrders] = useState([]);
+  const [completedOrders, setCompletedOrders] = useState(mergedProductOrders || []);
 
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectStatus, setSelectStatus] = useState('All');
@@ -32,7 +31,11 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
   const [sortStatus, setSortStatus] = useState('');
   const [orderIDSearchQuery, setOrderIDSearchQuery] = useState('');
 
-  const [cookie] = useCookies(['?id'])
+  useEffect(() => {
+
+    setCurrentPage(1)
+
+  }, [sortAmount, orderIDSearchQuery, selectStatus])
 
   const itemsPerPage = 3;
 
@@ -50,19 +53,14 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
   const handleChangeDate = async (dateValue) => {
     try {
       const formattedDate = dayjs(dateValue).format('YYYY-MM-DD');
-    
-      let filteredOrders = [];
-  
+      setCurrentPage(1);
+
       const sortedDataByDate = await axiosClient.get(`/order/fetchTransactionHistoryDataByDate/${formattedDate}`);
-      filteredOrders = sortedDataByDate.data;
-  
-      if (filteredOrders) {
-        if (sortedDataByDate.data.message) {
-          setCompletedOrders([]);
-        } else {
-          const mergedOrders = mergeOrders(filteredOrders);
-          setCompletedOrders(mergedOrders);
-        }
+      if (sortedDataByDate.data.message === "No Orders Found!") {
+        setCompletedOrders([]);
+      } else {
+        const mergedOrders = mergeOrders(sortedDataByDate.data);
+        setCompletedOrders(mergedOrders);
       }
     } catch (error) {
       console.log("Failed to fetch orders by date:", error);
@@ -78,46 +76,24 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
   
       if (orderMap.has(key)) {
         const existingOrder = orderMap.get(key);
-  
         existingOrder.orderInfo.productName += `, ${order.orderInfo.productName}`;
-  
-        if (typeof existingOrder.orderInfo.productQuantity === 'string') {
-          existingOrder.orderInfo.productQuantity += `, ${order.orderInfo.productQuantity}`;
-        } else {
-          existingOrder.orderInfo.productQuantity = `${existingOrder.orderInfo.productQuantity}, ${order.orderInfo.productQuantity}`;
-        }
-  
+        existingOrder.orderInfo.productQuantity = `${existingOrder.orderInfo.productQuantity}, ${order.orderInfo.productQuantity}`;
         existingOrder.orderInfo.productSize += `, ${order.orderInfo.productSize}`;
-  
-        // Combine size quantities
         existingOrder.orderInfo.smallQnt += order.orderInfo.smallQnt;
         existingOrder.orderInfo.mediumQnt += order.orderInfo.mediumQnt;
         existingOrder.orderInfo.largeQnt += order.orderInfo.largeQnt;
         existingOrder.orderInfo.extraLargeQnt += order.orderInfo.extraLargeQnt;
         existingOrder.orderInfo.doubleXLQnt += order.orderInfo.doubleXLQnt;
         existingOrder.orderInfo.tripleXLQnt += order.orderInfo.tripleXLQnt;
-  
       } else {
-        if (typeof order.orderInfo.productQuantity !== 'string') {
-          order.orderInfo.productQuantity = `${order.orderInfo.productQuantity}`;
-        }
-  
-        orderMap.set(key, order);
+        orderMap.set(key, { ...order });
       }
     });
   
-    orderMap.forEach((order) => {
-      mergedOrders.push(order);
-    });
-  
-    return mergedOrders;
+    return Array.from(orderMap.values());
   };
 
-  const paginate = (event, pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const sortedOrders = [...mergedProductOrders].sort((a, b) => {
+  const sortedOrders = [...completedOrders].sort((a, b) => {
     if (sortAmount) {
       return sortAmount === 'asc'
         ? a.orderInfo.amountToPay - b.orderInfo.amountToPay
@@ -136,31 +112,31 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
     return dateB - dateA;
   });
 
-  
   const filteredOrders = sortedOrders.filter((order) => {
     const orderIDMatches = order.orderID.toLowerCase().includes(orderIDSearchQuery.toLowerCase());
   
-    if (!orderIDMatches) {
-      return false;
-    }
+    if (!orderIDMatches) return false;
   
-    if (selectedCategory === 'All' && selectStatus === 'All') {
-      return true;
-    } else if (selectedCategory !== 'All' && selectStatus === 'All') {
+    if (selectedCategory === 'All' && selectStatus === 'All') return true;
+    if (selectedCategory !== 'All' && selectStatus === 'All') {
       return selectedCategory === 'Cash'
         ? order.orderInfo.paymentMethod === 'cash'
         : order.orderInfo.paymentMethod === 'ewallet';
-    } else if (selectedCategory === 'All' && selectStatus !== 'All') {
-      return order.orderInfo.orderStatus === selectStatus;
-    } else {
-      return (
-        (selectedCategory === 'Cash'
-          ? order.orderInfo.paymentMethod === 'cash'
-          : order.orderInfo.paymentMethod === 'ewallet') &&
-        order.orderInfo.orderStatus === selectStatus
-      );
     }
+    if (selectedCategory === 'All' && selectStatus !== 'All') {
+      return order.orderInfo.orderStatus === selectStatus;
+    }
+    return (
+      (selectedCategory === 'Cash'
+        ? order.orderInfo.paymentMethod === 'cash'
+        : order.orderInfo.paymentMethod === 'ewallet') &&
+      order.orderInfo.orderStatus === selectStatus
+    );
   });
+
+  const paginate = (event, pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;

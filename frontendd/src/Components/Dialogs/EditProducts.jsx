@@ -294,7 +294,7 @@ const EditProducts = ({ open, onClose, product, productID, fetchProducts, zIndex
         </DialogTitle> 
         <DialogContent >
         <Formik
-        initialValues={{ productName: product?.productName || '', price:product?.productPrice || '',description : product?.productDescription || '', criticalLevelQuantity: product?.productCriticalLevel || '', category:  product?.productCategory || '', smallQuantity: product?.smallQuantity || '0', mediumQuantity: product?.mediumQuantity || '0', largeQuantity: product?.largeQuantity || '0', extraLargeQuantity: product?.extraLargeQuantity || '0',  doubleXLQuantity: product?.doubleXLQuantity || '0', tripleXLQuantity: product?.tripleXLQuantity || '0', productVisible: product?.isVisible, totalQuantity: '0' }}
+        initialValues={{ productName: product?.productName || '', price:product?.productPrice || '',description : product?.productDescription || '', criticalLevelQuantity: product?.productCriticalLevel || '', category:  product?.productCategory || '', smallQuantity: product?.smallQuantity || '0', mediumQuantity: product?.mediumQuantity || '0', largeQuantity: product?.largeQuantity || '0', extraLargeQuantity: product?.extraLargeQuantity || '0',  doubleXLQuantity: product?.doubleXLQuantity || '0', tripleXLQuantity: product?.tripleXLQuantity || '0', productVisible: product?.isVisible, totalQuantity: product?.productQuantity || '0' }}
         validationSchema={product?.productCategory === 'Caps' ? ProductValidationSchemaIfCaps : ProductValidationSchema}
         onSubmit={(values, { setSubmitting }) => {
           handleEditProduct(values)
