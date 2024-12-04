@@ -20,7 +20,7 @@ import dayjs from 'dayjs';
 import axiosClient from '../../axios-client';
 import { useCookies } from 'react-cookie';
 
-const TransactionHistoryTable = ({ mergedProductOrders }) => {
+const TransactionHistoryTable = ({ mergedProductOrders, getDateFromTransaction }) => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [completedOrders, setCompletedOrders] = useState(mergedProductOrders || []);
@@ -55,12 +55,16 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
       const formattedDate = dayjs(dateValue).format('YYYY-MM-DD');
       setCurrentPage(1);
 
+      const mergedOrders = null;
+
       const sortedDataByDate = await axiosClient.get(`/order/fetchTransactionHistoryDataByDate/${formattedDate}`);
       if (sortedDataByDate.data.message === "No Orders Found!") {
         setCompletedOrders([]);
+        getDateFromTransaction([]);
       } else {
-        const mergedOrders = mergeOrders(sortedDataByDate.data);
+        mergedOrders = mergeOrders(sortedDataByDate.data);
         setCompletedOrders(mergedOrders);
+         getDateFromTransaction(mergedOrders);
       }
     } catch (error) {
       console.log("Failed to fetch orders by date:", error);
@@ -499,8 +503,8 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
                                 arrow
                               >
                                 <Typography
-                                  sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: '#1F618D', cursor: 'pointer', textDecoration: 'underline' }}
-                                  onClick={() => openImageInNewTab(order.orderInfo?.receiptImage)}
+                                  sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black', cursor: 'pointer' }}
+                                  // onClick={() => openImageInNewTab(order.orderInfo?.receiptImage)}
                                 >
                                   <b>E-Wallet</b>
                                 </Typography>
@@ -525,33 +529,42 @@ const TransactionHistoryTable = ({ mergedProductOrders }) => {
                     <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', color: order.orderInfo.orderStatus === 'Order Completed' ? '#27ae60' : '#e74c3c' }}>
                       <b> {order.orderInfo?.orderStatus === 'Order Completed' ? 'Order Delivered' : order.orderInfo?.orderStatus}</b>
                     </Typography>
-                      {order.orderInfo.cancelReason === "None" && order.orderInfo.userCancelReason === "None" ? (
+                      {order.orderInfo?.cancelReason === "None" && order.orderInfo?.userCancelReason === "None" ? (
                           <>
                             <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
-                              Tracking #: {order.orderInfo.trackingNumber}
+                              Tracking #: {order.orderInfo?.trackingNumber}
                             </Typography>
                             <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
-                              Updated: <b>{order.orderInfo.updateTimeStamp}</b>
+                              Updated: <b>{order.orderInfo?.updateTimeStamp}</b>
+                            </Typography>
+                            <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
+                              Payment ID: <b>{order.orderInfo?.paymongoPaymentID || '-'}</b>
                             </Typography>
                           </>
                       ) : (
-                          order.orderInfo.userCancelReason === "None" ? (
+                          order.orderInfo?.userCancelReason === "None" ? (
                             <>
                               <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
-                                Reason: {order.orderInfo?.cancelReason  === 'User didn\'t pay in time' ? 'Auto Cancelled' : 'You Cancelled'} (<b>{order.orderInfo.cancelReason}</b>)
+                                Reason: {order.orderInfo?.cancelReason  === 'User didn\'t pay in time' ? 'Auto Cancelled' : 'You Cancelled'} (<b>{order.orderInfo?.cancelReason}</b>)
                               </Typography>
                               <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
-                                Updated: <b>{order.orderInfo.updateTimeStamp}</b>
+                                Updated: <b>{order.orderInfo?.updateTimeStamp}</b>
                               </Typography>
+                              <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
+                              Payment ID: <b>{order.orderInfo?.paymongoPaymentID || '-'}</b>
+                            </Typography>
                             </>
                           ) : (
                             <>
                               <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
-                              Reason: User Cancelled (<b>{order.orderInfo.userCancelReason}</b>)
+                              Reason: User Cancelled (<b>{order.orderInfo?.userCancelReason}</b>)
                               </Typography>
                               <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
-                                Updated: <b>{order.orderInfo.updateTimeStamp}</b>
+                                Updated: <b>{order.orderInfo?.updateTimeStamp}</b>
                               </Typography>
+                              <Typography sx={{ fontFamily: 'Kanit', fontSize: 12, fontWeight: 400, color: 'black'}}>
+                              Payment ID: <b>{order.orderInfo?.paymongoPaymentID || '-'}</b>
+                            </Typography>
                             </>
                           )
                       )}

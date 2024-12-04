@@ -54,6 +54,8 @@ Route::prefix('auth')->controller(DataController::class)->group(function () {
     Route::post('/addAdmin', 'addAdmin');
     Route::post('/deleteAdmin/{adminID}', 'deleteAdmin');
 
+    Route::post('/verifyAdmin', 'verifyAdmin');
+
 });
 
 //product endpoints
@@ -92,10 +94,18 @@ Route::prefix('order')->controller(OrderController::class)->group(function () {
     Route::get('/fetchTransactionHistoryDataByDate/{dateSortRequest}', 'fetchTransactionHistoryDataByDate');
     Route::get('/fetchOrdersByDate/{dateSortRequest}', 'fetchOrdersByDate');
     Route::get('/fetchCancelRequestOrdersByDate/{dataSortRequest}', 'fetchCancelRequestOrdersByDate');
+    Route::get('/fetchReturnRequestOrders', 'fetchReturnRequestOrders');
+    Route::get('/fetchReturnRequestOrdersByDate/{dateSortRequest}', 'fetchReturnRequestOrdersByDate');
 
-    // ---
+    // admin cancel requests
     Route::post('/rejectCancelRequest', 'rejectCancelOrderRequest');
     Route::post('/cancelOrderRequest', 'cancelOrderRequest');
+
+    // admin cancel requests
+    Route::post('/approveReturnRequest', 'approveReturnRequest');
+    Route::post('/rejectReturnRequest', 'rejectReturnRequest');
+
+    Route::post('/updateOrderAndSetPaymentID', 'updateOrderAndSetPaymentID');
 
     //user side routes
     Route::get('/fetchMyOrder/{uid}', 'fetchMyOrder');
@@ -109,10 +119,15 @@ Route::prefix('order')->controller(OrderController::class)->group(function () {
     Route::post('/updateOrder', 'updateOrderStatus');
     Route::post('/updateProductRatingBasedOnOrder', 'updateProductStarRating');
     Route::post('/receiveMyOrder', 'receiveMyOrder');
-    // Route::post('/updateMyOrder/{orderID}', 'updateMyOrder');
+    Route::post('/returnProductRequest', 'returnProductRequest');
 
     //mobile route
     Route::post('/singleProductPlaceOrder', 'singleProductPlaceOrder');
+
+    //payment gateway testing
+    Route::post('payMongoCheckout', 'payMongoCheckout');
+    Route::post('fetchPaymentIDAndUpdateDBWhenPaymentSuccess/{orderID}', 'fetchPaymentIDAndUpdateDBWhenPaymentSuccess');
+    // Route::post('handlePaymentSuccess', 'handlePaymentSuccess');
 });
 
 //cart endpoints

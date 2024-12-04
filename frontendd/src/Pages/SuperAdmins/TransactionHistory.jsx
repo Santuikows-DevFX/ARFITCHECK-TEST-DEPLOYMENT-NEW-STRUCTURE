@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Box, Typography, Divider, Grid, Avatar, IconButton, Button } from '@mui/material';
 import PreLoader from '../../Components/PreLoader';
 import TransactionHistoryTable from '../../Components/Tables/TransactionHistoryTable';
@@ -14,6 +14,7 @@ function TransactionHistory() {
 
   const [isLoading, setIsLoading] = React.useState(true);
   const [completedOrders, setCompletedOrders] = React.useState([]);
+  const [filteredOrdersByDate, setFilteredOrdersByDate] = useState([])
 
   React.useEffect(() => {
     const timeout = setTimeout(() => {
@@ -127,14 +128,15 @@ function TransactionHistory() {
   }
 
   const handleSaveAsPDF = () => {
+
     try {
       const dateToday = dayjs().format('YYYY-MM-DD');
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
-      
-      const boxWidth = pageWidth - 20; // Total width for the title section
-      const boxHeight = 10; // Height for each row
-      
+  
+      const boxWidth = pageWidth - 20;
+      const boxHeight = 10;
+  
       const titleStartX = 10;
       const titleStartY = 15;
       doc.rect(titleStartX, titleStartY, boxWidth, boxHeight);
@@ -148,7 +150,7 @@ function TransactionHistory() {
       doc.text('TRANSACTION HISTORY', pageWidth / 2, subtitleStartY + boxHeight / 2 + 3, { align: 'center' });
   
       const dateRowStartY = subtitleStartY + boxHeight;
-      const halfBoxWidth = boxWidth / 2; 
+      const halfBoxWidth = boxWidth / 2;
       doc.rect(titleStartX, dateRowStartY, halfBoxWidth, boxHeight);
       doc.setFontSize(12);
       doc.setFont('Kanit', 'normal');
@@ -157,41 +159,59 @@ function TransactionHistory() {
       doc.rect(titleStartX + halfBoxWidth, dateRowStartY, halfBoxWidth, boxHeight);
       doc.text('Additional:', titleStartX + halfBoxWidth + 5, dateRowStartY + boxHeight / 2 + 3);
   
-      const dividerY = dateRowStartY + boxHeight;
+      const productSalesCounts = {}; 
+      const productCancelCounts = {}; 
+  
+      completedOrders.forEach(order => {
+        const products = order.orderInfo.productName.split(', ');
+        const quantities = order.orderInfo.productQuantity.split(', ').map(qty => parseInt(qty, 10));
+        const orderStatus = order.orderInfo.orderStatus;
+  
+        products.forEach((product, index) => {
+          if (orderStatus === 'Order Completed') {
+            productSalesCounts[product] = (productSalesCounts[product] || 0) + quantities[index];
+          }
+          if (orderStatus === 'Order Cancelled') {
+            productCancelCounts[product] = (productCancelCounts[product] || 0) + quantities[index];
+          }
+        });
+      });
+  
+      const topSoldProduct = Object.entries(productSalesCounts).reduce((a, b) => b[1] > a[1] ? b : a, ['', 0]);
+      const topCanceledProduct = Object.entries(productCancelCounts).reduce((a, b) => b[1] > a[1] ? b : a, ['', 0]);
+  
+      const summaryStartY = dateRowStartY + boxHeight + 5;
+      doc.setFontSize(12);
+      doc.text(`Transaction Report:`, titleStartX, summaryStartY);
+      doc.text(`Top product sold for ${dayjs().format('MMMM')}: ${topSoldProduct[0]}`, titleStartX, summaryStartY + 10);
+      doc.text(`Number sold for this product (per qnt): ${topSoldProduct[1]}`, titleStartX, summaryStartY + 20);
+      doc.text(`Top product cancelled for this month: ${topCanceledProduct[0]}`, titleStartX, summaryStartY + 30);
+      doc.text(`Number of cancelled orders for this product (per qnt): ${topCanceledProduct[1]}`, titleStartX, summaryStartY + 40);
+  
+      const dividerY = summaryStartY + 45;
       doc.line(10, dividerY, pageWidth - 10, dividerY);
   
       const headers = [
         ['Order ID', 'Order Date', 'Product', 'Quantity', 'Size', 'Amount', 'Payment Method', 'Shipping Address', 'Status']
       ];
+      const ordersToDownload = filteredOrdersByDate && filteredOrdersByDate.length > 0 ? filteredOrdersByDate : completedOrders;
+      const data = ordersToDownload.map(order => [
+        `${order.orderID}`,
+        order.orderInfo.orderDate,
+        order.orderInfo.productName.split(', ').join(' | '),
+        order.orderInfo.productQuantity.split(', ').join(' | '),
+        order.orderInfo.productSize.split(', ').join(' | '),
+        order.orderInfo.amountToPay.toFixed(2),
+        order.orderInfo.paymentMethod === 'cash' ? 'Cash' : 'E-Wallet',
+        `"${order.orderInfo.fullShippingAddress}"`,
+        order.orderInfo.orderStatus
+      ]);
   
-      const data = completedOrders.map(order => {
-        const orderID = `${order.orderID}`;
-        const orderDate = order.orderInfo.orderDate;
-        const orderedProducts = order.orderInfo.productName.split(', ').join(' | ');
-        const orderedQuantity = order.orderInfo.productQuantity.split(', ').join(' | ');
-        const orderedSize = order.orderInfo.productSize.split(', ').join(' | ');
-        const orderedAmount = order.orderInfo.amountToPay.toFixed(2);
-        const paymentMethod = order.orderInfo.paymentMethod === 'cash' ? 'Cash' : 'E-Wallet';
-        const fullShippingAddress = `"${order.orderInfo.fullShippingAddress}"`;
-        const orderStatus = order.orderInfo.orderStatus;
-  
-        return [
-          orderID,
-          orderDate,
-          orderedProducts,
-          orderedQuantity,
-          orderedSize,
-          orderedAmount,
-          paymentMethod,
-          fullShippingAddress,
-          orderStatus
-        ];
-      });
-  
+      // Render table
       doc.autoTable({
         head: headers,
         body: data,
-        startY: dividerY + 5, 
+        startY: dividerY + 5,
         theme: 'grid',
         styles: {
           font: 'Kanit',
@@ -199,18 +219,22 @@ function TransactionHistory() {
           halign: 'center',
           valign: 'middle'
         },
-        headStyles: { fillColor: [41, 128, 185] }, 
+        headStyles: { fillColor: [41, 128, 185] },
         alternateRowStyles: { fillColor: [220, 234, 246] }
       });
   
-      const tableEndY = doc.lastAutoTable.finalY; 
-      const tableDividerY = tableEndY + 10; 
+      const tableEndY = doc.lastAutoTable.finalY;
+      const tableDividerY = tableEndY + 10;
       doc.line(10, tableDividerY, pageWidth - 10, tableDividerY);
   
       doc.save(`${dateToday}_transaction_history.pdf`);
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const getDateFromTransaction = (date) => {
+    setFilteredOrdersByDate(date);
   };
   
   return (
@@ -279,7 +303,7 @@ function TransactionHistory() {
               <Divider sx={{ borderTopWidth: 2, mb : 3 }}/>
             </Grid>
           </Grid>
-       <TransactionHistoryTable mergedProductOrders={completedOrders}/>
+       <TransactionHistoryTable mergedProductOrders={completedOrders} getDateFromTransaction={getDateFromTransaction}/>
      </Box>
       )}
     </div>

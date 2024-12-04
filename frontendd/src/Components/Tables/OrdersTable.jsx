@@ -72,6 +72,11 @@ const OrdersTable = () => {
 
   }, [sortAmount, orderIDSearchQuery, selectStatus])
 
+  const handleSortAmountChange = (e) => {
+    setSortAmount(e.target.value);
+    setCurrentPage(1); // Move this here
+  };
+
   const checkIfOrderDelivered = (orderDateDelivery, orderID, isNotified) => {
     try {
 
@@ -230,13 +235,11 @@ const OrdersTable = () => {
 
   const sortedOrders = [...orders].sort((a, b) => {
     if (sortAmount) {
-      setCurrentPage(1)
       return sortAmount === 'asc'
         ? a.orderInfo.amountToPay - b.orderInfo.amountToPay
         : b.orderInfo.amountToPay - a.orderInfo.amountToPay;
     }
     if (sortStatus) {
-      setCurrentPage(1)
       const statuses = ['Waiting for Confirmation', 'Order Confirmed', 'Preparing Order to Ship', 'Parcel out for delivery', 'Cancellation Requested'];
       return sortStatus === 'asc'
         ? statuses.indexOf(a.orderInfo.orderStatus) - statuses.indexOf(b.orderInfo.orderStatus)

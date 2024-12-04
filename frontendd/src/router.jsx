@@ -153,9 +153,14 @@ const router = createBrowserRouter([
             {
                 path: '/customizedSingleProduct/:productID/:customizedProductImageURL/:smallQnt/:mediumQnt/:largeQnt/:extraLargeQnt/:doubleXLQnt/:tripleXLQnt/:customPrice',
                 element: <CustomProductRequest/>
-            }
+            },
 
-
+            //payment validation pero hindi pa to yung pinaka efficient way
+            {
+                path: '/home/:orderID',
+                element: <Home/>
+            },
+            
         ]
     },
 

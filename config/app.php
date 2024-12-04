@@ -169,6 +169,7 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         \Kreait\Laravel\Firebase\ServiceProvider::class,
+        Ixudra\Curl\CurlServiceProvider::class,
 
     ])->toArray(),
 
@@ -185,6 +186,7 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
+       'Curl' => Ixudra\Curl\Facades\Curl::class,
     ])->toArray(),
 
 ];

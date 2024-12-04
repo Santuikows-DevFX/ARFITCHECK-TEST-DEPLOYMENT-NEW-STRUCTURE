@@ -441,12 +441,12 @@ function AnalyticsAndReports() {
           <Grid container spacing={3}>
               <Grid item xs={12} sm={6} md={4} lg={2.4}>
             <Tooltip 
-             title={<Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12, md: 14} }}>Indicates the total number of cancelled orders. It also includes cancelled customization requests.</Typography>} 
+             title={<Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12, md: 14} }}>Indicates the total number of cancelled and returned orders. It also includes cancelled customization requests.</Typography>} 
              placement="top" arrow>
               <Box sx={{ background: 'linear-gradient(to right, #A00000, #C62128)', textAlign: 'center', padding: '20px', borderRadius: 5, boxShadow: 5, position: 'relative' }}>
                 <HighlightOffIcon sx={{ fontSize: { xs: 30, md: 40 }, color: 'white' }} />
                 <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 16, md: 20 }, fontWeight: 'medium', color: 'white' }}>
-                  Cancelled Orders
+                  Cancelled / Returned
                 </Typography>
                 <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 30, md: 50 }, fontWeight: 'bold', color: 'white' }}>
                   {reportsLoading ? <CircularProgress sx={{ color: 'white' }} /> : reportsData.cancelledOrder || 0}

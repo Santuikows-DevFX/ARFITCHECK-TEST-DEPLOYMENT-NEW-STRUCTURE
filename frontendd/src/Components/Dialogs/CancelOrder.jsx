@@ -12,17 +12,14 @@ import { Close } from '@mui/icons-material';
 import { Select } from '@mui/material';
 import { useState } from 'react';
 import { useSnackbar } from 'notistack';
+import AdminVerify from './AdminVerify';
 
 const CancelOrder = ({ open, onClose, orderID, orderType, zIndex, fetchOrders }) => {
 
-  const reasonValidationSchema = Yup.object().shape({
-    reason: Yup.string().required('Reason is required'),
-    additionalInfo: Yup.string(),
-  });
-
-  const { enqueueSnackbar  } = useSnackbar();
-
+  const [openAdminVerifyDialog, setOpenAdminVerifyDialog] = useState(false);
   const [adminCancelLoading, setAdminCancelLoading] = useState(false)
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelReasonAdditional, setCancelReasonAdditional] = useState('');
 
   useEffect(() => {
     if (adminCancelLoading) {
@@ -31,17 +28,22 @@ const CancelOrder = ({ open, onClose, orderID, orderType, zIndex, fetchOrders })
       document.body.style.overflow = '';
     }
   }, [adminCancelLoading]);
+  
+  const handleCloseAdminVerifyDialog = () => {
+    setOpenAdminVerifyDialog(false)
+    onClose();
+  };
+
+  const reasonValidationSchema = Yup.object().shape({
+    reason: Yup.string().required('Reason is required'),
+    additionalInfo: Yup.string(),
+  });
 
   const updateOrd = (values) => {
-    
-    const orderData = {
-      orderID: orderID,
-      associatedOrderID: orderID,
-      orderType: orderType,
-      cancelReason: values?.reason,
-      cancelReasonAdditional: values?.additionalInfo
-    }
 
+    setCancelReason(values?.reason);
+    setCancelReasonAdditional(values?.additionalInfo);
+    
     Swal.fire({
       title: "Are you sure you want to cancel this order?",
       text: "",
@@ -54,26 +56,9 @@ const CancelOrder = ({ open, onClose, orderID, orderType, zIndex, fetchOrders })
     }).then((result) => {
         if (result.isConfirmed) {
             try {
-              setAdminCancelLoading(true);
-              axiosClient.post('order/updateOrder', orderData)
-              .then(({ data }) => {
-                  enqueueSnackbar(`${data.message}`, { 
-                    variant: 'success',
-                    anchorOrigin: {
-                      vertical: 'top',
-                      horizontal: 'right'
-                    },
-                    autoHideDuration: 2000,
-                    style: {
-                      fontFamily: 'Kanit',
-                      fontSize: '16px'
-                    },
-                  });
 
-                  setAdminCancelLoading(false);
-                  onClose();
-
-              })
+              setOpenAdminVerifyDialog(true)
+             
             } catch (error) {
               console.log(error);
               setAdminCancelLoading(false);
@@ -92,14 +77,7 @@ const CancelOrder = ({ open, onClose, orderID, orderType, zIndex, fetchOrders })
   
   return (
     <div>
-      {adminCancelLoading && (
-        <Backdrop open={true} style={{ zIndex: 1000 + 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100%', backdropFilter: 'blur(2px)' }}>
-            <CircularProgress size={60} sx={{ color: 'white' }} />
-          </div>
-        </Backdrop>
-      )}
-      <Dialog open={open} onClose={onClose} style={{ zIndex: zIndex }}>
+      <Dialog open={open} onClose={onClose} style={{ zIndex: 1000 }}>
         <DialogTitle sx={{ background: 'linear-gradient(to left, #414141, #000000)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
             <Typography sx={{ fontFamily: 'Kanit', fontWeight: 'bold', fontSize: 34 }}>
                 CANCELLING ORDER
@@ -119,7 +97,7 @@ const CancelOrder = ({ open, onClose, orderID, orderType, zIndex, fetchOrders })
             <Form>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <Typography sx={{ fontFamily: 'Inter', fontSize: 18, fontWeight: 400, color: 'black', marginBottom: 2 }}>
+                  <Typography sx={{ fontFamily: 'Kanit', fontSize: 18, fontWeight: 400, color: 'black', marginBottom: 2 }}>
                     Kindly select the reason for canceling this order, <span style={{ color: 'red' }}>*<b>this will reflect on the user's order table.</b></span>
                   </Typography>
                   <Field name="reason">
@@ -176,12 +154,14 @@ const CancelOrder = ({ open, onClose, orderID, orderType, zIndex, fetchOrders })
                   </Typography>
                 </Button>
               </DialogActions>
+
             </Form>
           )}
         </Formik>
         </DialogContent>
       </Dialog>
       <ToastContainer />
+      <AdminVerify open={openAdminVerifyDialog} onClose={handleCloseAdminVerifyDialog} email={'bmicclothes@gmail.com'} orderID={orderID} orderType={orderType} reason={cancelReason} additionalReason={cancelReasonAdditional} />
     </div>
   );
 }

@@ -13,16 +13,13 @@ import {
   IconButton,
   CircularProgress,
 } from "@mui/material";
-import { Warning, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Footer from "../Components/Footer.jsx";
 import PreLoader from "../Components/PreLoader.jsx";
 import { Link, useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { Bounce } from "react-toastify";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import ForgotPassword from "../Components/Dialogs/ForgotPassword.jsx";
@@ -30,9 +27,7 @@ import Navbar from "../Widgets/Navbar.jsx";
 import loginPic from '../../public/assets/log.png'
 import loginGraffitiBG from '../../public/assets/loginGraffiti.png'
 import icon from '../../public/assets/Icon.png'
-import Swal from "sweetalert2";
 import { useSnackbar } from "notistack";
-import Zoom from "../WIdgets/Zoom.jsx";
 
 function Login() {
 

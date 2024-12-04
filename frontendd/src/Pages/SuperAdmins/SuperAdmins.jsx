@@ -48,7 +48,8 @@ import {
   Delete as DeleteIcon,
   Logout as LogoutIcon,
   ExpandMore,
-  ExpandLess
+  ExpandLess,
+  AssignmentReturn
 } from '@mui/icons-material';
 
 //Drawer Icons
@@ -71,6 +72,7 @@ import Footer from '../../Components/Footer';
 import superAdminBG from '../../../public/assets/shopGraffiti1.png'
 import { off, onValue, ref } from 'firebase/database';
 import { db } from '../../firebase';
+import ReturnRequest from './ReturnRequest';
 
 const SuperAdmin = (props) => {
 
@@ -159,6 +161,7 @@ const SuperAdmin = (props) => {
     'Customization Request': <TuneIcon />,
     'Transaction History': <HistoryIcon />,
     'Cancel Requests': <CancelScheduleSendIcon/>,
+    'Return Requests': <AssignmentReturn/>,
     'Size Table': <StraightenIcon />,
     'Inventory': <InventoryIcon />,
   };
@@ -331,7 +334,7 @@ const SuperAdmin = (props) => {
               </ListItem>
               <Collapse in={ordersOpen} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
-                  {['Order Status', 'Cancel Requests'].map((subText) => (
+                  {['Order Status', 'Cancel Requests', 'Return Requests'].map((subText) => (
                     <ListItem key={subText} disablePadding>
                       <ListItemButton sx={{ pl: 4 }} onClick={() => handleListItemClick(subText)}>
                         <ListItemIcon sx={{ color: "white" }}>
@@ -488,6 +491,8 @@ const SuperAdmin = (props) => {
           return <Orders/>;
           case 'Cancel Requests':
             return <CancelOrderRequest/>;
+            case 'Return Requests':
+              return <ReturnRequest/>;
             case 'Customization Request':
               return <CustomRequest/>;
               case 'Transaction History':

@@ -354,7 +354,7 @@ const ProductInventoryTable = ({ products, fetchProducts }) => {
                   </TableCell>
                   <TableCell>
                     <Typography sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black' }}>
-                      <b>{product?.productID}</b>
+                      <b>{product?.productInfo?.standardID}</b>
                     </Typography>
                   </TableCell>
                   <TableCell>

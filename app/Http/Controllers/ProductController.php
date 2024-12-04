@@ -130,10 +130,7 @@ class ProductController extends Controller
         return response()->json($unlistedPrd);
     }
 
-    public function getCriticalLevel() 
-    {
-
-    }
+    public function getCriticalLevel() {}
 
     public function getCategoryCount()
     {
@@ -153,7 +150,7 @@ class ProductController extends Controller
             } else if ($productInfo['productCategory'] === 'Hoodies' && $productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true) {
 
                 $totalHoodies += 1;
-            } else if($productInfo['productCategory'] === 'Caps' && $productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true) {
+            } else if ($productInfo['productCategory'] === 'Caps' && $productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true) {
 
                 $totalCaps += 1;
             }
@@ -186,12 +183,11 @@ class ProductController extends Controller
         //fetch product by its category and return it -josh
         foreach ($this->database->getReference('products')->getSnapshot()->getValue() as $productID => $productInfo) {
 
-            if ($productInfo['productCategory'] == $category && $productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true ) {
+            if ($productInfo['productCategory'] == $category && $productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true) {
                 $productByCateg[] = [
                     'productID' => $productID,
                     'productInfo' => $productInfo
                 ];
-
             } else if ($productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true) {
                 $allProduct[] = [
                     'productID' => $productID,
@@ -228,9 +224,9 @@ class ProductController extends Controller
         return response()->json($productByPriceRange);
     }
 
-    public function getProductByPriceAndCategory(Request $request) 
-    {   
-        try{
+    public function getProductByPriceAndCategory(Request $request)
+    {
+        try {
             $productByCateg = [];
             $allProduct = [];
             $category = strtolower($request->category);
@@ -245,18 +241,17 @@ class ProductController extends Controller
             }
             //fetch product by its category and return it -josh
             foreach ($this->database->getReference('products')->getSnapshot()->getValue() as $productID => $productInfo) {
-    
-                if ($productInfo['productCategory'] === $category && $productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true && $productInfo['productPrice'] >= $request->minimumPrice && $productInfo['productPrice'] <= $request->maximumPrice ) {
+
+                if ($productInfo['productCategory'] === $category && $productInfo['productQuantity'] > 0 && $productInfo['isVisible'] === true && $productInfo['productPrice'] >= $request->minimumPrice && $productInfo['productPrice'] <= $request->maximumPrice) {
                     $productByCateg[] = [
                         'productID' => $productID,
                         'productInfo' => $productInfo
                     ];
                 }
             }
-    
-            return response()->json(count($productByCateg) > 0 ? $productByCateg : $allProduct);
 
-        }catch(\Exception $e) {
+            return response()->json(count($productByCateg) > 0 ? $productByCateg : $allProduct);
+        } catch (\Exception $e) {
             return response($e->getMessage());
         }
     }
@@ -303,6 +298,16 @@ class ProductController extends Controller
 
         $totalQuantity = $request->productCategory === 'Caps' ? $request->totalQuantity : $request->smallQuantity + $request->mediumQuantity + $request->largeQuantity + $request->extraLargeQuantity;
 
+        //product ID standard ID config
+        $categoryHeader = match ($request->productCategory) {
+            'T-Shirt' => 'TSHRT',
+            'Shorts' => 'SHRT',
+            'Hoodies' => 'HOOD',
+            default => 'CAP',
+        };
+
+        $randomIDNumber = rand(1000,9999);
+
         $productData = [
             'productName' => $request->productName,
             'productPrice' => $request->productPrice,
@@ -317,11 +322,11 @@ class ProductController extends Controller
             'productDescription' => $description,
             'isVisible' => true,
             'isCriticalLevel' => $totalQuantity <= $request->productCriticalLevelQuantity,
-            'productImage' => $productImageURLs[0] ?? '', 
-            'productImage1' => $productImageURLs[1] ?? '', 
-            'productImage2' => $productImageURLs[2] ?? '', 
+            'productImage' => $productImageURLs[0] ?? '',
+            'productImage1' => $productImageURLs[1] ?? '',
+            'productImage2' => $productImageURLs[2] ?? '',
             'productCategory' => $request->productCategory,
-            'dateAdded' => Carbon::now()->toDateString(), 
+            'dateAdded' => Carbon::now()->toDateString(),
             'totalSold' => 0,
             'productRatings' => 0,
             'productFiveStarCount' => 0,
@@ -330,6 +335,7 @@ class ProductController extends Controller
             'productTwoStarCount' => 0,
             'productOneStarCount' => 0,
             'productTotalStarCount' => 0,
+            'standardID' => $categoryHeader. '-' .$randomIDNumber
         ];
 
         //insert
@@ -364,12 +370,12 @@ class ProductController extends Controller
             if ($request->hasFile("productFile{$i}")) {
                 $uploadedImagesCount++;
                 $productImageFile = $request->file("productFile{$i}");
-                $productImageName = 'products/' . time() . '_' . $productImageFile->getClientOriginalName(); 
+                $productImageName = 'products/' . time() . '_' . $productImageFile->getClientOriginalName();
 
                 $this->storage->getBucket()->upload($productImageFile->getContent(), [
                     'name' => $productImageName
                 ]);
-               
+
                 $fireBaseStoragePath = $productImageName;
                 $productImageURL = $this->storage->getBucket()->object($fireBaseStoragePath)->signedUrl(new \DateTime('3000-01-01T00:00:00Z'));
                 $productImageURLs[] = $productImageURL;
@@ -379,23 +385,23 @@ class ProductController extends Controller
         foreach ($this->database->getReference('products')->getSnapshot()->getValue() as $productID => $productInfo) {
             if ($request->productID == $productID) {
 
-                $newTotalQnt = ($request->smallQuantity ?? 0) 
-                + ($request->mediumQuantity ?? 0) 
-                + ($request->largeQuantity ?? 0) 
-                + ($request->extraLargeQuantity ?? 0) 
-                + ($request->doubleXLQuantity ?? 0) 
-                + ($request->tripleXLQuantity ?? 0) 
-                + ($request->totalQuantity ?? 0);
-   
+                $newTotalQnt = ($request->smallQuantity ?? 0)
+                    + ($request->mediumQuantity ?? 0)
+                    + ($request->largeQuantity ?? 0)
+                    + ($request->extraLargeQuantity ?? 0)
+                    + ($request->doubleXLQuantity ?? 0)
+                    + ($request->tripleXLQuantity ?? 0)
+                    + ($request->totalQuantity ?? 0);
+
                 $request->isUnlisted === 'false' ? $visiblity = true : $visiblity = false;
                 //update the child based on product ID
                 $this->database->getReference('products/' . $request->productID)->update([
 
                     'dateEdited' => Carbon::now()->toDateString(),
                     'dateAdded' => $productInfo['dateAdded'],
-                    'productImage' => $productImageURLs[0] ?? $productInfo['productImage'], 
-                    'productImage1' => $productImageURLs[1] ?? $productInfo['productImage1'], 
-                    'productImage2' => $productImageURLs[2] ?? $productInfo['productImage2'], 
+                    'productImage' => $productImageURLs[0] ?? $productInfo['productImage'],
+                    'productImage1' => $productImageURLs[1] ?? $productInfo['productImage1'],
+                    'productImage2' => $productImageURLs[2] ?? $productInfo['productImage2'],
                     'isVisible' => $visiblity,
                     'isCriticalLevel' => $newTotalQnt <= $productInfo['productCriticalLevel'] ? true : false,
                     'productName' => $request->productName ? $request->productName : $productInfo['productName'],

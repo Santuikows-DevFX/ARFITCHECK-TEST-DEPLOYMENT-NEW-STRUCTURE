@@ -747,6 +747,23 @@ class DataController extends Controller
         }
     }
 
+    public function verifyAdmin(Request $request)
+    {
+        try {
+
+            if ($this->auth->signInWithEmailAndPassword($request->email, $request->password)) {
+                $message = "Verified";
+            }
+            return response(compact('message'));
+        } catch (InvalidPassword $e) {
+            $message = $e->getMessage();
+            return response(compact('message'));
+        } catch (\Exception $e) {
+            $message = $e->getMessage();
+            return response(compact('message'));
+        }
+    }
+
     //email shits
     public function sendEmailForTheAdminBeingAdded($email, $recipient, $defaultPass)
     {

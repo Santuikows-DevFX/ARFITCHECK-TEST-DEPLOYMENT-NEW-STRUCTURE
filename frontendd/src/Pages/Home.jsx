@@ -8,7 +8,7 @@ import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import Footer from '../Components/Footer';
 import PreLoader from '../Components/PreLoader';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Navbar from '../Widgets/Navbar.jsx';
 import ProductDescription from './Customers/ProductDescription.jsx';
 import shopGraffiti from '../../public/assets/shopGraffiti1.png'
@@ -47,6 +47,7 @@ Aos.init({
 });
 
 const Home = () => {
+
   const [currentPage, setCurrentPage] = React.useState(1);
   const { user, setUser } = useStateContext();
   const [cookie] = useCookies(['?id', '?role']);
@@ -58,16 +59,16 @@ const Home = () => {
 
   const navigator = useNavigate();
 
+  const { orderID } = useParams();
+
   document.documentElement.style.setProperty('--primary', 'white');
   React.useEffect(() => {
-
     Aos.init();
-
     const timeout = setTimeout(() => {
       setIsLoading(false);
     }, 2000);
     return () => clearTimeout(timeout);
-  }, []);
+  }, [orderID]);
 
   useEffect(() => {
     const dbRef = ref(db, 'orders');
@@ -77,6 +78,7 @@ const Home = () => {
         fetchProducts();
         fetchMyOrders();
         fetchCustomizationRequest();
+        updateOrderAndSetPaymongoPaymentID();
       } else {
         console.log("No data available");
       }
@@ -183,6 +185,18 @@ const Home = () => {
       await axiosClient.post('/order/receiveMyOrder', receivedOrderData);
     }catch(error) {
       console.log(error);
+    }
+  }
+  
+  const updateOrderAndSetPaymongoPaymentID = async () => {
+
+    try {
+
+        if(orderID) {
+            await axiosClient.post('/order/updateOrderAndSetPaymentID', { orderID: orderID })
+        }
+    } catch (error) {
+        console.log(error);
     }
   }
 

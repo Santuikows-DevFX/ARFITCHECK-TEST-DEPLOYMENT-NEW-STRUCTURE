@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Kreait\Firebase\Contract\Database;
 use Kreait\Laravel\Firebase\Facades\Firebase;
-use Kreait\Firebase\Storage;
+use Ixudra\Curl\Facades\Curl;
 
 class OrderController extends Controller
 {
@@ -28,7 +28,7 @@ class OrderController extends Controller
     $orders = [];
     if ($this->database->getReference('orders')->getSnapshot()->exists()) {
       foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $orderInfo) {
-        if ($request->uid == $orderInfo['uid'] && $orderInfo['orderStatus'] != 'Order Completed' &&  $orderInfo['orderStatus'] != 'Order Cancelled' && $orderInfo['orderStatus'] != 'Request Rejected' && $orderInfo['orderStatus'] != 'Request Cancelled') {
+        if ($request->uid == $orderInfo['uid'] && $orderInfo['orderStatus'] != 'Order Completed' &&  $orderInfo['orderStatus'] != 'Order Cancelled' && $orderInfo['orderStatus'] != 'Request Rejected' && $orderInfo['orderStatus'] != 'Request Cancelled' && $orderInfo['orderStatus'] != 'Return Requested' && $orderInfo['orderStatus'] != 'Order Returned') {
           $orders[] = [
             'orderID' => $orderID,
             'orderInfo' => $orderInfo
@@ -62,7 +62,7 @@ class OrderController extends Controller
     $ordersByDate = [];
     if ($this->database->getReference('orders')->getSnapshot()->exists()) {
       foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $orderInfo) {
-        if ($request->uid == $orderInfo['uid'] && Carbon::parse($request->dateSortRequest)->toDateString() == $orderInfo['orderDate'] && $orderInfo['orderStatus'] != 'Order Completed' && $orderInfo['orderStatus'] != 'Order Cancelled' && $orderInfo['orderStatus'] != 'Request Cancelled' && $orderInfo['orderStatus'] != 'Request Rejected') {
+        if ($request->uid == $orderInfo['uid'] && Carbon::parse($request->dateSortRequest)->toDateString() == $orderInfo['orderDate'] && $orderInfo['orderStatus'] != 'Order Completed' && $orderInfo['orderStatus'] != 'Order Cancelled' && $orderInfo['orderStatus'] != 'Request Cancelled' && $orderInfo['orderStatus'] != 'Request Rejected' && $orderInfo['orderStatus'] != 'Order Returned') {
           $ordersByDate[] = [
             'orderID' => $orderID,
             'orderInfo' => $orderInfo
@@ -110,7 +110,7 @@ class OrderController extends Controller
       foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $orderInfo) {
         if ($request->uid == $orderInfo['uid']) {
 
-          if ($orderInfo['orderStatus'] == 'Order Completed' || $orderInfo['orderStatus'] == 'Order Cancelled' || $orderInfo['orderStatus'] == 'Request Rejected' || $orderInfo['orderStatus'] === 'Request Cancelled') {
+          if ($orderInfo['orderStatus'] === 'Order Completed' || $orderInfo['orderStatus'] == 'Order Cancelled' || $orderInfo['orderStatus'] == 'Request Rejected' || $orderInfo['orderStatus'] === 'Request Cancelled' || $orderInfo['orderStatus'] === 'Return Requested' || $orderInfo['orderStatus'] === 'Order Returned' ) {
             $completedOrders[] = [
               'orderID' => $orderID,
               'orderInfo' => $orderInfo
@@ -210,7 +210,7 @@ class OrderController extends Controller
           $customizedOrders++;
         }
 
-        if ($orderInfo['orderStatus'] == 'Order Cancelled' || $orderInfo['orderStatus'] == 'Request Cancelled') {
+        if ($orderInfo['orderStatus'] == 'Order Cancelled' || $orderInfo['orderStatus'] == 'Request Cancelled' || $orderInfo['orderStatus'] == 'Returned') {
           $cancelledOrders++;
         }
       }
@@ -233,7 +233,7 @@ class OrderController extends Controller
 
       $userOrders = [];
       foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $orderInfo) {
-        if ($orderInfo['orderStatus'] != 'Order Completed' && $orderInfo['orderStatus'] != 'Order Cancelled' && $orderInfo['orderStatus'] != 'Cancellation Requested' && $orderInfo['orderStatus'] != 'Request Rejected' && $orderInfo['orderStatus'] != 'Request Cancelled') {
+        if ($orderInfo['orderStatus'] != 'Order Completed' && $orderInfo['orderStatus'] != 'Order Cancelled' && $orderInfo['orderStatus'] != 'Cancellation Requested' && $orderInfo['orderStatus'] != 'Request Rejected' && $orderInfo['orderStatus'] != 'Request Cancelled' && $orderInfo['orderStatus'] != 'Return Requested' && $orderInfo['orderStatus'] != 'Order Returned') {
           $userOrders[] = [
             'orderID' => $orderID,
             'orderInfo' => $orderInfo
@@ -266,6 +266,28 @@ class OrderController extends Controller
     }
   }
 
+  public function fetchReturnRequestOrders()
+  {
+    try{
+
+      //look for the orders with the stattsu of Cancellation Requested only
+      $userOrders = [];
+      foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $orderInfo) {
+        if ($orderInfo['orderStatus'] === 'Return Requested') {
+          $userOrders[] = [
+            'orderID' => $orderID,
+            'orderInfo' => $orderInfo
+          ];
+        }
+      }
+
+      return response()->json($userOrders);
+
+    }catch(\Exception $e) {
+      return response($e->getMessage());
+    } 
+  }
+
   public function fetchOutForDeliveryOrders()
   {
     try {
@@ -294,7 +316,7 @@ class OrderController extends Controller
     $orderData = [];
     if ($this->database->getReference('orders')->getSnapshot()->exists()) {
       foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $orderInfo) {
-        if ($orderInfo['orderStatus'] === 'Order Completed' || $orderInfo['orderStatus'] === 'Order Cancelled' || $orderInfo['orderStatus'] === 'Request Rejected' || $orderInfo['orderStatus'] === 'Request Cancelled') {
+        if ($orderInfo['orderStatus'] === 'Order Completed' || $orderInfo['orderStatus'] === 'Order Cancelled' || $orderInfo['orderStatus'] === 'Request Rejected' || $orderInfo['orderStatus'] === 'Request Cancelled' || $orderInfo['orderStatus'] === 'Order Returned') {
           $orderData[] = [
             'orderID' => $orderID,
             'orderInfo' => $orderInfo
@@ -313,7 +335,7 @@ class OrderController extends Controller
       if ($this->database->getReference('orders')->getSnapshot()->exists()) {
         foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $orderInfo) {
           if (Carbon::parse($dataSortRequest)->isSameDay(Carbon::parse($orderInfo['orderDate']))) {
-            if ($orderInfo['orderStatus'] === 'Order Completed' || $orderInfo['orderStatus'] === 'Order Cancelled' || $orderInfo['orderStatus'] === 'Request Rejected' || $orderInfo['orderStatus'] === 'Request Cancelled') {
+            if ($orderInfo['orderStatus'] === 'Order Completed' || $orderInfo['orderStatus'] === 'Order Cancelled' || $orderInfo['orderStatus'] === 'Request Rejected' || $orderInfo['orderStatus'] === 'Request Cancelled' || $orderInfo['orderStatus'] === 'Order Returned') {
               $orderData[] = [
                 'orderID' => $orderID,
                 'orderInfo' => $orderInfo,
@@ -334,13 +356,13 @@ class OrderController extends Controller
 
   public function fetchOrdersByDate($dataSortRequest)
   {
-    try{
+    try {
 
       $orderData = [];
       if ($this->database->getReference('orders')->getSnapshot()->exists()) {
         foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $orderInfo) {
           if (Carbon::parse($dataSortRequest)->isSameDay(Carbon::parse($orderInfo['orderDate']))) {
-            if ($orderInfo['orderStatus'] != 'Order Completed' && $orderInfo['orderStatus'] != 'Order Cancelled' && $orderInfo['orderStatus'] != 'Request Rejected' && $orderInfo['orderStatus'] != 'Request Cancelled') {
+            if ($orderInfo['orderStatus'] != 'Order Completed' && $orderInfo['orderStatus'] != 'Order Cancelled' && $orderInfo['orderStatus'] != 'Request Rejected' && $orderInfo['orderStatus'] != 'Request Cancelled' && $orderInfo['orderStatus'] != 'Order Returned') {
               $orderData[] = [
                 'orderID' => $orderID,
                 'orderInfo' => $orderInfo,
@@ -355,53 +377,75 @@ class OrderController extends Controller
       }
 
       return response()->json($orderData);
-
-    }catch(\Exception $e) {
+    } catch (\Exception $e) {
       return response($e->getMessage());
     }
   }
 
   public function fetchCancelRequestOrdersByDate($dataSortRequest)
   {
-      try {
-          $orderData = [];
-          
-          if ($this->database->getReference('orders')->getSnapshot()->exists()) {
-              foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $orderInfo) {
-                  if (Carbon::parse($dataSortRequest)->isSameDay(Carbon::parse($orderInfo['orderDate']))) {
-                      if ($orderInfo['orderStatus'] === 'Cancellation Requested') {
-                          $orderData[] = [
-                              'orderID' => $orderID,
-                              'orderInfo' => $orderInfo,
-                          ];
-                      }
-                  }
-              }
+    try {
+      $orderData = [];
+
+      if ($this->database->getReference('orders')->getSnapshot()->exists()) {
+        foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $orderInfo) {
+          if (Carbon::parse($dataSortRequest)->isSameDay(Carbon::parse($orderInfo['orderDate']))) {
+            if ($orderInfo['orderStatus'] === 'Cancellation Requested') {
+              $orderData[] = [
+                'orderID' => $orderID,
+                'orderInfo' => $orderInfo,
+              ];
+            }
           }
-  
-          if ($this->database->getReference('customizedRequest')->getSnapshot()->exists()) {
-              foreach ($this->database->getReference('customizedRequest')->getSnapshot()->getValue() as $customID => $customInfo) {
-                  if (Carbon::parse($dataSortRequest)->isSameDay(Carbon::parse($customInfo['orderDate']))) {
-                      if ($customInfo['orderStatus'] === 'Cancellation Requested') {
-                          $orderData[] = [
-                              'orderID' => $customID,
-                              'orderInfo' => $customInfo,
-                          ];
-                      }
-                  }
-              }
-          }
-  
-          $message = "No Cancellation Requests Found!";
-          if (count($orderData) == 0) {
-              return response(compact('message'));
-          }
-  
-          return response()->json($orderData);
-  
-      } catch (\Exception $e) {
-          return response($e->getMessage());
+        }
       }
+
+      if ($this->database->getReference('customizedRequest')->getSnapshot()->exists()) {
+        foreach ($this->database->getReference('customizedRequest')->getSnapshot()->getValue() as $customID => $customInfo) {
+          if (Carbon::parse($dataSortRequest)->isSameDay(Carbon::parse($customInfo['orderDate']))) {
+            if ($customInfo['orderStatus'] === 'Cancellation Requested') {
+              $orderData[] = [
+                'orderID' => $customID,
+                'orderInfo' => $customInfo,
+              ];
+            }
+          }
+        }
+      }
+
+      $message = "No Cancellation Requests Found!";
+      if (count($orderData) == 0) {
+        return response(compact('message'));
+      }
+
+      return response()->json($orderData);
+    } catch (\Exception $e) {
+      return response($e->getMessage());
+    }
+  }
+  
+  public function fetchReturnRequestOrdersByDate($dataSortRequest)
+  {
+    try{
+
+      $orderData = [];
+
+      if ($this->database->getReference('orders')->getSnapshot()->exists()) {
+        foreach ($this->database->getReference('orders')->getSnapshot()->getValue() as $orderID => $orderInfo) {
+          if (Carbon::parse($dataSortRequest)->isSameDay(Carbon::parse($orderInfo['orderDate']))) {
+            if ($orderInfo['orderStatus'] === 'Return Requested') {
+              $orderData[] = [
+                'orderID' => $orderID,
+                'orderInfo' => $orderInfo,
+              ];
+            }
+          }
+        }
+      }
+
+    }catch(\Exception $e) {
+      return response($e->getMessage());
+    }
   }
 
   //----------------------------------------------------
@@ -546,10 +590,166 @@ class OrderController extends Controller
     }
   }
 
+  public function returnProductRequest(Request $request)
+  {
+    try {
+      $orders = $this->database->getReference('orders')->getSnapshot()->getValue();
+
+      // variables for finding the target order
+      $targetOrder = null;
+      $productImageNames = [];
+      $uploadedImagesCount = 0;
+
+      foreach ($orders as $orderID => $orderInfo) {
+        if ($request->orderID == $orderID) {
+
+          $targetOrder = $orderInfo;
+
+          break;
+        }
+      }
+
+      // Loop through orders again to update all orders with the matching timestamp and uid
+      foreach ($orders as $orderID => $orderInfo) {
+        if (
+          ($orderInfo['orderTimeStamp'] == $targetOrder['orderTimeStamp'] && $orderInfo['uid'] == $targetOrder['uid'] && $request->associatedOrderID == $orderInfo['associatedOrderID'])
+        ) {
+
+          for ($i = 1; $i <= 3; $i++) {
+            if ($request->hasFile("productFile{$i}")) {
+                $uploadedImagesCount++;
+                $productImageFile = $request->file("productFile{$i}");
+                $productImageName = 'products/' . time() . '_' . $productImageFile->getClientOriginalName();
+
+                $this->storage->getBucket()->upload($productImageFile->getContent(), [
+                    'name' => $productImageName
+                ]);
+
+                $fireBaseStoragePath = $productImageName;
+                $productImageURL = $this->storage->getBucket()->object($fireBaseStoragePath)->signedUrl(new \DateTime('3000-01-01T00:00:00Z'));
+                $returnImageURls[] = $productImageURL;
+            }
+        }
+
+          //update the data in the db
+          $updateOrderData = [
+            'userReturnReason' => $request->reason,
+            'userReturnReasonAdditional' => $request->additionalInformation ? $request->additionalInformation : 'None',
+            'orderStatus' => 'Return Requested',
+            'isRated' => true,
+            'isReturnRequest' => true,
+            'returnImage' => $returnImageURls[0] ?? '',
+            'returnImage1' => $returnImageURls[1] ?? '',
+            'returnImage2' => $returnImageURls[2] ?? '',
+          ];
+
+          $this->database->getReference('orders/' . $orderID)->update($updateOrderData);
+        }
+      }
+
+      //notify the admin for cancel request
+      $this->notifyAdmin(Carbon::now()->toDateString(), Carbon::now('Asia/Manila')->format('h:i A'), 'Return', $request->orderID);
+
+      $message = 'Return Request Sent! It will be processed within 2-3 business days.';
+      return response(compact('message'));
+
+    } catch (\Exception $e) {
+      return response($e->getMessage());
+    }
+  }
+
+  public function approveReturnRequest(Request $request) 
+  {
+    try {
+      $orders = $this->database->getReference('orders')->getSnapshot()->getValue();
+
+      // variables for finding the target order
+      $targetOrder = null;
+
+      foreach ($orders as $orderID => $orderInfo) {
+        if ($request->orderID == $orderID) {
+
+          $targetOrder = $orderInfo;
+
+          break;
+        }
+      }
+
+      // Loop through orders again to update all orders with the matching timestamp and uid
+      foreach ($orders as $orderID => $orderInfo) {
+        if (
+          ($orderInfo['orderTimeStamp'] == $targetOrder['orderTimeStamp'] && $orderInfo['uid'] == $targetOrder['uid'] && $request->associatedOrderID == $orderInfo['associatedOrderID'])
+        ) {
+
+          //update the data in the db
+          $updateOrderData = [
+            'orderStatus' => 'Order Returned',
+            'isRated' => true
+          ];
+
+          $this->database->getReference('orders/' . $orderID)->update($updateOrderData);
+        }
+      }
+
+      $message = 'Order Updated!';
+      return response(compact('message'));
+    } catch (\Exception $e) {
+      return response($e->getMessage());
+    }
+  }
+
+  public function rejectReturnRequest(Request $request) 
+  {
+    try {
+
+      $orders = $this->database->getReference('orders')->getSnapshot()->getValue();
+
+      // variables for finding the target order
+      $targetOrder = null;
+      $firstName = '';
+      foreach ($orders as $orderID => $orderInfo) {
+        if ($request->orderID == $orderID) {
+
+          $targetOrder = $orderInfo;
+          $firstName = $this->database->getReference('users/' . $orderInfo['uid'] . '/firstName')->getSnapshot()->getValue();
+          break;
+        }
+      }
+
+      //loop through the orders again and look for the order with the same timestamp and uid
+      foreach ($orders as $orderID => $orderInfo) {
+        if (($orderInfo['orderTimeStamp'] == $targetOrder['orderTimeStamp'] && $orderInfo['uid'] == $targetOrder['uid'] && $request->associatedOrderID == $orderInfo['associatedOrderID'])) {
+          //update the order info
+          $updateOrderInfo = [
+            'orderStatus' => 'Order Completed',
+            'statusBeforeCancel' => "None",
+            'userCancelReason' => "None",
+            'userCancelReasonAdditional' => "None",
+            'isRated' => false,
+            'isReturnRequest' => false
+          ];
+
+          //push the update
+          $this->database->getReference('orders/' . $orderID)->update($updateOrderInfo);
+        }
+      }
+
+      // notify the user about the rejection of the cancellation of the request
+      $this->notifyUserForReturnRequestRejection($orderID, $targetOrder['uid']);
+      $this->sendEmailForReturnRequestStatus($orderID, $targetOrder['uid'], $targetOrder['email'], 'rejectCancelReq', $firstName);
+    } catch (\Exception $e) {
+
+      return response($e->getMessage());
+    }
+  }
+
   public function placeOrder(Request $request)
   {
     // variables
+    $message = "";
     $receiptImageURL = "";
+    $sessionUrl = "";
+    $paymentID = "";
     $firstOrderKey = "";
     $countOrder = 0;
     $cartItems = $this->database->getReference('cart')->getSnapshot()->getValue();
@@ -559,17 +759,17 @@ class OrderController extends Controller
     $firstName =  $this->database->getReference('users/' . $request->uid . '/firstName')->getSnapshot()->getValue();
     $lastName = $this->database->getReference('users/' . $request->uid . '/lastName')->getSnapshot()->getValue();
 
-    if ($request->paymentMethod === 'ewallet') {
-      $receiptImageFile = $request->file('receiptFile');
-      $receiptImageName = 'receipts/' . $receiptImageFile->getClientOriginalName();
+    // if ($request->paymentMethod === 'ewallet') {
+    //   $receiptImageFile = $request->file('receiptFile');
+    //   $receiptImageName = 'receipts/' . $receiptImageFile->getClientOriginalName();
 
-      $this->storage->getBucket()->upload($receiptImageFile->getContent(), [
-        'name' => $receiptImageName
-      ]);
+    //   $this->storage->getBucket()->upload($receiptImageFile->getContent(), [
+    //     'name' => $receiptImageName
+    //   ]);
 
-      $fireBaseStoragePath = $receiptImageName;
-      $receiptImageURL = $this->storage->getBucket()->object($fireBaseStoragePath)->signedUrl(new \DateTime('3000-01-01T00:00:00Z'));
-    }
+    //   $fireBaseStoragePath = $receiptImageName;
+    //   $receiptImageURL = $this->storage->getBucket()->object($fireBaseStoragePath)->signedUrl(new \DateTime('3000-01-01T00:00:00Z'));
+    // }
 
     $cartCount = count(array_filter($cartItems, function ($cartInfo) use ($request) {
       return $request->uid == $cartInfo['uid'];
@@ -598,7 +798,14 @@ class OrderController extends Controller
           'trackingNumber' => '',
           'estimatedTimeOfDelivery' => '',
           'orderDateDelivery' => '', //when the order status is updated into out for delivery, this will serve as a reference for enabling receive button
+          'returnImage' => '',
+          'returnImage1' => '',
+          'returnImage2' => '',
+          'userReturnReason' => 'None',
+          'userReturnReasonAdditional' => 'None',
           'orderType' => $request->orderType == 'default' ? 'default' : 'custom',
+
+          'paymongoPaymentID' => '',
 
           'recipientName' => $request->recipientName,
           'email' => $request->email,
@@ -622,7 +829,8 @@ class OrderController extends Controller
 
           'isReceived' => false,
           'isRated' => false,
-          'isNotified' => false
+          'isNotified' => false,
+          'isReturnRequest' => false
         ];
 
         // if its the first order, store the first order key
@@ -641,26 +849,67 @@ class OrderController extends Controller
           $this->database->getReference('orders')->push($orderInfo);
         }
 
+        if ($request->paymentMethod === 'ewallet') {
+          $data = [
+            'data' => [
+              'attributes' => [
+                'line_items' => [
+                  [
+                    'currency' => 'PHP',
+                    'amount' => ((int) $cartInfo['productPrice'] + 100) * 100,
+                    'description' => 'BMIC Transaction',
+                    'name' => $cartInfo['productName'],
+                    'quantity' => (int) $cartInfo['productQuantity'],
+                  ]
+                ],
+                'payment_method_types' => [
+                  'gcash',
+                  'paymaya'
+                ],
+                'success_url' => 'http://localhost:3000/home/' . $firstOrderKey,
+                'cancel_url' => 'http://localhost:3000/checkout',
+                'description' => 'Order ID: ' . $firstOrderKey,
+              ],
+            ],
+          ];
+          // $this->fetchPaymentIDAndUpdateDBWhenPaymentSuccess($firstOrderKey)
+
+          $authHeader = 'Basic ' . env('AUTH_PAY');
+
+          $response = Curl::to('https://api.paymongo.com/v1/checkout_sessions')
+            ->withHeaders([
+              'Content-Type: application/json',
+              'Accept: application/json',
+              'Authorization' => $authHeader,
+            ])
+            ->withData($data)
+            ->asJson()
+            ->post();
+
+          if ($response && isset($response->data)) {
+
+            $sessionUrl = $response->data->attributes->checkout_url ?? 'URL not available';
+            $message = "Checkout session created successfully!";
+          } else {
+            $message = "Failed to create checkout session.";
+          }
+        }
         //increase the count so the condition above works for bulky orders.
         $countOrder++;
       }
     }
 
-    // Remove items from the cart for the user
     foreach ($cartItems as $cartID => $cartInfo) {
       if ($request->uid == $cartInfo['uid']) {
         $this->database->getReference('cart/' . $cartID)->remove();
       }
     }
 
-    // Notify admin
     $this->notifyAdmin(Carbon::now()->toDateString(), Carbon::now('Asia/Manila')->format('h:i A'), 'Order', $firstOrderKey);
     // send email notif for placing order
     $this->sendEmailNotificationForReceipt($firstOrderKey, $email, $firstName, $lastName, Carbon::now()->toDateString(), $request->amountToPay, $mobilePhone, $fullAddress, 'place', null, null);
 
-    // Return response
-    $message = "Checkout Successful! Thank you for purchasing.";
-    return response(compact('message'));
+    return response(compact('message', 'sessionUrl'));
   }
 
   //mobile function when the user decided to use the application to order
@@ -726,6 +975,11 @@ class OrderController extends Controller
             'estimatedTimeOfDelivery' => '',
             'orderDateDelivery' => '',
             'orderStatus' => 'Waiting for Confirmation',
+            'returnImage' => '',
+            'returnImage1' => '',
+            'returnImage2' => '',
+            'userReturnReason' => 'None',
+            'userReturnReasonAdditional' => 'None',
 
             'orderDate' => Carbon::now()->toDateString(),
             'orderTimeStamp' => Carbon::now('Asia/Manila')->format('h:i A'),
@@ -737,8 +991,8 @@ class OrderController extends Controller
             'isBulkyOrder' => false,
             'isReceived' => false,
             'isRated' => false,
-            'isNotified' => true
-
+            'isNotified' => false,
+            'isReturnRequest' => false
           ];
         }
       }
@@ -763,8 +1017,53 @@ class OrderController extends Controller
       return response($e->getMessage());
     }
   }
-  // updating && ratings
 
+  //paymongo API stuff
+  public function updateOrderAndSetPaymentID(Request $request)
+  {
+    $paymentID = "";
+    $paymentDescription = "";
+
+    $authHeader = 'Basic ' . env('AUTH_PAY');
+
+    $response = Curl::to("https://api.paymongo.com/v1/payments")
+      ->withHeaders([
+        'Content-Type: application/json',
+        'Accept: application/json',
+        'Authorization' => $authHeader,
+      ])
+      ->get();
+
+    $decodedResponse = json_decode($response);
+
+    foreach ($decodedResponse->data as $payment) {
+      if (isset($payment->attributes->description, $payment->attributes->status)) {
+        if (
+          $payment->attributes->description === 'Order ID: ' . $request->orderID &&
+          $payment->attributes->status === 'paid'
+        ) {
+
+          $paymentID = $payment->id;
+          $paymentDescription = $payment->attributes->description;
+
+          $this->database->getReference('orders/' . $request->orderID)->update([
+            'paymongoPaymentID' => $paymentID
+          ]);
+          break;
+        }
+      }
+    }
+
+    if (!$paymentID) {
+      return response()->json([
+        'error' => 'No matching payment found.',
+        'order_id' => $request->orderID,
+        'decoded_response' => $decodedResponse
+      ]);
+    }
+  }
+
+  // updating && ratings
   public function updateTotalProductSold($productName, $orderQuantity, $size, $productCategory)
   {
     try {
@@ -884,6 +1183,7 @@ class OrderController extends Controller
               $orderStatus = 'Order Cancelled';
               if (!$isBulkyOrder) {
                 $this->sentNotificationIfAdminCancelOrder($orderID, $email, $firstName, $lastName, $orderInfo['orderDate'], $totalAmountToPay - 100, $mobilePhone, $fullAddress, $request->cancelReason, $request->cancelReasonAdditional);
+                $this->notifyUserWhenOrderCancelledSMS($orderID, $request->cancelReason, $request->cancelReasonAdditional, $mobilePhone);
               }
 
               //since this function is also being called when the admin approved a cancellation request, we will also put here a condition to determine if its a cancellation request or not
@@ -939,6 +1239,7 @@ class OrderController extends Controller
       if ($orderStatus == 'Order Cancelled' && $isBulkyOrder && !$emailSent && !$request->isCancellationRequest) {
 
         $this->sentNotificationIfAdminCancelOrder($orderID, $email, $firstName, $lastName, $orderInfo['orderDate'], $totalAmountToPay - 100, $mobilePhone, $fullAddress, $request->cancelReason, null);
+        $this->notifyUserWhenOrderCancelledSMS($orderID, $request->cancelReason, $request->cancelReasonAdditional, $mobilePhone);
         $emailSent = true;
       }
 
@@ -1089,7 +1390,7 @@ class OrderController extends Controller
 
           $notificationData = [
             'adminID' => $adminID,
-            'notificationMessage' => $notificationType === 'Order' ? 'An Order has been placed.' : 'User requested cancellation for the order ' . $orderID . '.',
+            'notificationMessage' => $notificationType === 'Order' ? 'An Order has been placed.' : ($notificationType === 'Cancel' ? 'User requested cancellation for the order ' . $orderID . '.' : 'User requested return for the order ' . $orderID . '.'),
             'notificationDate' => $dateOrdered,
             'notificationTime' => $timeStamp,
             'status' => 'unread'
@@ -1133,6 +1434,23 @@ class OrderController extends Controller
     }
   }
 
+  public function notifyUserWhenOrderCancelledSMS($orderID, $cancelReason, $cancelReasonAdditional, $mobilePhone)
+  {
+    try {
+
+      $webClient = new Client();
+      $webClient->post('https://semaphore.co/api/v4/messages', [
+        'form_params' => [
+          'apikey' => env('SEMAPHORE_API_KEY'),
+          'number' => $mobilePhone,
+          'message' => 'ARFITCHECK: Your parcel with an order ID of ' . $orderID . ' has been cancelled due to the following reason ' . $cancelReason . ', ADDITIONAL: ' . $cancelReasonAdditional . '. If you have any inquiries, you may contact us through our facebook page BMIC Clothing.'
+        ]
+      ]);
+    } catch (\Exception $e) {
+      return response($e->getMessage());
+    }
+  }
+
   public function notifyUserForCancellationRequestRejection($orderID, $uid)
   {
     try {
@@ -1146,7 +1464,24 @@ class OrderController extends Controller
         'uid' => $uid
       ];
       $this->database->getReference('notificationForUsers')->push($userNotificationData);
+    } catch (\Exception $e) {
+      return response($e->getMessage());
+    }
+  }
 
+  public function notifyUserForReturnRequestRejection($orderID, $uid)
+  {
+    try {
+
+      //insert into notification node
+      $userNotificationData = [
+        'notificationMessage' => 'Your request to return ' . $orderID . ' was rejected.',
+        'notificationDate' => Carbon::now()->toDateString(),
+        'notificationTime' => Carbon::now('Asia/Manila')->format('h:i A'),
+        'status' => 'unread',
+        'uid' => $uid
+      ];
+      $this->database->getReference('notificationForUsers')->push($userNotificationData);
     } catch (\Exception $e) {
       return response($e->getMessage());
     }
@@ -1170,7 +1505,8 @@ class OrderController extends Controller
     }
   }
 
-  public function sendEmailForCancelRequestStatus($orderID, $uid, $email, $type, $recipient) {
+  public function sendEmailForCancelRequestStatus($orderID, $uid, $email, $type, $recipient)
+  {
 
     try {
 
@@ -1240,7 +1576,7 @@ class OrderController extends Controller
                </div>
                
                <p>Hi ' . $emailNotificationData['recipient'] . ',</p>
-               <p>Your request to cancel <span class="order-id">' . $emailNotificationData['orderID'] . '</span> '. $emailNotificationData['status'] .' </p>
+               <p>Your request to cancel <span class="order-id">' . $emailNotificationData['orderID'] . '</span> ' . $emailNotificationData['status'] . ' </p>
                
                <div class="divider"></div>
          
@@ -1265,11 +1601,110 @@ class OrderController extends Controller
       return response()->json([
         'message' => 'Email sent to ' . $email . '.'
       ], 200);
-      
-    }catch(\Exception $e) {
+    } catch (\Exception $e) {
       return response($e->getMessage());
     }
+  }
 
+  public function sendEmailForReturnRequestStatus($orderID, $uid, $email, $type, $recipient)
+  {
+
+    try {
+
+      $status = $type === 'rejectCancelReq' ? 'was rejected. Order goes back to its original status.' : 'was approved. Your order has been moved to order history.';
+
+      $emailNotificationData = [
+        'subject' => 'Your order ' . $orderID . ' return request update.',
+        'email' =>  $email,
+        'status' => $status,
+        'orderID' => $orderID,
+        'recipient' => $recipient,
+        'uid' => $uid,
+        'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
+      ];
+
+      Mail::send([], [], function ($message) use ($emailNotificationData) {
+        $htmlBody = '
+         <html>
+           <head>
+             <style>
+               body {
+                 font-family: Arial, sans-serif;
+                 background-color: #f4f4f4;
+                 padding: 20px;
+               }
+               .container {
+                 max-width: 600px;
+                 margin: 0 auto;
+                 background-color: #ffffff;
+                 padding: 20px;
+                 border-radius: 8px;
+                 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+               }
+               h1, h2, h3 {
+                 color: #333333;
+               }
+               p {
+                 color: #555555;
+                 line-height: 1.6;
+               }
+               .divider {
+                 border-top: 1px solid #dddddd;
+                 margin: 20px 0;
+               }
+               .order-id {
+                 font-weight: bold;
+               }
+               .footer {
+                 margin-top: 20px;
+                 text-align: center;
+                 color: #888888;
+                 font-size: 12px;
+               }
+               .logo {
+                 text-align: center;
+                 margin-bottom: 20px;
+               }
+               .logo img {
+                 max-width: 100px; /* Adjust the size of the image */
+               }
+             </style>
+           </head>
+           <body>
+             <div class="container">
+               <div class="logo">
+                 <img src="' . $emailNotificationData['url'] . '" alt="Logo" style="width: 200px; height: auto;">
+               </div>
+               
+               <p>Hi ' . $emailNotificationData['recipient'] . ',</p>
+               <p>Your request to return <span class="order-id">' . $emailNotificationData['orderID'] . '</span> ' . $emailNotificationData['status'] . ' </p>
+               
+               <div class="divider"></div>
+         
+               <p>
+                <a href="https://www.facebook.com/bmic.clothing" target="_blank">Visit BMIC on Facebook</a>
+              </p>
+             </div>
+         
+             <div class="footer">
+               <p>&copy; ' . date('Y') . ' ARFITCHECK. All rights reserved.</p>
+             </div>
+           </body>
+         </html>
+         ';
+
+        $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+        $message->to($emailNotificationData['email'])
+          ->subject($emailNotificationData['subject'])
+          ->html($htmlBody);
+      });
+
+      return response()->json([
+        'message' => 'Email sent to ' . $email . '.'
+      ], 200);
+    } catch (\Exception $e) {
+      return response($e->getMessage());
+    }
   }
 
   public function automNotifyUsersWhenEstHrsMet()
@@ -1576,19 +2011,19 @@ class OrderController extends Controller
 
   public function sendEmailNotificationForAdminIfCancelRequest($requestID)
   {
-      try {
+    try {
 
-          $emailNotificationData = [
-              'subject' => 'A customer requested to cancel a order with order ID ' . $requestID . '.',
-              'paymentDate' => Carbon::now()->toDateString(),
-              'requestID' => $requestID,
-              'paymentMethod' => 'E-Wallet',
-              'email' =>  'bmicclothes@gmail.com',
-              'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
-          ];
+      $emailNotificationData = [
+        'subject' => 'A customer requested to cancel a order with order ID ' . $requestID . '.',
+        'paymentDate' => Carbon::now()->toDateString(),
+        'requestID' => $requestID,
+        'paymentMethod' => 'E-Wallet',
+        'email' =>  'bmicclothes@gmail.com',
+        'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
+      ];
 
-          Mail::send([], [], function ($message) use ($emailNotificationData) {
-              $htmlBody = '
+      Mail::send([], [], function ($message) use ($emailNotificationData) {
+        $htmlBody = '
               <html>
                   <head>
                   <style>
@@ -1653,70 +2088,70 @@ class OrderController extends Controller
               </html>
               ';
 
-              $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
-              $message->to($emailNotificationData['email'])
-                  ->subject($emailNotificationData['subject'])
-                  ->html($htmlBody);
-          });
+        $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+        $message->to($emailNotificationData['email'])
+          ->subject($emailNotificationData['subject'])
+          ->html($htmlBody);
+      });
 
-          return response()->json([
-              'message' => 'Email sent successfully!'
-          ]);
-      } catch (\Exception $e) {
-          return response($e->getMessage());
-      }
+      return response()->json([
+        'message' => 'Email sent successfully!'
+      ]);
+    } catch (\Exception $e) {
+      return response($e->getMessage());
+    }
   }
 
   public function sendEmailNotificationForAdmin($requestID, $email, $firstName, $lastName, $requestDate, $subtotal, $phoneNumber, $fullAddress, $type, $trackingNumber, $estimatedTimeOfDelivery)
-    {
-        try {
+  {
+    try {
 
-            $status = $type == 'place'
-                ? 'an order has been placed.'
-                : ($type == 'approve'
-                    ? 'has been approved. You may now also process the payment for this request until ' . Carbon::now()->addDay(2)->toDateString() . ', if you did not process your payment within the set timeframe, your customization request will be automatically cancelled.'
-                    : ($type == 'reject'
-                        ? 'has been rejected. Your customize request might be over complicated, your design contains inappropriate graphics, etc. For more details, you may contact BMIC on their Facebook.'
-                        : ($type == 'cancel'
-                            ? 'has been cancelled. Your request will no longer be processed.'
-                            : 'is now out for delivery. REMINDER: Once you receive your item(s), please confirm it on the ARFITCHECK Website. If we don’t hear from you, payment will be automatically transferred to BMIC.'
-                        )
-                    )
-                );
+      $status = $type == 'place'
+        ? 'an order has been placed.'
+        : ($type == 'approve'
+          ? 'has been approved. You may now also process the payment for this request until ' . Carbon::now()->addDay(2)->toDateString() . ', if you did not process your payment within the set timeframe, your customization request will be automatically cancelled.'
+          : ($type == 'reject'
+            ? 'has been rejected. Your customize request might be over complicated, your design contains inappropriate graphics, etc. For more details, you may contact BMIC on their Facebook.'
+            : ($type == 'cancel'
+              ? 'has been cancelled. Your request will no longer be processed.'
+              : 'is now out for delivery. REMINDER: Once you receive your item(s), please confirm it on the ARFITCHECK Website. If we don’t hear from you, payment will be automatically transferred to BMIC.'
+            )
+          )
+        );
 
-            $subjectStatus = $type == 'place'
-                ? 'has been placed.'
-                : ($type == 'approve'
-                    ? 'has been approved.'
-                    : ($type == 'reject'
-                        ? 'has been rejected.'
-                        : ($type == 'cancel'
-                            ? 'has been cancelled.'
-                            : 'is now out for delivery.'
-                        )
-                    )
-                );
+      $subjectStatus = $type == 'place'
+        ? 'has been placed.'
+        : ($type == 'approve'
+          ? 'has been approved.'
+          : ($type == 'reject'
+            ? 'has been rejected.'
+            : ($type == 'cancel'
+              ? 'has been cancelled.'
+              : 'is now out for delivery.'
+            )
+          )
+        );
 
-            $estTimeManipulator = $estimatedTimeOfDelivery === 1 ? '1 - 2' : ($estimatedTimeOfDelivery === 2 ? '2 - 3' : ($estimatedTimeOfDelivery === 3 ? '3 - 4' : ($estimatedTimeOfDelivery === 4 ? '4 - 5' : '5+')));
+      $estTimeManipulator = $estimatedTimeOfDelivery === 1 ? '1 - 2' : ($estimatedTimeOfDelivery === 2 ? '2 - 3' : ($estimatedTimeOfDelivery === 3 ? '3 - 4' : ($estimatedTimeOfDelivery === 4 ? '4 - 5' : '5+')));
 
-            $emailNotificationData = [
-                'subject' => 'A order with order ID ' . $requestID . ' ' . $subjectStatus,
-                'email' =>  'bmicclothes@gmail.com',
-                'status' => $status,
-                'requestID' => $requestID,
-                'requestDate' => $requestDate,
-                'subtotal' => $subtotal,
-                'phoneNumber' => $phoneNumber,
-                'fullAddress' => $fullAddress,
-                'recipient' => $firstName,
-                'recipientLN' => $lastName,
-                'trackingNumber' => $trackingNumber != null ? $trackingNumber : '-',
-                'estimatedTimeOfDelivery' => $estimatedTimeOfDelivery != null ? $estTimeManipulator : '-',
-                'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
-            ];
+      $emailNotificationData = [
+        'subject' => 'A order with order ID ' . $requestID . ' ' . $subjectStatus,
+        'email' =>  'bmicclothes@gmail.com',
+        'status' => $status,
+        'requestID' => $requestID,
+        'requestDate' => $requestDate,
+        'subtotal' => $subtotal,
+        'phoneNumber' => $phoneNumber,
+        'fullAddress' => $fullAddress,
+        'recipient' => $firstName,
+        'recipientLN' => $lastName,
+        'trackingNumber' => $trackingNumber != null ? $trackingNumber : '-',
+        'estimatedTimeOfDelivery' => $estimatedTimeOfDelivery != null ? $estTimeManipulator : '-',
+        'url' => 'https://storage.googleapis.com/arfit-check-db.appspot.com/profiles/Logo.jpg?GoogleAccessId=firebase-adminsdk-j3jm3%40arfit-check-db.iam.gserviceaccount.com&Expires=32503680000&Signature=o36PEVjY2zvydUEoAeFWI9MOQ04aDVm4TjyvvvY%2FfZx1%2FargqQHKBWR6kFtOLYjLFuscTO0sYYdEBgL3uJ%2FQDCk1FwieZUdulfK9RcRX2dw9DzeiUFOv3IgilHC6lM3J44or8Hefi2QnmZddVv2CayI4BMOzUvHREhP1rVEuKSwJ0Px2e6wfg3HR7F9pcf0CYm93SpsCfP9NAtWUXUSFHKiFBHzxFDMmWgcBGWpOxbPgNgp%2FZGx9GSsZMw3Wu8Mfzx10iQv%2Fa7B4CGgpLCITPgIA30jFYw4x%2FdeCoW9UEkI2Iei1fqn2IiBWPLlurv526oVcuvdJMsVGfN1nK%2FMLNA%3D%3D'
+      ];
 
-            Mail::send([], [], function ($message) use ($emailNotificationData) {
-                $htmlBody = '
+      Mail::send([], [], function ($message) use ($emailNotificationData) {
+        $htmlBody = '
                 <html>
                     <head>
                     <style>
@@ -1792,19 +2227,19 @@ class OrderController extends Controller
                 </html>
                 ';
 
-                $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
-                $message->to($emailNotificationData['email'])
-                    ->subject($emailNotificationData['subject'])
-                    ->html($htmlBody);
-            });
+        $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));
+        $message->to($emailNotificationData['email'])
+          ->subject($emailNotificationData['subject'])
+          ->html($htmlBody);
+      });
 
-            return response()->json([
-                'message' => 'Email sent successfully!'
-            ]);
-        } catch (\Exception $e) {
-            return response($e->getMessage());
-        }
+      return response()->json([
+        'message' => 'Email sent successfully!'
+      ]);
+    } catch (\Exception $e) {
+      return response($e->getMessage());
     }
+  }
   // this function is what is being called if the admin clicked the "Notfy User"
   public function sendEmailForDeliveryNotification($orderID, $email, $firstName, $lastName, $orderDate, $subtotal, $phoneNumber, $fullAddress, $type, $trackingNumber)
   {

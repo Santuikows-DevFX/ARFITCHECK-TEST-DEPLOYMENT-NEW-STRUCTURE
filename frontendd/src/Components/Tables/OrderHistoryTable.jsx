@@ -22,6 +22,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ProductRating from '../Dialogs/ProductRating';
 import { off, onValue, ref } from 'firebase/database';
 import { db } from '../../firebase';
+import ReturnProducts from '../Dialogs/ReturnProduct';
 
 const OrderHistoryTable = () => {
 
@@ -37,6 +38,7 @@ const OrderHistoryTable = () => {
   const [orderID, setOrderID] = useState('');
 
   const [openRatingModal, setRatingModal] = useState(false);
+  const [openReturnModal, setOpenReturnModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
@@ -136,6 +138,16 @@ const OrderHistoryTable = () => {
     setOrderID(productInfo.associatedOrderID)
     setSelectedOrder(productInfo)
     setRatingModal(true)
+  }
+
+  const hendleOpenReturnModal = (productInfo) => {
+    setOrderID(productInfo.associatedOrderID)
+    setSelectedOrder(productInfo)
+    setOpenReturnModal(true)
+  }
+
+  const handleCloseReturnModal = () => {
+    setOpenReturnModal(false);
   }
 
   const handleCloseRatingModal = () => {
@@ -648,8 +660,8 @@ const OrderHistoryTable = () => {
                                 </Typography>
                               ) : (
                                 <Typography
-                                  sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: '#1F618D', cursor: 'pointer', textDecoration: 'underline' }}
-                                  onClick={() => openImageInNewTab(order.orderInfo?.receiptImage)}
+                                  sx={{ fontFamily: 'Kanit', fontSize: 16, fontWeight: 500, color: 'black', cursor: 'pointer' }}
+                                  // onClick={() => openImageInNewTab(order.orderInfo?.receiptImage)}
                                 >
                                   <b>E-Wallet</b>
                                 </Typography>
@@ -670,7 +682,7 @@ const OrderHistoryTable = () => {
                       <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', fontWeight: 'bold', color: 'black' }}>
                         Status
                       </Typography>
-                      <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', color: order.orderInfo?.orderStatus === 'Order Completed' ? '#27ae60' : '#e74c3c' }}>
+                      <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', color: order.orderInfo?.orderStatus === 'Order Completed' ? '#27ae60' : (order.orderInfo?.orderStatus === 'Return Requested' ? '#b7950b' : '#e74c3c') }}>
                        <b> {order.orderInfo?.orderStatus === 'Order Completed' ? 'Order Delivered' : order.orderInfo?.orderStatus}</b>
                       </Typography>
                         {order.orderInfo?.cancelReason === "None" && order.orderInfo?.userCancelReason === "None" ? (
@@ -706,31 +718,48 @@ const OrderHistoryTable = () => {
                     </Grid>
                       {/* buttons */}
                     <Grid item xs={12} sm={6} md={1.5}>
-                    {order.orderInfo?.orderStatus === 'Order Cancelled' || order.orderInfo?.isRated === true || order.orderInfo?.orderStatus === 'Request Cancelled'  ? (
+                    {order.orderInfo?.orderStatus === 'Order Cancelled' || order.orderInfo?.isRated === true || order.orderInfo?.orderStatus === 'Request Cancelled' || order.orderInfo?.isReturnRequest === true ? (
                         <Typography sx={{ fontFamily: 'Kanit', fontSize: '16px', fontWeight: 'bold', color: 'gray', textAlign: "center"}}>
                              -
                         </Typography>
                       ) : (
-                        <Button
-                          type="submit"
-                          onClick={() => {handleOpenRatingModal(order.orderInfo)}}
-                          fullWidth
-                          variant="contained"
-                          sx={{
-                            backgroundColor: 'White',
-                            '&:hover': { backgroundColor: '#196F3D', color: 'white' },
-                            '&:not(:hover)': { backgroundColor: '#239B56', color: 'white' },
-                          }}
-                      >
-                        <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12  , md: 14}, padding: 0.5 }}>QUICK RATE</Typography>
-                      </Button>
+                        <>
+                          <Button
+                              type="submit"
+                              onClick={() => {handleOpenRatingModal(order.orderInfo)}}
+                              fullWidth
+                              variant="contained"
+                              sx={{
+                                backgroundColor: 'White',
+                                '&:hover': { backgroundColor: '#196F3D', color: 'white' },
+                                '&:not(:hover)': { backgroundColor: '#239B56', color: 'white' },
+                              }}
+                          >
+                            <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12  , md: 14}, padding: 0.5 }}>QUICK RATE</Typography>
+                          </Button>
+
+                          <Button
+                            type="submit"
+                            onClick={() => {hendleOpenReturnModal(order.orderInfo)}}
+                            fullWidth
+                            variant="contained"
+                            sx={{
+                              backgroundColor: 'White',
+                              '&:hover': { backgroundColor: '#943126', color: 'white' },
+                              '&:not(:hover)': { backgroundColor: '#860000', color: 'white' },
+                              mt: 1.5
+                            }}
+                          >
+                          <Typography sx={{ fontFamily: 'Kanit', fontSize: {xs: 12  , md: 14}, padding: 0.5 }}>RETURN PRD.</Typography>
+                        </Button>
+                        </>
+                        
                       )}
                     </Grid>
                   </Grid>
                 </Paper>
               </Grid>
             )))}
-            <ProductRating open={openRatingModal} product={selectedOrder} onClose={handleCloseRatingModal} orderID={orderID} fetchMyOrders={fetchMyOrders} />
           </Grid>
         </Box>
         <Pagination
@@ -741,6 +770,8 @@ const OrderHistoryTable = () => {
           sx={{ display: 'flex', justifyContent: 'center', marginTop: '2rem', fontFamily: 'Kanit' }}
         />
       </Box>
+      <ProductRating open={openRatingModal} product={selectedOrder} onClose={handleCloseRatingModal} orderID={orderID} fetchMyOrders={fetchMyOrders} />
+      <ReturnProducts open={openReturnModal} product={selectedOrder} onClose={handleCloseReturnModal} orderID={orderID}  />
       <div style={styles.modalContent}>
       </div>
     </>

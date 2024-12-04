@@ -60,7 +60,7 @@ function Checkout() {
   const [shippingDetails, setShippingDetails] = useState([]);
   const [userDetails, setUserDetails] = useState([]);
 
-  const [paymentMethod, setPaymentMethod] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('cash');
   const [orderTimeStamp, setOrderTimeStamp] = useState('');
   const [uploadedImage, setUploadedImage] = useState(null);
 
@@ -183,14 +183,17 @@ function Checkout() {
           dbValues.append('uid', cookie['?id']);
           dbValues.append('orderType', 'default');
   
-          await axiosClient.post('order/placeOrder', dbValues);
-          setTimeout(() => {
+          await axiosClient.post('order/placeOrder', dbValues)
+          .then(({ data }) => {
+            updateCartWhenCheckedOutSuccess();
   
-           setSubmitLoading(false)
-           isDialogOpen(true)
-           updateCartWhenCheckedOutSuccess();
-  
-          }, 1500);
+            if(paymentMethod === 'cash') { 
+              setSubmitLoading(false)
+              isDialogOpen(true)
+            }else {
+              window.location.replace(data.sessionUrl);
+            }
+          })
         }
       } catch (error) {
         console.log(error);
@@ -302,9 +305,7 @@ function Checkout() {
   const handleEulaChecked = (event) => {
     setEulaChecked(event.target.checked);
   
-    if (event.target.checked && uploadedImage) {
-      setEnablePlaceOrder(true);
-    }else if (event.target.checked && paymentMethod === 'cash') {
+    if ((event.target.checked && paymentMethod === 'cash') || (event.target.checked && paymentMethod === 'gcash')) {
       setEnablePlaceOrder(true)
     } else {
       setEnablePlaceOrder(false);
@@ -668,7 +669,7 @@ function Checkout() {
                   <Typography sx={{ fontFamily: 'Kanit', fontSize:  { xs: 25, md: 30 }, fontWeight: 'bold', color: 'black' }}>
                       PAYMENT METHOD <br />
                     <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 20 }, fontWeight: '300', color: 'black' }}>
-                      View all the available payment method along with its respective qr codes
+                      View all the available payment method.
                     </Typography>
                   </Typography>
                 </AccordionSummary>
@@ -684,11 +685,8 @@ function Checkout() {
                         />
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography sx={{ fontFamily: 'Kanit' }}>G-cash</Typography>
+                      <Typography sx={{ fontFamily: 'Kanit' }}>E-Wallet (GCash, Paymaya, etc.)</Typography>
                       <Box>
-                        <IconButton >
-                            <QrCodeScannerIcon onClick = {handleGcashQRCodeOpen} />
-                        </IconButton>
                       <Radio
                           value="gcash"
                           name="radio-buttons"
@@ -696,67 +694,8 @@ function Checkout() {
                           disabled = {submitLoading}
                       /></Box>
                   </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography sx={{ fontFamily: 'Kanit' }}>Paymaya</Typography>
-                      <Box>
-                        <IconButton >
-                            <QrCodeScannerIcon onClick = {handlePaymayaQRCodeOpen} />
-                        </IconButton>
-                      <Radio
-                          value="paymaya"
-                          name="radio-buttons"
-                          inputProps={{ 'aria-label': 'paymaya' }}
-                          disabled = {submitLoading}
-                      /></Box>
-                  </Box>
                   </RadioGroup>
                 </AccordionDetails>
-                {paymentMethod === 'gcash' && (
-                  <Accordion>
-                    <AccordionDetails>
-                      <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 12, md: 22 }, color: 'gray' }}>
-                        Please upload a screenshot or photo of your <b>Gcash</b> receipt as proof of payment.
-                      </Typography>
-                        <Box sx={{ mt: 2 }}>
-                          <Box sx={{ mt: 2 }}>
-                            <Dropzone onDrop={onDrop} accept="image/jpeg, image/png, image/jpg">
-                              {({ getRootProps, getInputProps }) => (
-                                <div {...getRootProps()} style={{ cursor: 'pointer', width: '100%', height: '200px', backgroundColor: 'white', borderRadius: '10px', border: '2px dashed #666', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                  <input {...getInputProps()} />
-                                  {uploadedImage ? (
-                                    <img src={URL.createObjectURL(uploadedImage)} alt="Uploaded" style={{ maxWidth: '100%', maxHeight: '100%' }} />
-                                  ) : (
-                                    <CloudUploadIcon sx={{ fontSize: 60, color: '#666' }} />
-                                  )}
-                                </div>
-                              )}
-                            </Dropzone>
-                          </Box>
-                        </Box>
-                    </AccordionDetails>
-                  </Accordion>
-                )}
-                {paymentMethod === 'paymaya' && (
-                  <Accordion>
-                    <AccordionDetails>
-                      <Typography sx={{ fontFamily: 'Kanit', fontSize: { xs: 10, md: 25 }, color: 'gray' }}>
-                        Please upload a screenshot or photo of your <b>Paymaya</b> receipt as proof of payment.
-                      </Typography>
-                      <Box sx={{ mt: 2 }}>
-                        <Box sx={{ mt: 2 }}>
-                            <div {...getRootProps()} style={{ cursor: 'pointer', width: '100%', height: '200px', backgroundColor: 'white', borderRadius: '10px', border: '2px dashed #666', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                              <input {...getInputProps()} />
-                              {uploadedImage ? (
-                                <img src={URL.createObjectURL(uploadedImage)} alt="Uploaded" style={{ maxWidth: '100%', maxHeight: '100%' }} />
-                              ) : (
-                                <CloudUploadIcon sx={{ fontSize: 60, color: '#666' }} />
-                              )}
-                          </div>
-                          </Box>
-                      </Box>
-                    </AccordionDetails>
-                  </Accordion>
-                )}
               </Accordion>
               <FormControlLabel
                 control={
@@ -803,7 +742,7 @@ function Checkout() {
                     visibility: submitLoading ? 'hidden' : 'visible',
                   }}
                 >
-                  PLACE ORDER
+                  {paymentMethod === 'cash' ? 'PLACE ORDER' : 'PAY & PLACE ORDER'} 
                 </Typography>
                 {submitLoading && (
                   <CircularProgress
